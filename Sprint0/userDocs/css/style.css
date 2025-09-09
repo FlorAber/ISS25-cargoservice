@@ -47,21 +47,31 @@ a.header-link:hover {
   background: #4f46e5;
 }
 
+a.button {
+  margin: 5px;
+  border-radius: 6px;
+}
+
+a.button.primary {
+  background: #6366f1;
+}
+a.button.primary:hover {
+  background: #4f46e5;
+}
+
 /* Footer container */
-.container {
-  display: flex;
-  flex-direction: column; /* contenuto in colonna */
-  justify-content: center;
-  align-items: center;
+.footer {
   background: #111827;
   color: #f9fafb;
   padding: 20px;
   font-size: 0.95rem;
-  gap: 10px;
 }
-.container > div {
-  text-align: center;
-  width: auto;
+
+.footer a.button.change {
+  background: #d18636 !important;
+}
+.footer a.button.change:hover {
+  background: #d37006 !important;
 }
 
 /* Remark box */
