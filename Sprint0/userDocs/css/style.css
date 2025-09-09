@@ -1,4 +1,4 @@
-/* Font moderno */
+/* Font setting */
 body {
   margin: 0;
   font-family: "Inter", "Roboto", Arial, sans-serif;
@@ -7,7 +7,7 @@ body {
   line-height: 1.6;
 }
 
-/* Titoli principali */
+/* Main titles */
 h1,
 h2,
 h3 {
@@ -47,34 +47,33 @@ a.header-link:hover {
   background: #4f46e5;
 }
 
-/* Container in basso */
+/* Footer container */
 .container {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column; /* contenuto in colonna */
+  justify-content: center;
   align-items: center;
   background: #111827;
   color: #f9fafb;
-  padding: 15px 20px;
-  border-radius: 0;
-  margin-top: 40px;
+  padding: 20px;
   font-size: 0.95rem;
+  gap: 10px;
 }
 .container > div {
   text-align: center;
-  flex: 1;
+  width: auto;
 }
 
 /* Remark box */
 div.remark {
   background: #ffffff;
-  border-left: 4px solid #4f46e5;
   padding: 15px 20px;
-  margin: 20px 0;
+  margin: 5px 0;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Tabelle più pulite */
+/* Clean tables */
 table {
   border-collapse: collapse;
   width: 100%;
