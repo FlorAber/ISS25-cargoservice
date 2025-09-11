@@ -29,9 +29,21 @@ h2 {
 }
 
 h3 {
-  background: #f3f4f6;
+  background: #e7e5ff;
   color: #374151;
+  padding: 0.3rem;
   font-size: 1.1rem;
+  border-radius: 6px;
+}
+
+.textparagraph {
+  margin: 8px 0 0 0;
+  background: #eeeef1;
+  border-radius: 6px;
+}
+
+.textbody {
+  margin: 0 0 0 5px;
 }
 
 /* Link */
@@ -65,6 +77,7 @@ a.button.primary:hover {
   color: #f9fafb;
   padding: 20px;
   font-size: 0.95rem;
+  margin: 1rem 0 0 0;
 }
 
 .footer a.button.change {

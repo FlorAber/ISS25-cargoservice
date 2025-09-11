@@ -15,7 +15,7 @@
     ></script>
     <link rel="stylesheet" type="text/css" href="./css/style.css" />
 
-    <title>ISS25</title>
+    <title>ISS25 - Sprint 0</title>
   </head>
 
   <body>
@@ -24,7 +24,18 @@
     </div>
     <div class="body">
       <h2>Introduction</h2>
-      <div class="remark">...</div>
+      <div class="remark">
+        <div class="textbody">
+          Lo scopo del team è quello realizzare un sistema software sulla base
+          dei requisiti forniti dal cliente e presentanti nel
+          <a href="../../resources/TemaFinale25.html"> tema finale 2025 </a>.
+          L'obiettivo dello Sprint 0 è di analizzare i requisiti forniti dal
+          cliente, comprenderli pienamente e costruire un modello di riferimento
+          del sistema che illustri i macro-componenti in gioco
+          <!-- , evidenziando le componenti in gioco e come queste
+          interagiscono -->
+        </div>
+      </div>
 
       <h2>Requirements</h2>
 
@@ -40,23 +51,116 @@
 
       <h2>Requirement analysis</h2>
 
+      <div class="remark">
+        Si è osservato che il sistema è costituito da un insieme di componenti
+        attivi che comunicano tra loro, tramite scambi di messaggi, per
+        raggiungere un obiettivo comune. <br />
+        I componenti che andranno a formare il sistema sono:
+
+        <div class="textparagraph">
+          <h3>cargomanager</h3>
+          <div class="textbody">
+            Riceve richieste di caricamento Si interfaccia con productservice
+            per verificare il peso del prodotto (se è registrato) e controlla se
+            la capienza della stiva è sufficiente per il caricamento e se ci
+            sono slot liberi e risponde alla richiesta con l'esito (guarda
+            requisiti). Interagisce con una GUI per rendere visibile lo stato
+            del sistema, GUI che non possiamo definire non essendo specificati
+            abbastanza rewquisiti
+          </div>
+        </div>
+
+        <div class="textparagraph">
+          <h3>productservice</h3>
+          <div class="textbody">
+            È il DB che contiene PID e peso dei prodotti registrati, riceve
+            richieste da cargomanager e restituisce le informazioni del prodotto
+            (PID e peso) se registrato o errore se non registrato
+          </div>
+        </div>
+
+        <!-- <div class="textparagraph">
+          <h3>cargohold</h3>
+          <div class="textbody"> Potrebbe non servirci </div>
+        </div> -->
+
+        <div class="textparagraph">
+          <h3>sensors</h3>
+          <div class="textbody">
+            RaspBerryPy munito di led e sonar. Led e sonar possono essere
+            servizi separati e: Sonar: invia segnale a cargomanager se rileva
+            pacchi seguendo indicazioni, o invia interruzione a cargomanager e
+            led in caso di errore Led: attende segnali da sonar se deve
+            accendersi in caso di guasto
+          </div>
+        </div>
+
+        <div class="textparagraph">
+          <h3>basicrobot</h3>
+          <div class="textbody">
+            Attore fornito dal committente, può essere controllato tramite invio
+            di messaggi ed è in esecuzione su un nodo separato (da guardare
+            specifiche del robot)
+          </div>
+        </div>
+
+        <div class="textparagraph">
+          <h3>map</h3>
+          <div class="textbody">
+            Rettangilare con 5 slot e porta di IO, mettiamo una rappresentazione
+            2D (da fare), introduciamo alla rappresentazione cartesiana? Lati di
+            dimensione L1 ed L2 C'è HOME in alto a sinistra e ha le dimensioni
+            del robot (lato D)
+          </div>
+        </div>
+      </div>
+
+      <h2>Model</h2>
+
+      <div class="remark">
+        <h3>Perchè QAK</h3>
+        <div class="textbody">
+          Perchè usiamo Kotlin? Perchè con Kotlin non viene generato un thread
+          per ogni attore (come viene fatto in Scala, oroginariamente usato in
+          qak) ma utilizza le Kotlin Routines , la classe ActorBasic incapsula
+          uno di questi attori. Quindi sono molto leggeri ed adatti
+          all'esecuzione su macchine con prestazioni relativamente basse <br />
+
+          QAK offre solo un valido strumento per semplificare lo sviluppo <br />
+
+          Qual’è il grande vantaggio di usare i qak invece che altri strumenti
+          (es. Spring) per la creazione di microservizi? Il grande vantaggio è
+          che in qak c’è la possibilità di eseguire programmi senza passare
+          attraverso la rete, lo scambio di messaggi avviene tramite buffer in
+          locale, mentre in framework come Spring c’è necessità di lavorare
+          attraverso la rete anche in caso di esecuzione in localhost. Con qak
+          abbiamo quindi introdotto un denomiatore dove microcosmi e macrocosmi
+          sono la stessa cosa, i microcosmi sono le singole applicazioni in
+          locale, i macrocosmi i sistemi distribuiti
+        </div>
+      </div>
+
+      <h2>Logical Architecture</h2>
+
+      <!-- <h2>Test plans</h2>
+
       <div class="remark">...</div>
-
-      <h2>Problem analysis</h2>
-
-      <div class="remark">...</div>
-
-      <h2>Test plans</h2>
 
       <h2>Project</h2>
 
+      <div class="remark">...</div>
+
       <h2>Testing</h2>
+
+      <div class="remark">...</div>
 
       <h2>Deployment</h2>
 
+      <div class="remark">...</div>
+
       <h2>Maintenance</h2>
 
-      <br /><br />
+      <div class="remark">...</div> -->
 
       <footer class="footer">
         <div class="grid-container fluid">
@@ -66,7 +170,7 @@
             </div>
 
             <div class="small-12 medium-4 text-center">
-              Fasano Andrea : andra.fasano3@studio.unibo.it <br />
+              Fasano Andrea : andrea.fasano3@studio.unibo.it <br />
               <!-- 0001189592 -->
               Florian Alberto : alberto.florian@studio.unibo.it <br />
               <!-- 0001189572 -->
