@@ -1,14 +1,30 @@
-System sprint0_architettura
+System sprint0_system_overview
+//sensor to cargomanager
+Request loadrequest:	loadrerequest(
+							pid, 
+							wheigth
+						)
+//cargomanager	to sensor
+Reply loadaccepted:		loadaccepted(X)
+Reply loadrejected:		loadrejected(X)
+
+//cargomanager to all subcscribed
+//Dispatch doDeposit:		doDeposit(pid, Weight, slot)
+
+Dispatch stop:			stop(X)
+Dispatch resume:		resume(X)
+
+
+
+
 
 Context ctx_cargo  ip  [host="localhost" port=8014] 
 Context ctx_gui  ip  [host="localhost" port=8015] 
-Context ctx_wastestorage  ip  [host="localhost" port=8016]
-Context ctx_monitoringdevice  ip  [host="localhost" port=8017]
-Context ctx_basicrobot  ip  [host="localhost" port=8018]
-Context ctx_watcher  ip  [host="localhost" port=8019]
+Context ctx_sensor  ip  [host="localhost" port=8016]
+Context ctx_basicrobot  ip  [host="localhost" port=8017]
 
 
-QActor cargo context ctx_cargo { 
+QActor cargo_manager context ctx_cargo { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
@@ -19,7 +35,7 @@ QActor cargo context ctx_cargo {
 	}
 }
 
-QActor watcher context ctx_watcher { 
+QActor product_service context ctx_cargo { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
@@ -29,7 +45,8 @@ QActor watcher context ctx_watcher {
 		println("$name IDLE...")
 	}
 }
-QActor led context ctx_monitoringdevice { 
+
+QActor led context ctx_sensor { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
@@ -39,7 +56,7 @@ QActor led context ctx_monitoringdevice {
 		println("$name IDLE...")
 	}
 }
-QActor sonar context ctx_monitoringdevice { 
+QActor sonar context ctx_sensor { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
@@ -49,6 +66,7 @@ QActor sonar context ctx_monitoringdevice {
 		println("$name IDLE...")
 	}
 }
+
 QActor basicrobot context ctx_basicrobot { 
 	State s0 initial{
 		delay 500   
