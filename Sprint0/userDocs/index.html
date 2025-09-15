@@ -29,6 +29,7 @@
           Lo scopo del team è quello realizzare un sistema software sulla base
           dei requisiti forniti dal cliente e presentanti nel
           <a href="../../resources/TemaFinale25.html"> tema finale 2025 </a>.
+          <br />
           L'obiettivo dello Sprint 0 è di analizzare i requisiti forniti dal
           cliente, comprenderli pienamente e costruire un modello di riferimento
           del sistema che illustri i macro-componenti in gioco
@@ -52,30 +53,41 @@
       <h2>Requirement analysis</h2>
 
       <div class="remark">
-        Si è osservato che il sistema è costituito da un insieme di componenti
-        attivi che comunicano tra loro, tramite scambi di messaggi, per
-        raggiungere un obiettivo comune. <br />
-        I componenti che andranno a formare il sistema sono:
+        Si è osservato che il sistema richiesto dal cliente è costituito da un
+        insieme di componenti attivi che comunicano tra loro, tramite scambi di
+        messaggi, per raggiungere un obiettivo comune. <br />
+        Per questo motivo i componenti che andranno a formare il sistema sono: I
+        componenti che andranno a formare il sistema sono:
 
         <div class="textparagraph">
           <h3>cargomanager</h3>
           <div class="textbody">
-            Riceve richieste di caricamento Si interfaccia con productservice
-            per verificare il peso del prodotto (se è registrato) e controlla se
-            la capienza della stiva è sufficiente per il caricamento e se ci
-            sono slot liberi e risponde alla richiesta con l'esito (guarda
-            requisiti). Interagisce con una GUI per rendere visibile lo stato
-            del sistema, GUI che non possiamo definire non essendo specificati
-            abbastanza rewquisiti
+            Componente principale del sistema, ad esso è affidata la gestione
+            della nave cargo. Riceve le richieste di caricamento, si interfaccia
+            con productservice per verificare se il prodotto è registrato e
+            qual'è il suo peso, controlla se la capienza della stiva è
+            sufficiente per il caricamento e se ci sono slot liberi. Dopo queste
+            verifiche risponde alla richiesta con l'esito della. richiesta.
+            Oltre a ciò interagisce con una GUI per rendere visibile lo stato
+            del sistema all'utente, ad oggi non è possibile definire le
+            caratteristiche della GUI non essendo specificati abbastanza
+            requisiti Riceve richieste di caricamento Si interfaccia con
+            productservice per verificare il peso del prodotto (se è registrato)
+            e controlla se la capienza della stiva è sufficiente per il
+            caricamento e se ci sono slot liberi e risponde alla richiesta con
+            l'esito (guarda requisiti). Interagisce con una GUI per rendere
+            visibile lo stato del sistema, GUI che non possiamo definire non
+            essendo specificati abbastanza rewquisiti.
           </div>
         </div>
 
         <div class="textparagraph">
           <h3>productservice</h3>
           <div class="textbody">
-            È il DB che contiene PID e peso dei prodotti registrati, riceve
-            richieste da cargomanager e restituisce le informazioni del prodotto
-            (PID e peso) se registrato o errore se non registrato
+            Componente che si occupa della gestione del database dei prodotti,
+            contiene PID e peso dei prodotti registrati, riceve richieste da
+            cargomanager e restituisce le informazioni del prodotto (PID e
+            peso), nel caso sia registato, o errore nel caso non lo sia.
           </div>
         </div>
 
@@ -87,30 +99,49 @@
         <div class="textparagraph">
           <h3>sensors</h3>
           <div class="textbody">
-            RaspBerryPy munito di led e sonar. Led e sonar possono essere
-            servizi separati e: Sonar: invia segnale a cargomanager se rileva
-            pacchi seguendo indicazioni, o invia interruzione a cargomanager e
-            led in caso di errore Led: attende segnali da sonar se deve
-            accendersi in caso di guasto
+            Componente formato da un RaspBerryPy munito di led e sonar. Led e
+            sonar sono due servizi separati:
+            <ul>
+              <li>
+                Sonar: invia un segnale al cargomanager se rileva la presenza di
+                un pacco nella I/O Port o invia al led un segnale di
+                interruzione nel caso di errore nella rilevazione
+              </li>
+              <li>
+                Led: rimane in attesa di interruzioni provenienti dal sonar che
+                lo facciano accendere in caso di guasti
+              </li>
+            </ul>
           </div>
         </div>
 
         <div class="textparagraph">
           <h3>basicrobot</h3>
           <div class="textbody">
-            Attore fornito dal committente, può essere controllato tramite invio
-            di messaggi ed è in esecuzione su un nodo separato (da guardare
-            specifiche del robot)
+            Attore fornito dal committente, può essere controllato tramite
+            l'invio di messaggi ed è in esecuzione su un nodo separato rispetto
+            agli altri componenti. Può simulare o controllare fisicamente il
+            movimento di un DDR Robot
           </div>
         </div>
 
         <div class="textparagraph">
           <h3>map</h3>
           <div class="textbody">
-            Rettangilare con 5 slot e porta di IO, mettiamo una rappresentazione
-            2D (da fare), introduciamo alla rappresentazione cartesiana? Lati di
-            dimensione L1 ed L2 C'è HOME in alto a sinistra e ha le dimensioni
-            del robot (lato D)
+            La mappa rappresenta l'ambiente in cui il robot si muove. È formata
+            da una stanza rettangolare nella quale sono presenti 5 slot di
+            carico e una porta di I/O da cui entrano i pacchi. Il robot quando
+            fermo si trova nella posizione HOME, posta nell'angolo in alto a
+            sinistra della mappa e occupa una porzione di spazio pari alle sue
+            dimensioni.<br />
+            <div class="medium-12 text-center margin-5">
+              <img
+                src="./resources/map.png"
+                class="text-center"
+                alt="map"
+                width="25%"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -120,23 +151,16 @@
       <div class="remark">
         <h3>Perchè QAK</h3>
         <div class="textbody">
-          Perchè usiamo Kotlin? Perchè con Kotlin non viene generato un thread
-          per ogni attore (come viene fatto in Scala, oroginariamente usato in
-          qak) ma utilizza le Kotlin Routines , la classe ActorBasic incapsula
-          uno di questi attori. Quindi sono molto leggeri ed adatti
-          all'esecuzione su macchine con prestazioni relativamente basse <br />
-
-          QAK offre solo un valido strumento per semplificare lo sviluppo <br />
-
-          Qual’è il grande vantaggio di usare i qak invece che altri strumenti
-          (es. Spring) per la creazione di microservizi? Il grande vantaggio è
-          che in qak c’è la possibilità di eseguire programmi senza passare
-          attraverso la rete, lo scambio di messaggi avviene tramite buffer in
-          locale, mentre in framework come Spring c’è necessità di lavorare
-          attraverso la rete anche in caso di esecuzione in localhost. Con qak
-          abbiamo quindi introdotto un denomiatore dove microcosmi e macrocosmi
-          sono la stessa cosa, i microcosmi sono le singole applicazioni in
-          locale, i macrocosmi i sistemi distribuiti
+          Per la realizzazione del sistema si è deciso di utilizzare il
+          linguaggio QAK in quanto questo offre un valido stumento per la
+          velocizzazione dello sviluppo e della prototipazione. QAK infatti
+          offre la possibilità non solo di creare attori che comunicano
+          attraverso la rete ma in caso di esecuzione di più attori in localhost
+          lo scambio di messaggi avviene tramite buffer locale, riducendo il
+          carico della rete. Inoltre QAK si basa sul linguaggio Kotlin, dove
+          vengono utilizzate le Kotlin Routines, più leggere dei thread e quindi
+          più adatte all'esecuzione su macchine con prestazioni limitate, come
+          può essere un RaspBerryPy
         </div>
       </div>
 
