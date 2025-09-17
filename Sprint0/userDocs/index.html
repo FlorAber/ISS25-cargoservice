@@ -32,7 +32,7 @@
           <br />
           L'obiettivo dello Sprint 0 è di analizzare i requisiti forniti dal
           cliente, comprenderli pienamente e costruire un modello di riferimento
-          del sistema che illustri i macro-componenti in gioco
+          del sistema che illustri i macro-componenti in gioco.
           <!-- , evidenziando le componenti in gioco e come queste
           interagiscono -->
         </div>
@@ -56,28 +56,22 @@
         Si è osservato che il sistema richiesto dal cliente è costituito da un
         insieme di componenti attivi che comunicano tra loro, tramite scambi di
         messaggi, per raggiungere un obiettivo comune. <br />
-        Per questo motivo i componenti che andranno a formare il sistema sono: I
-        componenti che andranno a formare il sistema sono:
+        Per questo motivo i componenti che andranno a formare il sistema sono:
 
         <div class="textparagraph">
           <h3>cargomanager</h3>
           <div class="textbody">
             Componente principale del sistema, ad esso è affidata la gestione
             della nave cargo. Riceve le richieste di caricamento, si interfaccia
-            con productservice per verificare se il prodotto è registrato e
-            qual'è il suo peso, controlla se la capienza della stiva è
-            sufficiente per il caricamento e se ci sono slot liberi. Dopo queste
-            verifiche risponde alla richiesta con l'esito della. richiesta.
+            con <em>productservice</em> per verificare se il prodotto è
+            registrato e qual'è il suo peso, controlla se la capienza della
+            stiva è sufficiente per il caricamento e se ci sono slot liberi.
+            Dopo queste verifiche risponde alla richiesta l'esito della stessa.
+            <br />
             Oltre a ciò interagisce con una GUI per rendere visibile lo stato
             del sistema all'utente, ad oggi non è possibile definire le
             caratteristiche della GUI non essendo specificati abbastanza
-            requisiti Riceve richieste di caricamento Si interfaccia con
-            productservice per verificare il peso del prodotto (se è registrato)
-            e controlla se la capienza della stiva è sufficiente per il
-            caricamento e se ci sono slot liberi e risponde alla richiesta con
-            l'esito (guarda requisiti). Interagisce con una GUI per rendere
-            visibile lo stato del sistema, GUI che non possiamo definire non
-            essendo specificati abbastanza requisiti.
+            requisiti.
           </div>
         </div>
 
@@ -85,31 +79,28 @@
           <h3>productservice</h3>
           <div class="textbody">
             Componente che si occupa della gestione del database dei prodotti,
-            contiene PID e peso dei prodotti registrati, riceve richieste da
+            contenente PID e peso dei prodotti registrati, riceve richieste da
             cargomanager e restituisce le informazioni del prodotto (PID e
-            peso), nel caso sia registato, o errore nel caso non lo sia.
+            peso), nel caso sia registato, o un messaggio di errore nel caso non
+            lo sia.
           </div>
         </div>
-
-        <!-- <div class="textparagraph">
-          <h3>cargohold</h3>
-          <div class="textbody"> Potrebbe non servirci </div>
-        </div> -->
 
         <div class="textparagraph">
           <h3>sensors</h3>
           <div class="textbody">
-            Componente formato da un RaspBerryPy munito di led e sonar. Led e
-            sonar sono due servizi separati:
+            Componente formato da un RaspBerryPy munito di led e sonar forniti
+            dal cliente. Led e sonar vengono gestiti da due servizi separati:
             <ul>
               <li>
-                Sonar: invia un segnale al cargomanager se rileva la presenza di
-                un pacco nella I/O Port o invia al led un segnale di
-                interruzione nel caso di errore nella rilevazione
+                Sonarmng: invia un segnale al cargomanager se rileva la presenza
+                di un pacco nella I/O Port o invia un segnale di interruzione a
+                tutto il sistema nel caso di errore nella rilevazione
               </li>
               <li>
-                Led: rimane in attesa di interruzioni provenienti dal sonar che
-                lo facciano accendere in caso di guasti
+                Ledmng: rimane in attesa di interruzioni provenienti dal sonar
+                che lo facciano accendere o spegnere in caso di guasti e al
+                momento della loro risoluzione
               </li>
             </ul>
           </div>
@@ -120,8 +111,7 @@
           <div class="textbody">
             Attore fornito dal committente, può essere controllato tramite
             l'invio di messaggi ed è in esecuzione su un nodo separato rispetto
-            agli altri componenti. Può simulare o controllare fisicamente il
-            movimento di un DDR Robot
+            agli altri componenti.
           </div>
         </div>
 
@@ -130,24 +120,18 @@
           <div class="textbody">
             La mappa rappresenta l'ambiente in cui il robot si muove. È formata
             da una stanza rettangolare nella quale sono presenti 5 slot di
-            carico e una porta di I/O da cui entrano i pacchi. Il robot quando
-            fermo si trova nella posizione HOME, posta nell'angolo in alto a
-            sinistra della mappa e occupa una porzione di spazio pari alle sue
-            dimensioni.<br />
+            carico e una porta di I/O da cui entrano i container. Il robot
+            quando fermo si trova nella posizione HOME, posta nell'angolo in
+            alto a sinistra della mappa e occupa una porzione di spazio pari
+            alle sue dimensioni. <br />
             <div class="medium-12 text-center margin-5">
-              <img
-                src="./resources/map.png"
-                class="text-center"
-                alt="map"
-                width="25%"
-              />
+              <img src="./resources/map.png" class="" alt="map" width="25%" />
             </div>
           </div>
         </div>
       </div>
 
       <h2>Model</h2>
-
       <div class="remark">
         <h3>Perchè QAK</h3>
         <div class="textbody">
@@ -157,28 +141,66 @@
           offre la possibilità non solo di creare attori che comunicano
           attraverso la rete ma in caso di esecuzione di più attori in localhost
           lo scambio di messaggi avviene tramite buffer locale, riducendo il
-          carico della rete. Inoltre QAK si basa sul linguaggio Kotlin, dove
+          carico della rete. Inoltre QAK sfrutta il linguaggio Kotlin, dove
           vengono utilizzate le Kotlin Routines, più leggere dei thread e quindi
-          più adatte all'esecuzione su macchine con prestazioni limitate, come
-          può essere un RaspBerryPy
+          più adatte all'esecuzione simultanea su macchine con prestazioni
+          limitate, come può essere un RaspBerryPy.
         </div>
       </div>
 
       <h2>Logical Architecture</h2>
-      <div class="medium-12 text-center margin-5">
+      <div class="medium-12 text-center remark">
         <img
-                src="../sprint0_system_overviewarch.png"
-                class="text-center"
-                alt="map"
-                width="25%"
-              />
+          src="../sprint0_system_overviewarch.png"
+          class="text-center"
+          alt="map"
+          width="25%"
+        />
       </div>
 
-      <!-- <h2>Test plans</h2>
+      <h2>Test plans</h2>
+      <div class="remark">
+        <div class="textbody">
+          Lo scopo della fase di test è quello di testare il funzionamento del
+          core business, cioè dei componenti <strong> cargomanager </strong> e
+          <strong> productservice</strong>. Per farlo si è deciso di procedere
+          inizialmente con un approccio Unit Test per poi proseguire con
+          l'Integration Test al termine dei primi. <br />
+          <ul>
+            <li>
+              Un'entità esterna andrà ad inoltrare una richiesta di carico al
+              cargomanager e ne verficherà l'esito. Per rispondere a questa
+              richiesta il cargomanager interagirà sempre con l'entità esterna
+              che avrà il compito di simulare il comportamento del
+              productservice. Se l'esito della richiesta sarà positivo l'entità
+              esterna invierà un segnale di carico emulando il comportamento del
+              sonar.
+            </li>
+            <li>
+              Un'entità esterna avrà lo scopo di simulare il comportamento del
+              cargomanager nella comunicazione con il productservice. Inviando
+              appositi messaggi per effettuare la ricerca dei prodotti
+              all'interno del database
+            </li>
+          </ul>
+        </div>
+      </div>
 
-      <div class="remark">...</div>
+      <h2>Work plans</h2>
+      <div class="remark">
+        <div class="textbody">
+          Il progetto verrà sviluppato in 3 sprint, secondo un ordine di
+          priorità delle funzionalità:
+          <ol>
+            <li>
+              <bold>Sprint 1 - Core Business : </bold> si svilupperà un modello che realizzi le funzionalità principali del sistema, tra cui il movimento del basicrobot
+            </li>
+            <li><bold>Sprint 2 - Sensor : </bold> si realizzerà la parte del sistema che si occupa della gestione di led e sonar </li>
+            <li><bold>Sprint 3 - GUI : si realizzerà l'interfaccia grafica che permetterà di visualizzare lo stato del sistema </bold></li>
+          </ol>
+      </div>
 
-      <h2>Project</h2>
+      <!-- <h2>Project</h2>
 
       <div class="remark">...</div>
 

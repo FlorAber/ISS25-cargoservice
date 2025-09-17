@@ -37,7 +37,7 @@ h3 {
 }
 
 .textparagraph {
-  margin: 8px 0 0 0;
+  margin: 10px 90px 0 90px;
   background: #eeeef1;
   border-radius: 6px;
 }
@@ -110,4 +110,8 @@ td {
 th {
   background: #f3f4f6;
   text-align: left;
+}
+
+img {
+  margin: 10px;
 }
