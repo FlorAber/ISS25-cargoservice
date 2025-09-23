@@ -15,27 +15,30 @@ Dispatch stop:			stop(X)
 Dispatch resume:		resume(X)
 
 
+Request start_load: start_load(pid)
+Dispatch reply_success : reply_success(N)// N if 1 == success, esle fail.
 
 
 
 Context ctx_cargo  ip  [host="localhost" port=8014] 
 Context ctx_gui  ip  [host="localhost" port=8015] 
 Context ctx_sensor  ip  [host="localhost" port=8016]
-Context ctx_basicrobot  ip  [host="localhost" port=8017]
+Context ctx_cargorobot  ip  [host="localhost" port=8017]
+
+Context ctx_test  ip  [host="localhost" port=8018]
 
 
-QActor cargo_manager context ctx_cargo { 
+QActor cargomanager context ctx_cargo { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
-	} 
-	Goto idle 
-	State idle{
-		println("$name IDLE...")
-	}
+		
+			
+	}Transition t0
+		
 }
 
-QActor product_service context ctx_cargo { 
+QActor productservice context ctx_cargo { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
@@ -67,7 +70,7 @@ QActor sonar context ctx_sensor {
 	}
 }
 
-QActor basicrobot context ctx_basicrobot { 
+QActor cargorobot context ctx_cargorobot{ 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
@@ -78,4 +81,14 @@ QActor basicrobot context ctx_basicrobot {
 	}
 }
 
+QActor mockactor context ctx_test{
+	State s0 initial{
+		delay 500   
+		println("$name STARTS") color green 
+	} 
+	Goto load
+	State load{
+		request cargomanager -m loadrequest : "Val" 
+	}
+}
 

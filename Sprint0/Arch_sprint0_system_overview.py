@@ -26,11 +26,14 @@ with Diagram('sprint0_system_overviewArch', show=False, outformat='png', graph_a
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_cargo', graph_attr=nodeattr):
-          cargo_manager=Custom('cargo_manager','./qakicons/symActorWithobjSmall.png')
-          product_service=Custom('product_service','./qakicons/symActorWithobjSmall.png')
+          cargomanager=Custom('cargomanager','./qakicons/symActorWithobjSmall.png')
+          productservice=Custom('productservice','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_sensor', graph_attr=nodeattr):
           led=Custom('led','./qakicons/symActorWithobjSmall.png')
           sonar=Custom('sonar','./qakicons/symActorWithobjSmall.png')
-     with Cluster('ctx_basicrobot', graph_attr=nodeattr):
-          basicrobot=Custom('basicrobot','./qakicons/symActorWithobjSmall.png')
+     with Cluster('ctx_cargorobot', graph_attr=nodeattr):
+          cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
+     with Cluster('ctx_test', graph_attr=nodeattr):
+          mockactor=Custom('mockactor','./qakicons/symActorWithobjSmall.png')
+     mockactor >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest &nbsp; >',  fontcolor='magenta') >> cargomanager
 diag
