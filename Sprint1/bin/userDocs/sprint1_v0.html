@@ -28,20 +28,18 @@
         <div class="textbody grid-x grid-margin-x align-middle">
           <div class="medium-8">
             Nello
-            <a href="../../Sprint0/userDocs/sprint0_v1.html">Sprint 0</a> è
+            <a href="../../Sprint0/userDocs/sprint0_v1.html"> Sprint 0 </a> è
             stato realizzato un primo modello del sistema ottenuto tramite la
             formalizzazione dei requisiti forniti dal committente (figura a
-            destra). <br />
-            <br />
-            L'obiettivo dello Sprint 1 è di analizzare le problematiche del core
-            business emerse nella fase di analisi e realizzarne
-            un'implementazione funzionante da fornire al committente.
+            destra). <br />L'obiettivo dello Sprint 1 è di fare l'analisi del
+            problema del core business e realizzarne un'implementazione
+            funzionante.
           </div>
           <div class="medium-4">
             <img
               src="../../Sprint0/sprint0_system_overviewarch.png"
               alt="architecture"
-              width="75%"
+              width="65%"
             />
           </div>
         </div>
@@ -65,44 +63,8 @@
         Introduzione
 
         <div class="textparagraph">
-          <h3>Come rappresentare la hold?</h3>
-          La hold viene rappresentata internamente al robot come una matrice, 
-          <div class="textbody">
-          </div>
-        </div>
-
-        <div class="textparagraph">
-          <h3>Come sfruttare il productservice?</h3>
-          <div class="textbody">
-            Il productservice viene fornito dal committente, per sfruttarlo al meglio e seguire il single responsibility principle? Si crea l'holdmanager, attore 
-            che funge da intermediario tra cargomanager e productservice, questo componente ha il compito di gestire la hold, tenendo traccia degli slot liberi, di quelli occupati e del peso dei prodotti caricati nella nave cargo.
-            A partire da queste conoscenze al momento della ricezione di una richiesta dal cargomanager verifica se il prodotto è registrato, 
-            verifica se il peso del prodotto è adeguato alla capacità massima della stiva e decide a che slot assegnare il carico.
-            Risponde al cargomenager con lo slot assegnato o con un messaggio di errore motivazionale.
-
-          </div>
-        </div>
-
-        <div class="textparagraph">
-          <h3>Cosa fa il cargomanager?</h3>
-          <div class="textbody"></div>
-            Ha il compito di controllare il funzionamento del sistema e coordinare le comunicaziono tra i componenti.
-            Quindi riceve le richieste di caricamento, comunica all'holdmanager la richiesta e attende una conferma.
-            Al momento della ricezione della conferma risponde al richiedente e rimane in attesa del segnale di carico dal sonar.
-            Quando arriva il segnale dal sonar comunica al robotmanager lo slot a cui portare il carico, questo slot gli viene comunicato dall'holdmanager.
-            Attende il completamento delle operazioni del basicrobot prima di tornare in attesa di una nuova richiesta di carico.
-          </div>
-        </div>
-
-        <div class="textparagraph">
-          <h3>Come muovere il basicrobot?</h3>
-          <div class="textbody">
-            Il basicrobot viene fornito dal committente, per controllarlo sfruttiamo un nuovo attore, il robotmanager.
-            Questo componente riceverà dal cargomanager lo slot a cui portare il carico e si occuperà di calcolare il percorso ottimale per raggiungerlo, 
-            controllando il robot affinchè lo segua. 
-            Deve essere capace di gestire i segnali di interruzione generati dal sonar (che arriveranno dal cargomanager) e fermare il robot nel caso sia 
-            in movimento per poi farlo ripartire quando il sistema torna funzionante
-          </div>
+          <h3>primo</h3>
+          <div class="textbody">blabla</div>
         </div>
       </div>
 
