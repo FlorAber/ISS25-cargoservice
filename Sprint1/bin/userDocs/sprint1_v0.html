@@ -13,8 +13,7 @@
       src="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.4/dist/js/foundation.min.js"
       crossorigin="anonymous"
     ></script>
-    <!-- <link rel="stylesheet" type="text/css" href="../../resources/_styles/style.css" /> -->
-     <link rel="stylesheet" type="text/css" href="./css/style.css" />
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
 
     <title>ISS25 - Sprint 1</title>
   </head>
@@ -63,9 +62,7 @@
       <h2>Problem analysis</h2>
 
       <div class="remark">
-
-        Per seguire il single responsibility principle è stato deciso di affidare a diversi attori la gestione di parti diverse del sistema, 
-        in seguito verranno specificati il comportamento di ciascun attore e le motivazioni dietro a queste scelte
+        Introduzione
 
         <div class="textparagraph">
           <h3>Come rappresentare la hold?</h3>
@@ -75,63 +72,48 @@
               una coppia di coordinate cartesiane. La home si troverà nel punto di origine, quindi alle coordinate (0,0) mentre i vari slot sono visibili nell'immagine seguente, che è analoga alla configurazione già presente all'interno del robot fornito dal committente e quindi non è modificabile. <br/>
               <div class="text-center"> <img src="resources/map.png" alt="grid" width="25%"/>  </div>
               In particolare si avranno: 
-                <ul>
-                  <li> Slot 1 alle coordinate (2,1) </li>
-                  <li> Slot 2 alle coordinate (3,1) </li>
-                  <li> Slot 3 alle coordinate (2,3) </li>
-                  <li> Slot 4 alle coordinate (3,3) </li>
-                  <li> Slot 5 alle coordinate (4,2) </li>
-                </ul>
-              E la home?? Vediamo se troviamo da qualche parte le coordinate
-          </div>
-        </div>
-
-        <div class="textparagraph">
-          <h3>Come muovere il basicrobot?</h3>
-          <div class="textbody">
-            Il basicrobot fornisce un'interfaccia che permette, tramite l'invio di messaggi, di controllarne il movimento.
-            Per gestire questo movimento è stato deciso di introdurre un attore <bold> robotmanager </bold> che avrà il compito di controllare il robot in ogni suo movimento e gestire le interruzioni provenienti dal sonar in caso di malfunzionamento.
-            Questo approccio consente di separare le funzionalità dei vari componenti facendo in modo che il cargomanager mantenga solo la funzionalità di gestore delle comunicazioni.
-
-            <div class="textbody">
-              <h4> Interazioni del robotmanager </h4>
-              Dovendo controllare il robot in ogni suo movimento l'attore avvierà l'operazione di carico una volta ricevuto un messaggio dal cargomanager, questo messaggio 
-              dovrà specificare lo slot a cui caricare il prodotto così che il robotmanager possa scegliere la strada appropriata per fare raggiungere al robot la posizione fisica.
-              Una volta terminata l'operazione di caricamento il robotmanager invierà un messaggio al cargomanager per notificarlo.
-              Inoltre l'attore deve essere capace di gestire i segnali di interruzione generati dal sonar (che arriveranno dal cargomanager in quanto gestore delle 
-              comunicazioni) e fermare il movimento per poi farlo ripartire quando il sistema tornerà funzionante
-            </div>
-
-            <div class="textbody">
-              <h4> Gestione del movimento </h4>
-              Come fa muovere il robot?? Scriviamolo dopo averlo effettivamente fatto
-            </div>
-
+                <li>
+                  <ul> Slot 1 alle coordinate (2,1) </ul>
+                  <ul> Slot 2 alle coordinate (3,1) </ul>
+                  <ul> Slot 3 alle coordinate (2,3) </ul>
+                  <ul> Slot 4 alle coordinate (3,3) </ul>
+                  <ul> Slot 5 alle coordinate (4,2) </ul>
+                </li>
+              
           </div>
         </div>
 
         <div class="textparagraph">
           <h3>Come sfruttare il productservice?</h3>
           <div class="textbody">
-            Il productservice viene fornito dal componente e come si utilizza? ...
-            Per sfruttare questo servizio e affidare ad un componente ad-hoc la gestione degli slot e del peso della nave cargo è stato deciso di implementare un attore di nome holdmanager.
-            Questo attore fungerà da intermediario tra cargomanager e productservice, prendendo in carico la gestione della hold tramite il tracciamento degli slot liberi, di quelli occupati e del peso dei prodotti caricati nella nave cargo.
-            A partire da queste conoscenze, al momento della ricezione di una richiesta getProduct dal cargomanager verifica se il prodotto è registrato, 
-            verifica se il peso del prodotto è adeguato alla capacità massima della stiva e decide a che slot assegnare il carico (se sono presenti slot liberi). 
-            Infine invierà una risposta al cargomanager specificando lo slot a cui caricare il prodotto in caso i controlli abbiano esito positivo o con un messaggio di errore motivazionale in caso contrario.
+            Il productservice viene fornito dal committente, per sfruttarlo al meglio e seguire il single responsibility principle? Si crea l'holdmanager, attore 
+            che funge da intermediario tra cargomanager e productservice, questo componente ha il compito di gestire la hold, tenendo traccia degli slot liberi, di quelli occupati e del peso dei prodotti caricati nella nave cargo.
+            A partire da queste conoscenze al momento della ricezione di una richiesta dal cargomanager verifica se il prodotto è registrato, 
+            verifica se il peso del prodotto è adeguato alla capacità massima della stiva e decide a che slot assegnare il carico.
+            Risponde al cargomenager con lo slot assegnato o con un messaggio di errore motivazionale.
+
           </div>
         </div>
 
         <div class="textparagraph">
           <h3>Cosa fa il cargomanager?</h3>
           <div class="textbody"></div>
-            Il cargomanager è l'attore che ha il compito di controllare il funzionamento del sistema e coordinare le comunicazioni tra i componenti.
-            Al momento della ricezione di una richiesta di caricamento questa verrà inoltrata all'holdmanager e attende una risposta. 
-            Al momento della ricezione della conferma risponderà al richiedente e, se la conferma è positiva, rimane in attesa del segnale di carico dal sonar.
-            Al momento della ricezione del segnale dal sonar comuncherà al robotmanager lo slot, come indicato dall'holmanager, a cui portare il carico.
-            Succesivamente attende il completamento delle operazioni del basicrobot prima di tornare in attesa di una nuova richiesta di carico.
-            Oltre alla normale esecuzione il cargomanager dovrà gestire anche il segnali di interruzione provenienti dal sonar in caso di malfunzionamento 
-            per andare a sospendere le attività di tutti i componenti del sistema fino al rientro dell'errore. 
+            Ha il compito di controllare il funzionamento del sistema e coordinare le comunicaziono tra i componenti.
+            Quindi riceve le richieste di caricamento, comunica all'holdmanager la richiesta e attende una conferma.
+            Al momento della ricezione della conferma risponde al richiedente e rimane in attesa del segnale di carico dal sonar.
+            Quando arriva il segnale dal sonar comunica al robotmanager lo slot a cui portare il carico, questo slot gli viene comunicato dall'holdmanager.
+            Attende il completamento delle operazioni del basicrobot prima di tornare in attesa di una nuova richiesta di carico.
+          </div>
+        </div>
+
+        <div class="textparagraph">
+          <h3>Come muovere il basicrobot?</h3>
+          <div class="textbody">
+            Il basicrobot viene fornito dal committente, per controllarlo sfruttiamo un nuovo attore, il robotmanager.
+            Questo componente riceverà dal cargomanager lo slot a cui portare il carico e si occuperà di calcolare il percorso ottimale per raggiungerlo, 
+            controllando il robot affinchè lo segua. 
+            Deve essere capace di gestire i segnali di interruzione generati dal sonar (che arriveranno dal cargomanager) e fermare il robot nel caso sia 
+            in movimento per poi farlo ripartire quando il sistema torna funzionante
           </div>
         </div>
       </div>
