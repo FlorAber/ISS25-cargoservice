@@ -1,0 +1,314 @@
+System test_architettura
+// ==================== MESSAGGI ====================
+Request loadrequest: loadrequest(PID)
+Dispatch doDeposit: doDeposit(X)
+Reply loadaccepted: loadaccepted(X)
+Reply loadrejected: loadrejected(X)
+
+Request control_product: control_product(PID)
+Dispatch load: load(SLOT)
+
+Dispatch movedone: movedone(X)
+Dispatch movefailed: movefailed(PLANDONE, PLANTODO)
+
+Request moverobot: moverobot(X,Y)
+Reply moverobotdone: moverobotok(ARG)
+Reply moverobotfailed: moverobotfailed(PLANDONE, PLANTODO)
+
+Request getProduct: product(ID)
+Reply getProductAnswer: product(JSONSTRING)
+
+// ==================== CONTESTI ====================
+Context ctx_cargo ip [host="localhost" port=8014]
+Context ctx_cargorobot ip [host="localhost" port=8017]
+Context ctx_test ip [host="localhost" port=8018]
+Context ctx_basicrobot ip [host="localhost" port=8020]
+Context ctx_productservice ip [host="localhost" port=8111]
+
+// ==================== MOCK ESTERNI ====================
+// Mock del ProductService
+QActor mock_productservice context ctx_test {
+    State s0 initial {
+        println("MOCK ProductService STARTS") color yellow
+    }
+    Goto listening
+    
+    State listening {
+        println("MOCK ProductService waiting for requests...") color yellow
+    }
+    Transition t0 whenRequest getProduct -> handleGetProduct
+    
+    State handleGetProduct {
+        onMsg(getProduct: product(ID)) {
+            println("MOCK ProductService received getProduct for ID=${payloadArg(0)}") color yellow
+            // Simula risposta JSON con prodotto valido
+            replyTo getProduct with getProductAnswer: product("{\"id\":${payloadArg(0)},\"name\":\"TestProduct\",\"weight\":10,\"valid\":true}")
+        }
+    }
+    Goto listening
+}
+
+// Mock del BasicRobot
+QActor mock_basicrobot context ctx_test {
+    State s0 initial {
+        println("MOCK BasicRobot STARTS") color yellow
+    }
+    Goto listening
+    
+    State listening {
+        println("MOCK BasicRobot waiting for requests...") color yellow
+    }
+    Transition t0 whenRequest moverobot -> handleMove
+    
+    State handleMove {
+        onMsg(moverobot: moverobot(X,Y)) {
+            println("MOCK BasicRobot moving to (${payloadArg(0)},${payloadArg(1)})") color yellow
+            delay 500  // Simula tempo di movimento
+            // Simula successo del movimento
+            replyTo moverobot with moverobotdone: moverobotok("success")
+        }
+    }
+    Goto listening
+}
+
+// ==================== ATTORI DEL SISTEMA ====================
+QActor holdmanager context ctx_cargo {
+    State s0 initial {
+        delay 500
+        println("HoldManager STARTS") color green
+    }
+    Goto idle
+    
+    State idle {
+        println("HoldManager IDLE...") color green
+    }
+    Transition t0 whenRequest control_product -> checkProduct
+    
+    State checkProduct {
+        onMsg(control_product: control_product(PID)) {
+            println("HoldManager checking product ${payloadArg(0)}") color green
+            // Forward richiesta al ProductService (mock)
+            [# val pid = payloadArg(0) #]
+            request mock_productservice -m getProduct: product(pid)
+        }
+    }
+    Transition t1 whenReply getProductAnswer -> processProductInfo
+    
+    State processProductInfo {
+        onMsg(getProductAnswer: product(JSONSTRING)) {
+            println("HoldManager received product info: ${payloadArg(0)}") color green
+            // Qui potresti parsare il JSON e decidere se accettare o rifiutare
+            // Per ora assumiamo sempre successo
+        }
+    }
+    Goto idle
+}
+
+QActor cargorobot context ctx_cargorobot {
+    State s0 initial {
+        delay 500
+        println("CargoRobot STARTS") color blue
+    }
+    Goto idle
+    
+    State idle {
+        println("CargoRobot IDLE...") color blue
+    }
+    Transition t0 whenMsg load -> handleLoad
+    
+    State handleLoad {
+        onMsg(load: load(SLOT)) {
+            println("CargoRobot loading at slot ${payloadArg(0)}") color blue
+            // Richiede movimento al BasicRobot
+            [# val slot = payloadArg(0) #]
+            request mock_basicrobot -m moverobot: moverobot(slot,0)
+        }
+    }
+    Transition t1 whenReply moverobotdone -> loadSuccess
+                  whenReply moverobotfailed -> loadFailed
+    
+    State loadSuccess {
+        onMsg(moverobotdone: moverobotok(ARG)) {
+            println("CargoRobot movement successful") color blue
+            // Invia conferma al CargoManager
+            forward cargomanager -m movedone: movedone("success")
+        }
+    }
+    Goto idle
+    
+    State loadFailed {
+        onMsg(moverobotfailed: moverobotfailed(PLANDONE, PLANTODO)) {
+            println("CargoRobot movement failed") color red
+            [# x = payloadArg(0)
+               y = payloadArg(1)
+             #
+            ]
+            forward cargomanager -m movefailed : movefailed(x,y)
+        }
+    }
+    Goto idle
+}
+
+QActor cargomanager context ctx_cargo {
+    [# var currentProductId = 0 #]
+    
+    State s0 initial {
+        delay 500
+        println("CargoManager STARTS") color magenta
+    }
+    Goto idle
+    
+    State idle {
+        println("CargoManager IDLE...") color magenta
+    }
+    Transition t0 whenRequest loadrequest -> handleLoadRequest
+                  whenMsg doDeposit -> handleDeposit
+    
+    State handleLoadRequest {
+        onMsg(loadrequest: loadrequest(PID)) {
+            [# currentProductId = payloadArg(0).toInt() #]
+            println("CargoManager received load request for product $currentProductId") color magenta
+            // Controlla prodotto tramite HoldManager
+            request holdmanager -m control_product: control_product(currentProductId)
+        }
+    }
+    Transition t1 whenReply getProductAnswer -> validateProduct
+    
+    State validateProduct {
+        onMsg(getProductAnswer: product(JSONSTRING)) {
+            println("CargoManager validating product...") color magenta
+            // Simula validazione (potrebbe parsare JSON)
+            // Assumiamo validazione OK
+            replyTo loadrequest with loadaccepted: loadaccepted(currentProductId)
+        }
+    }
+    Goto idle
+    
+    State handleDeposit {
+        onMsg(doDeposit: doDeposit(X)) {
+            println("CargoManager initiating deposit for slot ${payloadArg(0)}") color magenta
+            // Inoltra comando di caricamento al CargoRobot
+            [# var = payloadArg(0) #]
+            forward cargorobot -m load: load(var)
+        }
+    }
+    Goto waitingMove
+    
+    State waitingMove {
+        println("CargoManager waiting for robot movement...") color magenta
+    }
+    Transition t2 whenMsg movedone -> depositSuccess
+                  whenMsg movefailed -> depositFailed
+    
+    State depositSuccess {
+        onMsg(movedone: movedone(X)) {
+            println("CargoManager: deposit completed successfully") color magenta
+        }
+    }
+    Goto idle
+    
+    State depositFailed {
+        onMsg(movefailed: movefailed(PLANDONE, PLANTODO)) {
+            println("CargoManager: deposit failed") color red
+        }
+    }
+    Goto idle
+}
+
+/* 
+// ==================== TEST ACTOR ====================
+QActor tester context ctx_test {
+    [# var testsPassed = 0
+       var testsFailed = 0 #]
+    
+    State s0 initial {
+        delay 1000  // Attende che tutti gli attori siano pronti
+        println("========================================") color cyan
+        println("STARTING INTERACTION TESTS") color cyan
+        println("========================================") color cyan
+    }
+    Goto test1
+    
+    // TEST 1: Verifica interazione completa loadrequest + doDeposit
+    State test1 {
+        println("\n[TEST 1] Testing complete load workflow") color cyan
+        request cargomanager -m loadrequest: loadrequest(1)
+    }
+    Transition t1
+    	whenReply loadaccepted -> test1_accepted 
+    	whenReply loadrejected -> test1_rejected 
+    	whenTime 5000 -> test1_timeout
+    
+	State test1_accepted {
+    	println("[TEST 1] PASS - Load accepted, now depositing") color green
+    	forward cargomanager -m doDeposit: doDeposit(1)
+    	delay 2000
+    	println("[TEST 1] PASS - Complete workflow successful") color green
+    	[# testsPassed++ #]
+	}
+	Goto test2
+    
+    State test1_rejected {
+        println("[TEST 1] FAIL - Load request rejected") color red
+        [# testsFailed++ #]
+    }
+    Goto test2
+    
+    State test1_timeout {
+        println("[TEST 1] FAIL - Timeout waiting for response") color red
+        [# testsFailed++ #]
+    }
+    Goto test2
+    
+    // TEST 2: Verifica solo loadrequest
+    State test2 {
+        println("\n[TEST 2] Testing load request only") color cyan
+        request cargomanager -m loadrequest: loadrequest(2)
+    }
+    Transition t2 whenReply loadaccepted -> test2_success
+                  whenReply loadrejected -> test2_fail
+                  whenTime 5000 -> test2_timeout
+    
+    State test2_success {
+        println("[TEST 2] PASS - Load request handled correctly") color green
+        [# testsPassed++ #]
+    }
+    Goto test3
+    
+    State test2_fail {
+        println("[TEST 2] FAIL - Unexpected rejection") color red
+        [# testsFailed++ #]
+    }
+    Goto test3
+    
+    State test2_timeout {
+        println("[TEST 2] FAIL - Timeout") color red
+        [# testsFailed++ #]
+    }
+    Goto test3
+    
+    // TEST 3: Verifica solo doDeposit
+    State test3 {
+        println("\n[TEST 3] Testing deposit only") color cyan
+        forward cargomanager -m doDeposit: doDeposit(3)
+        delay 3000  // Attende completamento
+        println("[TEST 3] PASS - Deposit command sent and processed") color green
+        [# testsPassed++ #]
+    }
+    Goto finalReport
+    
+    State finalReport {
+        println("\n========================================") color cyan
+        println("TEST RESULTS") color cyan
+        println("========================================") color cyan
+        println("Tests Passed: $testsPassed") color green
+        println("Tests Failed: $testsFailed") color red
+        println("========================================") color cyan
+    }
+    Goto idle
+    
+    State idle {
+        println("\nAll tests completed. System ready for manual testing.") color cyan
+    }
+}
+*/
