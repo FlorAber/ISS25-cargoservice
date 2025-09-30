@@ -33,8 +33,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("s0") { //this:State
 					action { //it:State
 						delay(500) 
-						CommUtils.outgreen("$name STARTS")
-						request("moverobot", "moverobot(1,2)" ,"basicrobot" )  
+						CommUtils.outblue("CargoRobot STARTS")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -44,12 +43,59 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("idle") { //this:State
 					action { //it:State
-						CommUtils.outblack("$name IDLE...")
+						CommUtils.outblue("CargoRobot IDLE...")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t04",targetState="handleLoad",cond=whenDispatch("load"))
+				}	 
+				state("handleLoad") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("load(SLOT)"), Term.createTerm("load(SLOT)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								CommUtils.outblue("CargoRobot loading at slot ${payloadArg(0)}")
+								 val slot = payloadArg(0)  
+								request("moverobot", "moverobot(slot,0)" ,"mock_basicrobot" )  
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t15",targetState="loadSuccess",cond=whenReply("moverobotdone"))
+					transition(edgeName="t16",targetState="loadFailed",cond=whenReply("moverobotfailed"))
+				}	 
+				state("loadSuccess") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotok(ARG)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								CommUtils.outblue("CargoRobot movement successful")
+								forward("movedone", "movedone("success")" ,"cargomanager" ) 
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
+				}	 
+				state("loadFailed") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								CommUtils.outred("CargoRobot movement failed")
+								 x = payloadArg(0)
+								               y = payloadArg(1)
+								forward("movefailed", "movefailed(x,y)" ,"cargomanager" ) 
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
 				}	 
 			}
 		}
