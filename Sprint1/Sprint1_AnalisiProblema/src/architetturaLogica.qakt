@@ -1,9 +1,12 @@
 System sprint1_system_overview
 //mock to cargomanager
-Request loadrequest:	loadrerequest(pid)
+Request loadrequest:	loadrequest(pid)
 
 //Mock 
-Dispatch doDeposit:		doDeposit(X)				
+Dispatch doDeposit:		doDeposit(X)			
+
+// cargorobot   
+Dispatch waiting : waiting(X)	
 
 //cargomanager	to mock
 Reply loadaccepted:		loadaccepted(X) for loadrequest
@@ -22,9 +25,6 @@ Reply productjected:		productjected(X) for controlproduct
 Dispatch load : load(SLOT)
 
 
-//cargorobot to cargomanager
-Reply movedone : movedone(X) 
-Reply movefailed : movefailed(PLANDONE, PLANTODO)
 
 //cargorobot (to basic robot)
 Request moverobot : moverobot(X,Y)
