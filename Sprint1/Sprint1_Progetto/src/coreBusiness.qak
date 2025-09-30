@@ -1,9 +1,12 @@
-System sprint1_core_business
+System sprint1_system_overview
 //mock to cargomanager
 Request loadrequest:	loadrequest(pid)
 
 //Mock 
-Dispatch doDeposit:		doDeposit(X)				
+Dispatch doDeposit:		doDeposit(X)			
+
+// cargorobot   
+Dispatch waiting : waiting(X)	
 
 //cargomanager	to mock
 Reply loadaccepted:		loadaccepted(X) for loadrequest
@@ -12,6 +15,8 @@ Reply loadrejected:		loadrejected(X) for loadrequest
 //cargomanager	to holdmanager
 Request controlproduct : controlproduct(pid)
 
+
+
 //holdmanager to cargomanager
 Reply productaccepted:		productaccepted(X) for controlproduct
 Reply productjected:		productjected(X) for controlproduct
@@ -19,20 +24,22 @@ Reply productjected:		productjected(X) for controlproduct
 //cargomanager (to cargorobot)
 Dispatch load : load(SLOT)
 
-//cargorobot to cargomanager
-Reply movedone : movedone(X) 
-Reply movefailed : movefailed(PLANDONE, PLANTODO)
+
 
 //cargorobot (to basic robot)
 Request moverobot : moverobot(X,Y)
 Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
 Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
  
+
+
 //holdmanager to productservice
 Request getProduct : product(id)
 Reply getProductAnswer: product( JSonString ) for getProduct// formato di messaggio coerente con product service
 										//tutte le info anche in caso di fail sono contenute nel json
 												
+
+
 Context ctx_cargo  ip  [host="localhost" port=8014]
 
 Context ctx_cargorobot  ip  [host="localhost" port=8017]
@@ -41,6 +48,7 @@ Context ctx_test  ip  [host="localhost" port=8018]
 
 Context ctx_basicrobot  ip  [host="localhost" port=8020]
 Context ctx_productservice ip [ host="localhost" port=8111]
+
 
 ExternalQActor productservice context ctx_productservice
 ExternalQActor basicrobot context ctx_basicrobot
