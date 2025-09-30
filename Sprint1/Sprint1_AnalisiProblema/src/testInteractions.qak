@@ -2,8 +2,8 @@ System test_architettura
 // ==================== MESSAGGI ====================
 Request loadrequest: loadrequest(PID)
 Dispatch doDeposit: doDeposit(X)
-Reply loadaccepted: loadaccepted(X)
-Reply loadrejected: loadrejected(X)
+Reply loadaccepted: loadaccepted(X) for loadrequest
+Reply loadrejected: loadrejected(X) for loadrequest
 
 Request control_product: control_product(PID)
 Dispatch load: load(SLOT)
@@ -12,11 +12,11 @@ Dispatch movedone: movedone(X)
 Dispatch movefailed: movefailed(PLANDONE, PLANTODO)
 
 Request moverobot: moverobot(X,Y)
-Reply moverobotdone: moverobotok(ARG)
-Reply moverobotfailed: moverobotfailed(PLANDONE, PLANTODO)
+Reply moverobotdone: moverobotdone(ARG) for moverobot
+Reply moverobotfailed: moverobotfailed(PLANDONE, PLANTODO) for moverobot
 
-Request getProduct: product(ID)
-Reply getProductAnswer: product(JSONSTRING)
+Request getProduct: getProduct(ID)
+Reply getProductAnswer: getProductAnswer(JSONSTRING) for getProduct
 
 // ==================== CONTESTI ====================
 Context ctx_cargo ip [host="localhost" port=8014]
