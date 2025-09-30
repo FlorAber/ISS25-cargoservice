@@ -1,7 +1,7 @@
 %====================================================================================
 % sprint1_core_business description   
 %====================================================================================
-request( loadrequest, loadrerequest(pid) ).
+request( loadrequest, loadrequest(pid) ).
 dispatch( doDeposit, doDeposit(X) ).
 reply( loadaccepted, loadaccepted(X) ).  %%for loadrequest
 reply( loadrejected, loadrejected(X) ).  %%for loadrequest
