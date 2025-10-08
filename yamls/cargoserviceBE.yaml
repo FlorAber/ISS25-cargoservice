@@ -75,8 +75,6 @@ services:
     networks:
       - cargoservice-network
 
-<<<<<<< Updated upstream
-=======
   eureka:
     image: natbodocker/springcloud-eureka
     container_name: eurekaserver
@@ -93,7 +91,6 @@ services:
         "wait-for-it.sh mongodb:27017 --timeout=60 -- java -jar app.jar",
       ]
 
->>>>>>> Stashed changes
 networks:
   cargoservice-network:
     external: true
