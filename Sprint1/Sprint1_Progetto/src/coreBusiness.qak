@@ -19,11 +19,10 @@ Request controlproduct : controlproduct(pid)
 
 //holdmanager to cargomanager
 Reply productaccepted:		productaccepted(X) for controlproduct
-Reply productjected:		productjected(X) for controlproduct
+Reply productrejected:		productrejected(X) for controlproduct
 
 //cargomanager (to cargorobot)
 Dispatch load : load(SLOT)
-
 
 
 //cargorobot (to basic robot)
@@ -38,38 +37,97 @@ Request getProduct : product(id)
 Reply getProductAnswer: product( JSonString ) for getProduct// formato di messaggio coerente con product service
 										//tutte le info anche in caso di fail sono contenute nel json
 												
-
+//TODO
+//creare una chain di dispatch da cargorobot a cargomanager a mock per quando il bot finisce il suo lavro e torna a hom
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
 
-Context ctx_cargorobot  ip  [host="localhost" port=8017]
-
-Context ctx_test  ip  [host="localhost" port=8018]
-
-Context ctx_basicrobot  ip  [host="localhost" port=8020]
-Context ctx_productservice ip [ host="localhost" port=8111]
+Context ctx_basicrobot  ip  [host="127.0.0.1" port=8090]
+Context ctx_productservice ip [ host="127.0.0.1" port=8111]
 
 
 ExternalQActor productservice context ctx_productservice
 ExternalQActor basicrobot context ctx_basicrobot
 
 QActor cargomanager context ctx_cargo { 
+	[#
+		var robot_waiting: Boolean = false;
+		var package_accepted: Boolean = false;
+		var package_ready: Boolean = false;
+		var PID: Int = 0;
+		var slot_to_load: Int = -1;
+	#
+	]
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
-		request holdmanager -m controlproduct : controlproduct(1)
-		forward cargorobot -m load : load(1) //num slot 
 			
-	}Transition t0
+	}
+	/*Goto verifyConditions
+		
+	State robotWaiting{
+		[#
+			robot_waiting = true;
+		#]
+	}
+	Goto verifyConditions
+		
+	State doLoad{//asking holdmanager for pid
+		request holdmanager -m controlproduct : controlproduct($PID)
+		
+	}Transition t1
+		whenReply productaccepted -> loadSuccess
+		whenReply productrejected -> loadFail
+		
+	State loadFail{
+		onMsg (productrejected: productrejected($ERRORPAYLOAD)){
+			replyTo loadrequest with loadrejected : loadrejected($ERRORPAYLOAD)
+		}
+		
+	}Goto verifyConditions
+		
+	State loadSuccess{
+		//printCurrentMessage color blue
+		onMsg (productaccepted: productaccepted($PID)){
+			[#
+				PID=payloadArg(0).toInt();
+			#]
+			}
+		[#
+			package_accepted = true;
+		#]
+		replyTo loadrequest with loadaccepted : loadaccepted($PID)
+	}Goto verifyConditions
+		
+	State deposit{
+		if[#package_accepted#]{
+			[#
+				package_ready=true;
+			#]
+		}
+		
+	}Goto verifyConditions
+	
+	
+	State verifyConditions{
+		if[#package_ready && robot_waiting#]{
+			forward cargorobot -m load : load($PID) //num slot 
+		}
+		
+		}Transition t2
+		whenMsg doDeposit -> deposit
+		whenRequest loadrequest -> doLoad
+	*/
 		
 }
 
 
-QActor cargorobot context ctx_cargorobot{ 
+QActor cargorobot context ctx_cargo{ 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
 		request basicrobot -m moverobot : moverobot(1,2)
+		
 	} 
 	Goto idle 
 	State idle{
@@ -77,17 +135,56 @@ QActor cargorobot context ctx_cargorobot{
 	}
 }
 
-QActor mockactor context ctx_test{
+QActor mockactor context ctx_cargo{
+	[#
+		var ERROR = false;
+	#
+	]
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
 	} 
-	Goto load
-	State load{
+	/*Goto load_test
+	State load_test{
 		request cargomanager -m loadrequest : loadrequest(1) 
-		forward cargomanager -m doDeposit : doDeposit(1)
+		//forward cargomanager -m doDeposit : doDeposit(1)
 		
+	}Transition t0
+		whenTime 15000 -> fail
+		whenReply loadaccepted -> deposit
+		whenReply loadrejected -> loadfail
+		
+	State fail{
+	
 	}
+	
+	State deposit{
+		println("PID found, proceeding to do Deposit") color green
+		forward cargomanager -m doDeposit : doDeposit(PID)
+		
+	}Transition t1
+			//controllo su evento in caso di robot che termina il suo lavoro -> end
+			whenTime 15000 -> fail
+	
+	State end{
+		if [#ERROR == true#]{
+			println("Failed") color red
+		}
+		else{
+			println("Success") color blue
+		}
+	}
+	
+	State loadfail{
+			[#
+		ERROR = true;
+	#
+	]
+	onMsg (loadrejected : loadrejected(ERRORPAYLOAD)){
+		println("$ERRORPAYLOAD") color red
+	}
+	println("PID not found") color red
+	}*/
 }
 
 QActor holdmanager context ctx_cargo{

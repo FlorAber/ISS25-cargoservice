@@ -80,21 +80,6 @@ services:
     networks:
       - cargoservice-network
 
-  cargoserviceqak:
-    container_name: cargoserviceqak
-    image: docker.io/natbodocker/cargoserviceqak:1.0
-    environment:
-      - MONGO_HOST=mongodb
-      - SERVICE_IP=cargoserviceqak # 192.168.1.189 # boh, qua sembra che il prof abbia scambiato SERVICE_HOST con SERVICE_IP
-    ports:
-      - 8111:8111/tcp
-      - 8111:8111/udp
-    depends_on:
-      - mongodb
-      - eureka
-    networks:
-      - cargoservice-network
-
 networks:
   cargoservice-network:
     external: true

@@ -29,22 +29,13 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				var ERROR = false;
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(500) 
 						CommUtils.outgreen("$name STARTS")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="load", cond=doswitch() )
-				}	 
-				state("load") { //this:State
-					action { //it:State
-						request("loadrequest", "loadrequest(1)" ,"cargomanager" )  
-						forward("doDeposit", "doDeposit(1)" ,"cargomanager" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
