@@ -1,54 +1,54 @@
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - xpack.security.transport.ssl.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - ES_LOG_LEVEL=error # Log solo errori
     ports:
       - "9200:9200"
     networks:
       - cargoservice-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.11.1
+    image: docker.elastic.co/logstash/logstash:7.17.10
     container_name: logstash
-    environment:
-      - LOG_LEVEL=error #Log solo errori
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh
     ports:
-      - "5044:5044" # Porta TCP per l'input TCP o Beats.
+      - "5044:5044"
     depends_on:
       - elasticsearch
+    command:
+      [
+        "bash",
+        "-c",
+        "wait-for-it.sh elasticsearch:9200 --timeout=60 -- logstash -f /usr/share/logstash/pipeline/logstash.conf",
+      ]
     networks:
       - cargoservice-network
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.1
+    image: docker.elastic.co/kibana/kibana:7.17.10
     container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - LOG_LEVEL=error #Log solo errori
     ports:
       - "5601:5601"
+    volumes:
+      - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh
     depends_on:
       - elasticsearch
-    networks:
-      - cargoservice-network
-
-  mosquitto:
-    image: eclipse-mosquitto:1.6.15
-    container_name: mosquitto
-    environment:
-      - MOSQUITTO_LOG_TYPE=error # Log solo errori
-      - MQTT_ALLOW_ANONYMOUS=true # Permette connessioni anonime
-    ports:
-      - 1883:1883
-      - 9001:9001 # Optional:Utilizzata per WebSocket MQTT
+    command:
+      ["bash", "-c", "wait-for-it.sh elasticsearch:9200 --timeout=60 -- kibana"]
     networks:
       - cargoservice-network
 
@@ -57,33 +57,43 @@ services:
     container_name: mongodb
     mem_limit: 512m
     environment:
-      - MONGO_INITDB_DATABASE=cargodb # Nome del database da inizializzare
+      - MONGO_INITDB_DATABASE=cargodb
     ports:
       - "27017:27017"
     command: mongod
     networks:
       - cargoservice-network
 
-  eureka:
-    image: "natbodocker/springcloud-eureka"
-    logging:
-      driver: "none"
-    container_name: eurekaserver
-    ports:
-      - "8761:8761"
+  mosquitto:
+    image: eclipse-mosquitto:1.6.15
+    container_name: mosquitto
     environment:
-      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=true # Il server Eureka non si registra da solo
-      - EUREKA_CLIENT_FETCH_REGISTRY=true # Il server Eureka non recupera il registro
-      - EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false # Disabilita la modalità di auto-conservazione per testare l'auto-rimozione delle istanze
-      - EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS=60
-      - EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS=120
+      - MQTT_ALLOW_ANONYMOUS=true
+    ports:
+      - "1883:1883"
+      - "9001:9001"
     networks:
       - cargoservice-network
 
+<<<<<<< Updated upstream
+=======
+  eureka:
+    image: natbodocker/springcloud-eureka
+    container_name: eurekaserver
+    ports:
+      - "8761:8761"
+    networks:
+      - cargoservice-network
+    volumes:
+      - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh
+    command:
+      [
+        "bash",
+        "-c",
+        "wait-for-it.sh mongodb:27017 --timeout=60 -- java -jar app.jar",
+      ]
+
+>>>>>>> Stashed changes
 networks:
   cargoservice-network:
     external: true
-## yamls> docker network ls
-## docker network create cargoservice-network
-## docker network rm xxx
-## docker-compose -f cargoserviceBE.yaml -p cargoservice up
