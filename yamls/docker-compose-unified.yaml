@@ -1,0 +1,197 @@
+services:
+  # ==========================================
+  # SERVIZI BASE ISS2025 (Layer 1)
+  # ==========================================
+  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10     
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    networks:
+      - iss-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  mosquitto:
+    image: eclipse-mosquitto:1.6.15
+    container_name: mosquitto
+    environment:
+      - MQTT_ALLOW_ANONYMOUS=true
+    ports:
+      - 1883:1883
+      - 9001:9001
+    networks:
+      - iss-network
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$SYS/#' -C 1 -W 3 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  mongodb:
+    image: mongo:6.0.4
+    container_name: mongodb  
+    mem_limit: 512m
+    environment:
+      - MONGO_INITDB_DATABASE=cargodb
+    ports:
+      - "27017:27017"
+    command: mongod
+    networks:
+      - iss-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ==========================================
+  # SERVIZI DIPENDENTI (Layer 2)
+  # ==========================================
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.10   
+    container_name: logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - iss-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+ 
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.10   
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - iss-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  eureka:
+    image: 'natbodocker/springcloud-eureka'                                     
+    container_name: eurekaserver 
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=true
+      - EUREKA_CLIENT_FETCH_REGISTRY=true
+      - EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false
+      - EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS=60
+      - EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS=120
+    networks:
+      - iss-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || curl -f http://localhost:8761 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+
+  # ==========================================
+  # SERVIZI FINALI (Layer 3) - Avviati dopo ISS2025
+  # ==========================================
+
+  cargoserviceqak:
+    container_name: cargoserviceqak
+    image: docker.io/natbodocker/cargoserviceqak:1.0
+    environment:
+      - MONGO_HOST=mongodb
+      - SERVICE_IP=127.0.0.1
+    ports:
+      - 8111:8111/tcp
+      - 8111:8111/udp
+    networks:
+      - iss-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+
+  wenv:
+    image: docker.io/natbodocker/virtualrobotdisi25:2.2
+    container_name: virtualrobot
+    ports:
+      - 8090:8090
+      - 8091:8091
+    networks:
+      - iss-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+
+
+networks:
+  iss-network:
+    driver: bridge
+
+# ==========================================
+# COMANDI UTILI
+# ==========================================
+# Creare la rete (se necessario):
+# docker network create iss-network
+#
+# Avviare tutti i servizi:
+# docker-compose -f docker-compose-unified.yaml up
+#
+# Avviare in background:
+# docker-compose -f docker-compose-unified.yaml up -d
+#
+# Vedere i log:
+# docker-compose -f docker-compose-unified.yaml logs -f
+#
+# Fermare tutto:
+# docker-compose -f docker-compose-unified.yaml down
+#
+# Rimuovere anche i volumi:
+# docker-compose -f docker-compose-unified.yaml down -v
