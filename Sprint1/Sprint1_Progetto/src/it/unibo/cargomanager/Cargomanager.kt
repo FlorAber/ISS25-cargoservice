@@ -29,13 +29,17 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				var robot_waiting: Boolean = false;
+				var package_accepted: Boolean = false;
+				var package_ready: Boolean = false;
+				var PID: Int = 0;
+				var slot_to_load: Int = -1;
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(500) 
 						CommUtils.outgreen("$name STARTS")
-						request("controlproduct", "controlproduct(1)" ,"holdmanager" )  
-						forward("load", "load(1)" ,"cargorobot" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

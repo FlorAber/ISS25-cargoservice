@@ -33,7 +33,8 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 				state("s0") { //this:State
 					action { //it:State
 						delay(500) 
-						CommUtils.outgreen("HoldManager STARTS")
+						CommUtils.outgreen("$name STARTS")
+						request("getProduct", "product(1)" ,"productservice" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -43,41 +44,12 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 				}	 
 				state("idle") { //this:State
 					action { //it:State
-						CommUtils.outgreen("HoldManager IDLE...")
+						CommUtils.outblack("$name IDLE...")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="checkProduct",cond=whenRequest("control_product"))
-				}	 
-				state("checkProduct") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("control_product(PID)"), Term.createTerm("control_product(PID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outgreen("HoldManager checking product ${payloadArg(0)}")
-								 val pid = payloadArg(0)  
-								request("getProduct", "product(pid)" ,"mock_productservice" )  
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t13",targetState="processProductInfo",cond=whenReply("getProductAnswer"))
-				}	 
-				state("processProductInfo") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("getProductAnswer(JSONSTRING)"), Term.createTerm("product(JSONSTRING)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outgreen("HoldManager received product info: ${payloadArg(0)}")
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
 				}	 
 			}
 		}

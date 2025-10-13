@@ -27,14 +27,13 @@ with Diagram('sprint1_system_overviewArch', show=False, outformat='png', graph_a
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_cargo', graph_attr=nodeattr):
           cargomanager=Custom('cargomanager','./qakicons/symActorWithobjSmall.png')
-          holdmanager=Custom('holdmanager','./qakicons/symActorWithobjSmall.png')
-     with Cluster('ctx_cargorobot', graph_attr=nodeattr):
           cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
+          holdmanager=Custom('holdmanager','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_test', graph_attr=nodeattr):
           mockactor=Custom('mockactor','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_basicrobot', graph_attr=nodeattr):
           basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
-     with Cluster('ctx_productservice', graph_attr=nodeattr):
+     with Cluster('ctxcargoservice', graph_attr=nodeattr):
           productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
      cargorobot >> Edge(color='magenta', style='solid', decorate='true', label='<moverobot<font color="darkgreen"> moverobotdone moverobotfailed</font> &nbsp; >',  fontcolor='magenta') >> basicrobot
      mockactor >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargomanager

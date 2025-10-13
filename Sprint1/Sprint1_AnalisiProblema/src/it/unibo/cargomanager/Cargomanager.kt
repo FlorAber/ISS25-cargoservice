@@ -29,110 +29,18 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
-		 var currentProductId = 0  
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(500) 
-						CommUtils.outmagenta("CargoManager STARTS")
+						CommUtils.outgreen("$name STARTS")
+						request("controlproduct", "controlproduct(1)" ,"holdmanager" )  
+						forward("load", "load(1)" ,"cargorobot" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
-				}	 
-				state("idle") { //this:State
-					action { //it:State
-						CommUtils.outmagenta("CargoManager IDLE...")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t07",targetState="handleLoadRequest",cond=whenRequest("loadrequest"))
-					transition(edgeName="t08",targetState="handleDeposit",cond=whenDispatch("doDeposit"))
-				}	 
-				state("handleLoadRequest") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("loadrequest(PID)"), Term.createTerm("loadrequest(PID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								 currentProductId = payloadArg(0).toInt()  
-								CommUtils.outmagenta("CargoManager received load request for product $currentProductId")
-								request("control_product", "control_product(currentProductId)" ,"holdmanager" )  
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t19",targetState="validateProduct",cond=whenReply("getProductAnswer"))
-				}	 
-				state("validateProduct") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("getProductAnswer(JSONSTRING)"), Term.createTerm("product(JSONSTRING)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outmagenta("CargoManager validating product...")
-								answer("loadrequest", "loadaccepted", "loadaccepted(currentProductId)"   )  
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
-				}	 
-				state("handleDeposit") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("doDeposit(X)"), Term.createTerm("doDeposit(X)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outmagenta("CargoManager initiating deposit for slot ${payloadArg(0)}")
-								 var = payloadArg(0)  
-								forward("load", "load(var)" ,"cargorobot" ) 
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="waitingMove", cond=doswitch() )
-				}	 
-				state("waitingMove") { //this:State
-					action { //it:State
-						CommUtils.outmagenta("CargoManager waiting for robot movement...")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t210",targetState="depositSuccess",cond=whenDispatch("movedone"))
-					transition(edgeName="t211",targetState="depositFailed",cond=whenDispatch("movefailed"))
-				}	 
-				state("depositSuccess") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("movedone(X)"), Term.createTerm("movedone(X)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outmagenta("CargoManager: deposit completed successfully")
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
-				}	 
-				state("depositFailed") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("movefailed(PLANDONE,PLANTODO)"), Term.createTerm("movefailed(PLANDONE,PLANTODO)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outred("CargoManager: deposit failed")
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
 				}	 
 			}
 		}
