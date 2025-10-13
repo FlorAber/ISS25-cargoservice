@@ -14,7 +14,7 @@ services:
     ports:
       - "9200:9200"
     networks:
-      - iss-network
+      - cargoservice-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 10s
@@ -31,7 +31,7 @@ services:
       - 1883:1883
       - 9001:9001
     networks:
-      - iss-network
+      - cargoservice-network
     healthcheck:
       test: ["CMD-SHELL", "mosquitto_sub -t '$SYS/#' -C 1 -W 3 || exit 1"]
       interval: 10s
@@ -49,7 +49,7 @@ services:
       - "27017:27017"
     command: mongod
     networks:
-      - iss-network
+      - cargoservice-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -72,7 +72,7 @@ services:
       elasticsearch:
         condition: service_healthy
     networks:
-      - iss-network
+      - cargoservice-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9600 || exit 1"]
       interval: 10s
@@ -91,7 +91,7 @@ services:
       elasticsearch:
         condition: service_healthy
     networks:
-      - iss-network
+      - cargoservice-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
       interval: 10s
@@ -111,7 +111,7 @@ services:
       - EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS=60
       - EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS=120
     networks:
-      - iss-network
+      - cargoservice-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || curl -f http://localhost:8761 || exit 1"]
       interval: 10s
@@ -133,7 +133,7 @@ services:
       - 8111:8111/tcp
       - 8111:8111/udp
     networks:
-      - iss-network
+      - cargoservice-network
     depends_on:
       mongodb:
         condition: service_healthy
@@ -155,7 +155,7 @@ services:
       - 8090:8090
       - 8091:8091
     networks:
-      - iss-network
+      - cargoservice-network
     depends_on:
       mongodb:
         condition: service_healthy
@@ -172,14 +172,17 @@ services:
 
 
 networks:
-  iss-network:
+  cargoservice-network:
     driver: bridge
 
 # ==========================================
 # COMANDI UTILI
 # ==========================================
+#
+# Utile per vedere quando avviare il core business: ctop
+#
 # Creare la rete (se necessario):
-# docker network create iss-network
+# docker network create cargoservice-network
 #
 # Avviare tutti i servizi:
 # docker-compose -f docker-compose-unified.yaml up
