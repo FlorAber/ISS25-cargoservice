@@ -170,6 +170,39 @@ services:
       kibana:
         condition: service_healthy
 
+  basicrobot24:
+    container_name: basicrobot24
+    image: docker.io/natbodocker/basicrobot24:3.0
+    #image: basicrobot24:3.0
+    mem_limit: 512m
+    ports:
+      - "8020:8020/tcp" 
+      - "8020:8020/udp"
+      - "8085:8085"
+    environment:
+      - VIRTUAL_ENV=wenv   #Used by uniborobots.robotSupport.create
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SERVICE_IP=127.0.0.1
+    depends_on:
+      wenv:
+        condition: service_started
+      mongodb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+     
+    networks:
+      - cargoservice-network
+    
+
 
 networks:
   cargoservice-network:
