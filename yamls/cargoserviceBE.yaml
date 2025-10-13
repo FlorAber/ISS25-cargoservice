@@ -94,3 +94,6 @@ services:
 networks:
   cargoservice-network:
     external: true
+
+
+## docker-compose -f cargoserviceBE.yaml  up
