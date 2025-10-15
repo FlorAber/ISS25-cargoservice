@@ -149,11 +149,12 @@ services:
         condition: service_healthy
 
   wenv:
+    container_name: wenv
     image: docker.io/natbodocker/virtualrobotdisi25:2.2
-    container_name: virtualrobot
     ports:
-      - 8090:8090
-      - 8091:8091
+      - 8090:8090 
+      - 8091:8091/tcp
+      - 8091:8091/udp
     networks:
       - cargoservice-network
     depends_on:
@@ -169,40 +170,37 @@ services:
         condition: service_healthy
       kibana:
         condition: service_healthy
-
-  basicrobot24:
-    container_name: basicrobot24
-    image: docker.io/natbodocker/basicrobot24:3.0
-    #image: basicrobot24:3.0
-    mem_limit: 512m
-    ports:
-      - "8020:8020/tcp" 
-      - "8020:8020/udp"
-      - "8085:8085"
-    environment:
-      - VIRTUAL_ENV=wenv   #Used by uniborobots.robotSupport.create
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
-      - SERVICE_IP=127.0.0.1
-    depends_on:
-      wenv:
-        condition: service_started
-      mongodb:
-        condition: service_healthy
-      mosquitto:
-        condition: service_healthy
-      eureka:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-      logstash:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-     
-    networks:
-      - cargoservice-network
-    
-
+  
+  basicrobot24: 
+      container_name: basicrobot24
+      image: basicrobot24:latest
+      mem_limit: 512m 
+      ports:
+        - "8020:8020/tcp"
+        - "8020:8020/udp"
+      environment:
+        - VIRTUAL_ENV=wenv                         #Used by uniborobots.robotSupport.create
+        - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+        - SERVICE_HOST=localhost      #basicrobot25 per app che usano basicrobot in docker  192.168.1.132
+        - SERVICE_IP=localhost        #1 192.168.1.132
+        - MQTTBROKER=mosquitto
+      depends_on:
+        wenv:
+          condition: service_started
+        mongodb:
+          condition: service_healthy
+        mosquitto:
+          condition: service_healthy
+        eureka:
+          condition: service_healthy
+        elasticsearch:
+          condition: service_healthy
+        logstash:
+          condition: service_healthy
+        kibana:
+          condition: service_healthy
+      networks:
+        - cargoservice-network
 
 networks:
   cargoservice-network:

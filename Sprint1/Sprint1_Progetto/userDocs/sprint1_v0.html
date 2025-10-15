@@ -60,6 +60,21 @@
         </a>
       </div>
 
+      <h2> Info generali da aggiungere </h2>
+      
+      <div class="textparagraph">
+
+          <h3>holdmanager</h3>
+            <div class="textbody">
+              È stato deciso di fare in modo che l'holdmanager mantenga lo stato della hold all'interno di varibaili locali, per rendere questa informazione 
+              persistente così da poter avere una visione della hold in caso di crash del sistema nel momento in cui il caricamento di un prodotto viene completato (qua 
+              da vedere se il robot invia un segnale di completamento quando torna alla home o in altro modo) oltre ad aggiornare lo stato interno questo viene 
+              salvato all'interno di un file json così da essere visibile anche agli altri attori (es. GUI), per la GUI poi potremmo fare un altro attore o delegare all'cargomanager le richieste della GUI a seguito delle quali
+              andrà a rispondere con il contenuto del JSON
+          </div>
+
+        </div>
+
       <h2>Problem analysis</h2>
 
       <div class="remark">

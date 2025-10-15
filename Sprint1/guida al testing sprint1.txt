@@ -1,3 +1,0 @@
--esguito il file yaml BE
--eseguito il file yaml virtualrobot25
--esuito il gradle run di sprint1_progetto

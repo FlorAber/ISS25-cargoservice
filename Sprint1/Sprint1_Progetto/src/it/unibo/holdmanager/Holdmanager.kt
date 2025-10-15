@@ -19,37 +19,188 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
+import java.io.File
 
 class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
 
 	override fun getInitialState() : String{
-		return "s0"
+		return "start"
 	}
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				// Used to serialize local variables and memorize them in the JSON file
+				@Serializable
+				data class HoldState(
+				    val pids    : Array<Int>,
+				    val names   : Array<String>,
+				    val weights : Array<Int>,
+				    val MAXLOAD : Int
+				)
+				
+				fun saveState(state: HoldState, filename: String = "holdState.json") {
+				    val json = Json { prettyPrint = true }
+				    val jsonString = json.encodeToString(state)
+				    File(filename).writeText(jsonString)
+				}
+				
+				fun resetState(filename: String = "holdState.json") {
+				    val state = HoldState(
+				        pids = arrayOf(0, 0, 0, 0),
+				        names = arrayOf("", "", "", ""),
+				        weights = arrayOf(0, 0, 0, 0),
+				        MAXLOAD = 100
+				    )
+				    saveState(state, filename)
+				}
+				
+				fun loadState(filename: String = "holdState.json"): HoldState? {
+				    val file = File(filename)
+				    if (!file.exists()) return null
+				    val json = Json { ignoreUnknownKeys = true }
+				    return json.decodeFromString(file.readText())
+				}
+				
+		    	var pids = arrayOf(0, 0, 0, 0)			// Ogni elemento corrisponde ad uno slot, contiene i PID dei prodotti caricati
+		    	var names = arrayOf("", "", "", "")		// Ogni elemento corrisponde ad uno slot, contiene i nomi dei prodotti caricati
+		    	var weights = arrayOf(0, 0, 0, 0)		// Ogni elemento corrisponde ad uno slot, contiene i pesi dei prodotti caricati
+		    	val MAXLOAD = 100						// Carico massimo della hold
+		    	
+		    	var waitingProduct: JSONObject? = null	// Oggetto JSON che rappresenta il prodotto in attesa di essere caricato, terminato il robot viene registrato nello stato
 		return { //this:ActionBasciFsm
-				state("s0") { //this:State
+				state("start") { //this:State
 					action { //it:State
 						delay(500) 
-						CommUtils.outgreen("$name STARTS")
-						request("getProduct", "product(1)" ,"productservice" )  
+						CommUtils.outblue("$name : starting")
+						 val loaded = loadState()  
+						if(  loaded != null  
+						 ){CommUtils.outblue("$name : state file found, loading previous state ")
+						
+										pids = loaded.pids
+										names = loaded.names
+										weights = loaded.weights
+										
+						}
+						else
+						 {CommUtils.outblue("$name : state file not found, initializing")
+						  resetState()  
+						 }
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
 				}	 
-				state("idle") { //this:State
+				state("wait") { //this:State
 					action { //it:State
-						CommUtils.outblack("$name IDLE...")
+						CommUtils.outblue("$name : waiting for requests")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t16",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
+					transition(edgeName="t17",targetState="updateHoldState",cond=whenEvent("productloaded"))
+				}	 
+				state("handleControlRequest") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("controlproduct(PID)"), Term.createTerm("controlproduct(PID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 val PID = payloadArg(0).toInt()  
+								CommUtils.outblue("$name : received control request for PID : $PID")
+								request("getProduct", "product($PID)" ,"productservice" )  
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t18",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
+				}	 
+				state("checkProductAnswer") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("product(JSONSTRING)"), Term.createTerm("product(JsonString)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 				
+												val parser = JSONParser()
+												val jsonString = payloadArg(0).toString()
+												val jsonObj = parser.parse(jsonString) as JSONObject
+												
+												val pid = (jsonObj["productId"] as Long).toInt()
+												val pname =  (jsonObj["name"] as String)
+												val weight = (jsonObj["weight"] as Long).toInt()
+								
+												var rejected = false
+												var ERMSG = ""	
+												var SLOT = 0			
+												
+												if( pid > 0 ) {														// Prodotto registrato
+													if ( MAXLOAD >= (weights.sumOf {it} + weight)) {				// Capienza stiva sufficiente
+														SLOT = pids.indexOfFirst { it == 0 }
+														if(SLOT < 0) {											    // Nessuno slot libero
+															rejected = true
+															ERMSG = sysUtil.toPrologStr("Tutti gli slot sono già occupati")
+														}
+													} else {
+														rejected = true
+														ERMSG = sysUtil.toPrologStr("Capienza stiva non sufficiente")
+													}
+												} else {
+													rejected = true
+													ERMSG = sysUtil.toPrologStr("Prodotto non registrato")
+												}
+												
+								if(  rejected  
+								 ){CommUtils.outblue("$name : product rejected")
+								answer("controlproduct", "productrejected", "productrejected($ERMSG)"   )  
+								}
+								else
+								 {CommUtils.outblue("$name : product accepted")
+								  waitingProduct = jsonObj  
+								 answer("controlproduct", "productaccepted", "productaccepted($SLOT)"   )  
+								 }
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
+				}	 
+				state("updateHoldState") { //this:State
+					action { //it:State
+						 val waitingProd = waitingProduct  
+						if(  waitingProd != null  
+						 ){
+										val pid = (waitingProd["productId"] as Long).toInt()
+										val pname =  (waitingProd["name"] as String)
+										val weight = (waitingProd["weight"] as Long).toInt()
+									
+										val slot = pids.indexOfFirst { it == 0 }
+										
+										pids[slot] = pid
+										names[slot] = pname
+										weights[slot] = weight
+										
+										val state = HoldState(pids, names, weights, MAXLOAD)
+										
+										saveState(state)				
+						CommUtils.outblue("$name : updated hold state - $state")
+						}
+						else
+						 {CommUtils.outblue("$name : hold state not changed")
+						 }
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
 				}	 
 			}
 		}

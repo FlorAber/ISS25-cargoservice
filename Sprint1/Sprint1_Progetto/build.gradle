@@ -19,6 +19,9 @@ plugins {
     
     //Per poter usare javafx
     //id 'org.openjfx.javafxplugin' version '0.1.0'
+    
+    //Per serialization holdmanager
+    id "org.jetbrains.kotlin.plugin.serialization" version "1.9.22"
 }
 
 version '1.0'
@@ -122,10 +125,11 @@ dependencies {
     implementation name: '2p301'
 	implementation name: 'unibo.qakactor23-5.0'
     implementation name: 'unibo.basicomm23-1.0'
-
-
     
     //USER libs for facades
+
+	//serialization for holdmanager
+	implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
     
 }
 	

@@ -31,11 +31,64 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
 				var ERROR = false;
+				var ERRORPAYLOAD: String = "";
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(500) 
-						CommUtils.outgreen("$name STARTS")
+						CommUtils.outcyan("$name : starting")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="load_test", cond=doswitch() )
+				}	 
+				state("load_test") { //this:State
+					action { //it:State
+						request("loadrequest", "loadrequest(1)" ,"cargomanager" )  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t13",targetState="deposit",cond=whenReply("loadaccepted"))
+					transition(edgeName="t14",targetState="loadfail",cond=whenReply("loadrejected"))
+				}	 
+				state("deposit") { //this:State
+					action { //it:State
+						CommUtils.outcyan("$name : PID found, proceeding to do Deposit")
+						forward("doDeposit", "doDeposit(1)" ,"cargomanager" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t15",targetState="end",cond=whenEvent("productloaded"))
+				}	 
+				state("loadfail") { //this:State
+					action { //it:State
+						 ERROR = true  
+						if( checkMsgContent( Term.createTerm("loadrejected(X)"), Term.createTerm("loadrejected(ERRORPAYLOAD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 val ERRORPAYLOAD = payloadArg(0) 
+								CommUtils.outred("$ERRORPAYLOAD")
+						}
+						CommUtils.outred("PID not found")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+				}	 
+				state("end") { //this:State
+					action { //it:State
+						if(  ERROR == true  
+						 ){CommUtils.outcyan("$name : Failed")
+						}
+						else
+						 {CommUtils.outcyan("$name : Success")
+						 }
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

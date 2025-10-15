@@ -34,17 +34,141 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				var package_accepted: Boolean = false;
 				var package_ready: Boolean = false;
 				var PID: Int = 0;
-				var slot_to_load: Int = -1;
+				var SLOT_TO_LOAD: Int = -1;
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(500) 
-						CommUtils.outgreen("$name STARTS")
+						CommUtils.outgreen("$name : starting")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
+				}	 
+				state("wait") { //this:State
+					action { //it:State
+						CommUtils.outgreen("$name : waiting for requests...")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t0",targetState="robotWaiting",cond=whenDispatch("waiting"))
+					transition(edgeName="t1",targetState="deposit",cond=whenDispatch("doDeposit"))
+					transition(edgeName="t2",targetState="doLoad",cond=whenRequest("loadrequest"))
+					transition(edgeName="t3",targetState="receivedalert",cond=whenEvent("sonarAlert"))
+				}	 
+				state("verifyConditions") { //this:State
+					action { //it:State
+						if(  package_ready && robot_waiting && SLOT_TO_LOAD!=-1 && PID != -1  
+						 ){CommUtils.outgreen("tentativo di load del pid: $PID in slot: $SLOT_TO_LOAD")
+						forward("load", "load($SLOT_TO_LOAD)" ,"cargorobot" ) 
+						
+										package_ready =false;
+										robot_waiting = false;
+										SLOT_TO_LOAD=-1;
+										PID = -1;
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
+				}	 
+				state("robotWaiting") { //this:State
+					action { //it:State
+						 robot_waiting = true  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="verifyConditions", cond=doswitch() )
+				}	 
+				state("doLoad") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("loadrequest(PID)"), Term.createTerm("loadrequest(PID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												PID = payloadArg(0).toInt();
+								CommUtils.outgreen("$name : Asking for pid: $PID")
+								request("controlproduct", "controlproduct($PID)" ,"holdmanager" )  
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t4",targetState="loadSuccess",cond=whenReply("productaccepted"))
+					transition(edgeName="t5",targetState="loadFail",cond=whenReply("productrejected"))
+					transition(edgeName="t6",targetState="receivedalert",cond=whenEvent("sonarAlert"))
+				}	 
+				state("loadFail") { //this:State
+					action { //it:State
+						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						if( checkMsgContent( Term.createTerm("productrejected(MSG)"), Term.createTerm("productrejected(ERRORPAYLOAD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 val ERRORPAYLOAD = payloadArg(0) 
+								CommUtils.outgreen("$name : received error $ERRORPAYLOAD")
+								answer("loadrequest", "loadrejected", "loadrejected($ERRORPAYLOAD)"   )  
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="verifyConditions", cond=doswitch() )
+				}	 
+				state("loadSuccess") { //this:State
+					action { //it:State
+						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						if( checkMsgContent( Term.createTerm("productaccepted(SLOT)"), Term.createTerm("productaccepted(SLOT_TO_LOAD)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 SLOT_TO_LOAD=payloadArg(0).toInt()  
+						}
+						 package_accepted = true  
+						CommUtils.outgreen("$name received loadsuccess, going to load $PID in $SLOT_TO_LOAD")
+						answer("loadrequest", "loadaccepted", "loadaccepted($PID)"   )  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="verifyConditions", cond=doswitch() )
+				}	 
+				state("deposit") { //this:State
+					action { //it:State
+						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						if( package_accepted 
+						 ){
+										package_ready=true;
+						}
+						emit("productloaded", "productloaded($PID)" ) 
+						forward("load", "load($SLOT_TO_LOAD)" ,"cargorobot" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="verifyConditions", cond=doswitch() )
+				}	 
+				state("receivedalert") { //this:State
+					action { //it:State
+						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						CommUtils.outgreen("sonar in alert state")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t37",targetState="verifyConditions",cond=whenEvent("sonarok"))
 				}	 
 			}
 		}
