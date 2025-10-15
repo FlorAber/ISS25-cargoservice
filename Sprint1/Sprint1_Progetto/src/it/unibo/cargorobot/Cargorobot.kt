@@ -30,14 +30,19 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				data class Coordinate(val x: Int, val y: Int)
+				data class Position(val x: Int, val y: Int, val direction: String)
 		
-				val coords = arrayOf(
-				    Coordinate(1, 1),
-				    Coordinate(4, 1),
-				    Coordinate(1, 3),
-				    Coordinate(4, 3)
+				val home = Position(0,0,"down")
+				val ioport = Position(1,4,"up")
+		
+				val slots = arrayOf(
+				    Position(1, 1, "left"),
+				    Position(4, 1, "right"),
+				    Position(1, 3, "left"),
+				    Position(4, 3, "right")
 				)
+				
+				var TARGETSLOT = -1
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -53,7 +58,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("engage") { //this:State
 					action { //it:State
 						CommUtils.outyellow("$name : engaging basicrobot")
-						request("engage", "engage($MyName,300)" ,"basicrobot" )  
+						request("engage", "engage($MyName,350)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -64,7 +69,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("wait") { //this:State
 					action { //it:State
-						delay(1000) 
+						delay(500) 
 						if( checkMsgContent( Term.createTerm("engagedone(ARG)"), Term.createTerm("engagedone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 var ARG = payloadArg(0)  
@@ -76,39 +81,86 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t10",targetState="moverobot",cond=whenDispatch("load"))
+					 transition(edgeName="t10",targetState="movetoioport",cond=whenDispatch("load"))
 				}	 
-				state("moverobot") { //this:State
+				state("movetoioport") { //this:State
 					action { //it:State
+						delay(2000) 
 						if( checkMsgContent( Term.createTerm("load(SLOT)"), Term.createTerm("load(SLOT)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val SLOT = payloadArg(0).toInt()
-												val X = coords[SLOT].x
-												val Y = coords[SLOT].y
-								CommUtils.outyellow("$name : moving robot to slot $SLOT at coordinates ($X,$Y)")
+												TARGETSLOT = payloadArg(0).toInt()
+												val X = ioport.x
+												val Y = ioport.y
+												val D = ioport.direction
+								CommUtils.outyellow("$name : moving robot to slot IOPORT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+								delay(500) 
+								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t11",targetState="movedone",cond=whenReply("moverobotdone"))
+					 transition(edgeName="t11",targetState="movetoslot",cond=whenReply("moverobotdone"))
 					transition(edgeName="t12",targetState="movefailed",cond=whenReply("moverobotfailed"))
 				}	 
-				state("movedone") { //this:State
+				state("movetoslot") { //this:State
 					action { //it:State
+						delay(2000) 
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outyellow("$name : robot movement ended with success")
-								 	val RES = payloadArg(0)  
+								CommUtils.outblack("$name : robot movement ended with success")
+								
+												val X = slots[TARGETSLOT].x
+												val Y = slots[TARGETSLOT].y
+												val D = slots[TARGETSLOT].direction
+								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
+								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+								delay(500) 
+								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t13",targetState="movetohome",cond=whenReply("moverobotdone"))
+					transition(edgeName="t14",targetState="movefailed",cond=whenReply("moverobotfailed"))
+				}	 
+				state("movetohome") { //this:State
+					action { //it:State
+						delay(2000) 
+						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												val X = home.x
+												val Y = home.y
+												val D = home.direction
+								CommUtils.outyellow("$name : moving robot to slot HOME at Position ($X,$Y)")
+								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+								delay(500) 
+								forward("setdirection", "dir($D)" ,"basicrobot" ) 
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t15",targetState="ended",cond=whenReply("moverobotdone"))
+					transition(edgeName="t16",targetState="movefailed",cond=whenReply("moverobotfailed"))
+				}	 
+				state("ended") { //this:State
+					action { //it:State
+						emit("productloaded", "productloaded($TARGETSLOT)" ) 
+						 TARGETSLOT = -1  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
 				}	 
 				state("movefailed") { //this:State
 					action { //it:State

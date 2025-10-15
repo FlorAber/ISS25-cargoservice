@@ -35,6 +35,7 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				var package_ready: Boolean = false;
 				var PID: Int = 0;
 				var SLOT_TO_LOAD: Int = -1;
+				
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -108,8 +109,6 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("loadFail") { //this:State
 					action { //it:State
-						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
 						if( checkMsgContent( Term.createTerm("productrejected(MSG)"), Term.createTerm("productrejected(ERRORPAYLOAD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 val ERRORPAYLOAD = payloadArg(0) 
@@ -125,8 +124,6 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("loadSuccess") { //this:State
 					action { //it:State
-						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
 						if( checkMsgContent( Term.createTerm("productaccepted(SLOT)"), Term.createTerm("productaccepted(SLOT_TO_LOAD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 SLOT_TO_LOAD=payloadArg(0).toInt()  
@@ -143,13 +140,10 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("deposit") { //this:State
 					action { //it:State
-						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
 						if( package_accepted 
 						 ){
 										package_ready=true;
 						}
-						emit("productloaded", "productloaded($PID)" ) 
 						forward("load", "load($SLOT_TO_LOAD)" ,"cargorobot" ) 
 						//genTimer( actor, state )
 					}
@@ -160,8 +154,6 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("receivedalert") { //this:State
 					action { //it:State
-						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
 						CommUtils.outgreen("sonar in alert state")
 						//genTimer( actor, state )
 					}

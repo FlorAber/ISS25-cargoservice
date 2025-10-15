@@ -3,36 +3,33 @@ System sprint1_system_overview
 // MOCK
 Request createProduct : product(JSonString) // mock to productservice - DA USARE PER CARICARE PRODOTTI NEL DB, SOLO PRIMO AVVIO
 
-Dispatch doDeposit : doDeposit(X) 			// mock to cargomanager
-Request loadrequest: loadrequest(PID)	// mock to cargomanager
+// Load request, starting point of the whole scenary
+Request loadrequest: loadrequest(PID)				 // mock to cargomanager
+Reply loadaccepted : loadaccepted(X) for loadrequest // cargomanager to mock
+Reply loadrejected : loadrejected(X) for loadrequest // cargomanager to mock
 
+// Check product existance in hold manager
+Request controlproduct : controlproduct(PID)  						// cargomanager to hold manager
+Reply productaccepted : productaccepted(SLOT) for controlproduct	// hold manager to cargomanager 
+Reply productrejected : productrejected(MSG)  for controlproduct	// hold manager to cargomanager
 
-// CARGO MANAGER
+// Sonar detects the product 
+Dispatch doDeposit : doDeposit(X)  // mock to cargomanager
 
-
-
-// cargorobot   
+// CARGOROBOT  
 Dispatch waiting : waiting(X)	
-
-
-//Cargomanager	to mock
-Reply loadaccepted : loadaccepted(X) for loadrequest
-Reply loadrejected : loadrejected(X) for loadrequest
 
 // TEMPORANEA PER GESTIRE LA FINE DEL CARICAMENTO E AGGIORNARE LO STATO INTERNO DELL'HOLDMANAGER, SOSTITUIBILE CON ALTRO
 Event productloaded : productloaded(X) 
 
-//cargomanager	to holdmanager
-Request controlproduct : controlproduct(PID)
-
-//holdmanager to cargomanager
-Reply productaccepted : productaccepted(SLOT) for controlproduct
-Reply productrejected : productrejected(MSG) for controlproduct
-
 //cargomanager to cargorobot
 Dispatch load : load(SLOT)
 
-// BASIC ROBOT
+// BASIC ROBOT CONTROLS
+Request engage        : engage(OWNER,STEPTIME)	
+Reply   engagedone    : engagedone(ARG) for engage 
+Reply   engagerefused : engagerefused(ARG) for engage 
+
 Request moverobot    :  moverobot(TARGETX, TARGETY)
 Reply moverobotdone  :  moverobotdone(ARG) for moverobot
 Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
@@ -40,26 +37,16 @@ Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
 Dispatch setdirection : dir( D )
 Dispatch setrobotstate: setpos(X,Y,D)
 
-Request engage        : engage(OWNER,STEPTIME)	
-Reply   engagedone    : engagedone(ARG) for engage 
-Reply   engagerefused : engagerefused(ARG) for engage 
-
-Dispatch disengage    : disengage(ARG)
+//Dispatch disengage    : disengage(ARG)
  
-Request step       : step(TIME)
-Reply stepdone     : stepdone(V) for step
-Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
+//Request step       : step(TIME)
+//Reply stepdone     : stepdone(V) for step
+//Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
  
 //holdmanager to productservice
 Request getProduct 		 : product(ID)
 Reply 	getProductAnswer : product(JSONSTRING) for getProduct // formato di messaggio coerente con product service
-										
-//Request getAllProducts : dummy(ID)
-//Reply   getAllProductsAnswer: products(String) for getAllProducts 
 												
-//TODO
-//creare una chain di dispatch da cargorobot a cargomanager a mock per quando il bot finisce il suo lavro e torna a hom
-
 //Sonar
 Event sonarAlert:		sonarAlert(X)			
 Event sonarok : 		sonarok(X)//terminato lo stato di alert
@@ -80,6 +67,7 @@ QActor cargomanager context ctx_cargo {
 		var package_ready: Boolean = false;
 		var PID: Int = 0;
 		var SLOT_TO_LOAD: Int = -1;
+		
 	#]
 	
 	State s0 initial{
@@ -116,8 +104,7 @@ QActor cargomanager context ctx_cargo {
 	}
 	Goto verifyConditions
 		
-	State doLoad {//asking holdmanager for pid
-//		printCurrentMessage color green
+	State doLoad { //asking holdmanager for pid
 		onMsg ( loadrequest : loadrequest(PID) ){
 			[#
 				PID = payloadArg(0).toInt();
@@ -132,7 +119,6 @@ QActor cargomanager context ctx_cargo {
 		whenEvent sonarAlert -> receivedalert
 		
 	State loadFail {
-		printCurrentMessage color green
 		onMsg (productrejected: productrejected(ERRORPAYLOAD)){
 			[# val ERRORPAYLOAD = payloadArg(0)#]
 			println("$name : received error $ERRORPAYLOAD") color green
@@ -143,8 +129,6 @@ QActor cargomanager context ctx_cargo {
 	Goto verifyConditions
 		
 	State loadSuccess{
-		
-		printCurrentMessage color green
 		
 		onMsg (productaccepted: productaccepted(SLOT_TO_LOAD)){
 			[# SLOT_TO_LOAD=payloadArg(0).toInt() #]
@@ -159,21 +143,17 @@ QActor cargomanager context ctx_cargo {
 	Goto verifyConditions // se arrivaa loadrequest a meta processo verrebbe accettata fare un nuovo stato ogni stato ha anche il possibile messaggio di alert del sonar
 		
 	State deposit{
-		printCurrentMessage color green
 		if[#package_accepted#]{
 			[#
 				package_ready=true;
 			#]
 		}
-		// muovo il bot, al momento fingiamo che vada e torni subito in home
-		emit productloaded :  productloaded($PID)
+
 		forward cargorobot -m load : load($SLOT_TO_LOAD)
 		
-	}Goto verifyConditions
-	
+	} Goto verifyConditions
 		
 	State receivedalert{
-		printCurrentMessage color green
 		println ("sonar in alert state") color green
 	}
 	Transition t3
@@ -185,14 +165,19 @@ QActor cargomanager context ctx_cargo {
 QActor cargorobot context ctx_cargo { 
 	
 	[#
-		data class Coordinate(val x: Int, val y: Int)
+		data class Position(val x: Int, val y: Int, val direction: String)
 
-		val coords = arrayOf(
-		    Coordinate(1, 1),
-		    Coordinate(4, 1),
-		    Coordinate(1, 3),
-		    Coordinate(4, 3)
+		val home = Position(0,0,"down")
+		val ioport = Position(1,4,"up")
+
+		val slots = arrayOf(
+		    Position(1, 1, "left"),
+		    Position(4, 1, "right"),
+		    Position(1, 3, "left"),
+		    Position(4, 3, "right")
 		)
+		
+		var TARGETSLOT = -1
 	#]
 	
 	State s0 initial{
@@ -203,14 +188,14 @@ QActor cargorobot context ctx_cargo {
 	
 	State engage {
 		println("$name : engaging basicrobot") color yellow
-		request basicrobot -m engage:engage($MyName,300)
+		request basicrobot -m engage:engage($MyName,350)
 	}
 	Transition t
 		whenReply engagedone -> wait
 		whenReply engagerefused -> engage
 		
 	State wait {
-		delay 1000
+		delay 500
 		onMsg(engagedone : engagedone(ARG) ) {
 			[# var ARG = payloadArg(0) #]
 			println("$name : robot engaged, response - $ARG") color yellow
@@ -218,36 +203,73 @@ QActor cargorobot context ctx_cargo {
 		println("$name : waiting for movement requests") color yellow
 	}
 	Transition t
-		whenMsg load -> moverobot
+		whenMsg load -> movetoioport
 		
-	State moverobot {
+	State movetoioport {
+		delay 2000
 		onMsg (load : load(SLOT)) {
 			
 			[#
-				val SLOT = payloadArg(0).toInt()
-				val X = coords[SLOT].x
-				val Y = coords[SLOT].y
+				TARGETSLOT = payloadArg(0).toInt()
+				val X = ioport.x
+				val Y = ioport.y
+				val D = ioport.direction
 			#]
 			
-			println("$name : moving robot to slot $SLOT at coordinates ($X,$Y)") color yellow
+			println("$name : moving robot to slot IOPORT at Positions ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			
-//			forward basicrobot -m disengage:disengage($MyName)
+			delay 500
+			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t 
-		whenReply moverobotdone -> movedone
+		whenReply moverobotdone -> movetoslot
 		whenReply moverobotfailed -> movefailed
-//		whenReply stepdone -> movedone
-//		whenReply stepfailed -> movefailed
 	
-	State movedone {
+	State movetoslot {
+		delay 2000
 		onMsg ( moverobotdone : moverobotdone(ARG)) {
-			println("$name : robot movement ended with success") color yellow
-			[# 	val RES = payloadArg(0) #]
+			println("$name : robot movement ended with success")
+			[#
+				val X = slots[TARGETSLOT].x
+				val Y = slots[TARGETSLOT].y
+				val D = slots[TARGETSLOT].direction
+			#]
 			
+			println("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)") color yellow
+			request basicrobot -m moverobot:moverobot($X,$Y)
+			delay 500
+			forward basicrobot -m setdirection:dir($D)
 		}
 	}
+	Transition t
+		whenReply moverobotdone -> movetohome
+		whenReply moverobotfailed -> movefailed
+	
+	State movetohome {
+		delay 2000
+		onMsg ( moverobotdone : moverobotdone(ARG)) {
+			[#
+				val X = home.x
+				val Y = home.y
+				val D = home.direction
+			#]
+			
+			println("$name : moving robot to slot HOME at Position ($X,$Y)") color yellow
+			request basicrobot -m moverobot:moverobot($X,$Y)
+			delay 500
+			forward basicrobot -m setdirection:dir($D)
+		}
+	}
+	Transition t
+		whenReply moverobotdone -> ended
+		whenReply moverobotfailed -> movefailed
+	
+	State ended {
+		emit productloaded :  productloaded($TARGETSLOT)
+		[# TARGETSLOT = -1 #]
+	}
+	Goto wait
 	
 	State movefailed {
 		onMsg ( moverobotdone : moverobotdone(PLANDONE, PLANTODO)) {
@@ -256,7 +278,6 @@ QActor cargorobot context ctx_cargo {
 				val PLANTODO = payloadArg(1)
 			#]
 			println("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)") color yellow
-			
 		}
 	}
 	
@@ -267,6 +288,7 @@ QActor mockactor context ctx_cargo{
 	[#
 		var ERROR = false;
 		var ERRORPAYLOAD: String = "";
+		var COUNTLOADS = 0
 	#]
 	
 	State s0 initial{
@@ -291,7 +313,12 @@ QActor mockactor context ctx_cargo{
 	Goto load_test
 	
 	State load_test{
-		request cargomanager -m loadrequest : loadrequest(1) 
+		
+		[# COUNTLOADS++ #]
+		delay 5000
+		if[# COUNTLOADS < 4 #] {
+			request cargomanager -m loadrequest : loadrequest($COUNTLOADS)
+		}
 		//forward cargomanager -m doDeposit : doDeposit(1)	
 	}
 	Transition t
@@ -321,6 +348,7 @@ QActor mockactor context ctx_cargo{
 			println("$name : Success") color cyan
 		}
 	}
+	Goto load_test
 }
 
 QActor holdmanager context ctx_cargo {
@@ -424,28 +452,28 @@ QActor holdmanager context ctx_cargo {
 
 				var rejected = false
 				var ERMSG = ""	
-				var SLOT = 0			
+				var SLOT = 0		
 				
 				if( pid > 0 ) {														// Prodotto registrato
 					if ( MAXLOAD >= (weights.sumOf {it} + weight)) {				// Capienza stiva sufficiente
 						SLOT = pids.indexOfFirst { it == 0 }
 						if(SLOT < 0) {											    // Nessuno slot libero
 							rejected = true
-							ERMSG = sysUtil.toPrologStr("Tutti gli slot sono già occupati")
+							ERMSG = "Tutti_gli_slot_sono_gia_occupati"
 						}
 					} else {
 						rejected = true
-						ERMSG = sysUtil.toPrologStr("Capienza stiva non sufficiente")
+						ERMSG = "Capienza_stiva_non_sufficiente"
 					}
 				} else {
 					rejected = true
-					ERMSG = sysUtil.toPrologStr("Prodotto non registrato")
+					ERMSG = "Prodotto_non_registrato"
 				}
 				
 			#]
 			
 			if [# rejected #] {
-				println("$name : product rejected") color blue 
+				println("$name : product rejected") color blue
 				replyTo controlproduct with productrejected : productrejected($ERMSG)
 			} else {
 				println("$name : product accepted") color blue 

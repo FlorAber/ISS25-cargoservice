@@ -104,8 +104,8 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t16",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
-					transition(edgeName="t17",targetState="updateHoldState",cond=whenEvent("productloaded"))
+					 transition(edgeName="t20",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
+					transition(edgeName="t21",targetState="updateHoldState",cond=whenEvent("productloaded"))
 				}	 
 				state("handleControlRequest") { //this:State
 					action { //it:State
@@ -120,7 +120,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t18",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
+					 transition(edgeName="t22",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
 				}	 
 				state("checkProductAnswer") { //this:State
 					action { //it:State
@@ -137,22 +137,22 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 								
 												var rejected = false
 												var ERMSG = ""	
-												var SLOT = 0			
+												var SLOT = 0		
 												
 												if( pid > 0 ) {														// Prodotto registrato
 													if ( MAXLOAD >= (weights.sumOf {it} + weight)) {				// Capienza stiva sufficiente
 														SLOT = pids.indexOfFirst { it == 0 }
 														if(SLOT < 0) {											    // Nessuno slot libero
 															rejected = true
-															ERMSG = sysUtil.toPrologStr("Tutti gli slot sono già occupati")
+															ERMSG = "Tutti_gli_slot_sono_gia_occupati"
 														}
 													} else {
 														rejected = true
-														ERMSG = sysUtil.toPrologStr("Capienza stiva non sufficiente")
+														ERMSG = "Capienza_stiva_non_sufficiente"
 													}
 												} else {
 													rejected = true
-													ERMSG = sysUtil.toPrologStr("Prodotto non registrato")
+													ERMSG = "Prodotto_non_registrato"
 												}
 												
 								if(  rejected  

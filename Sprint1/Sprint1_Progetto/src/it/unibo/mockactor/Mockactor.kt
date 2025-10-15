@@ -32,6 +32,7 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 		
 				var ERROR = false;
 				var ERRORPAYLOAD: String = "";
+				var COUNTLOADS = 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -46,14 +47,18 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 				}	 
 				state("load_test") { //this:State
 					action { //it:State
-						request("loadrequest", "loadrequest(1)" ,"cargomanager" )  
+						 COUNTLOADS++  
+						delay(5000) 
+						if(  COUNTLOADS < 4  
+						 ){request("loadrequest", "loadrequest($COUNTLOADS)" ,"cargomanager" )  
+						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t13",targetState="deposit",cond=whenReply("loadaccepted"))
-					transition(edgeName="t14",targetState="loadfail",cond=whenReply("loadrejected"))
+					 transition(edgeName="t17",targetState="deposit",cond=whenReply("loadaccepted"))
+					transition(edgeName="t18",targetState="loadfail",cond=whenReply("loadrejected"))
 				}	 
 				state("deposit") { //this:State
 					action { //it:State
@@ -64,7 +69,7 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t15",targetState="end",cond=whenEvent("productloaded"))
+					 transition(edgeName="t19",targetState="end",cond=whenEvent("productloaded"))
 				}	 
 				state("loadfail") { //this:State
 					action { //it:State
@@ -94,6 +99,7 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="load_test", cond=doswitch() )
 				}	 
 			}
 		}
