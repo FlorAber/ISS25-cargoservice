@@ -43,6 +43,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				)
 				
 				var TARGETSLOT = -1
+				
+				var currentState = -1 //Contiene un numero che indica lo stato in cui si trova, serve per ripartire dopo l'alert del sonar
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -64,16 +66,18 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t8",targetState="wait",cond=whenReply("engagedone"))
-					transition(edgeName="t9",targetState="engage",cond=whenReply("engagerefused"))
+					 transition(edgeName="t11",targetState="wait",cond=whenReply("engagedone"))
+					transition(edgeName="t12",targetState="engage",cond=whenReply("engagerefused"))
 				}	 
 				state("wait") { //this:State
 					action { //it:State
 						delay(500) 
+						 currentState = 0  
 						if( checkMsgContent( Term.createTerm("engagedone(ARG)"), Term.createTerm("engagedone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 var ARG = payloadArg(0)  
 								CommUtils.outyellow("$name : robot engaged, response - $ARG")
+								forward("robotready", "robotready(0)" ,"cargomanager" ) 
 						}
 						CommUtils.outyellow("$name : waiting for movement requests")
 						//genTimer( actor, state )
@@ -81,7 +85,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t10",targetState="movetoioport",cond=whenDispatch("load"))
+					 transition(edgeName="t13",targetState="movetoioport",cond=whenRequest("load"))
+					transition(edgeName="t14",targetState="systemStopped",cond=whenEvent("stopthesystem"))
 				}	 
 				state("movetoioport") { //this:State
 					action { //it:State
@@ -103,15 +108,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t11",targetState="movetoslot",cond=whenReply("moverobotdone"))
-					transition(edgeName="t12",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					 transition(edgeName="t15",targetState="movetoslot",cond=whenReply("moverobotdone"))
+					transition(edgeName="t16",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t17",targetState="systemStopped",cond=whenEvent("stopthesystem"))
 				}	 
 				state("movetoslot") { //this:State
 					action { //it:State
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								CommUtils.outblack("$name : robot movement ended with success")
 								
 												val X = slots[TARGETSLOT].x
 												val Y = slots[TARGETSLOT].y
@@ -126,8 +131,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t13",targetState="movetohome",cond=whenReply("moverobotdone"))
-					transition(edgeName="t14",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					 transition(edgeName="t18",targetState="movetohome",cond=whenReply("moverobotdone"))
+					transition(edgeName="t19",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t20",targetState="systemStopped",cond=whenEvent("stopthesystem"))
 				}	 
 				state("movetohome") { //this:State
 					action { //it:State
@@ -148,8 +154,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t15",targetState="ended",cond=whenReply("moverobotdone"))
-					transition(edgeName="t16",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					 transition(edgeName="t21",targetState="ended",cond=whenReply("moverobotdone"))
+					transition(edgeName="t22",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t23",targetState="systemStopped",cond=whenEvent("stopthesystem"))
 				}	 
 				state("ended") { //this:State
 					action { //it:State
@@ -161,6 +168,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
+				}	 
+				state("systemStopped") { //this:State
+					action { //it:State
+						CommUtils.outyellow("$name : system forced to stop ")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
 				}	 
 				state("movefailed") { //this:State
 					action { //it:State

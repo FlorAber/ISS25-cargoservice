@@ -1,7 +1,13 @@
 System sprint1_system_overview
 
+// MESSAGGI DI AVVIO DEL SISTEMA IL CARGOMANAGER PARTE DOPO AVERLI RICEVUTI ENTRAMBI INVIANDOSI UN allRady
+Dispatch robotready : robotready(0)
+Dispatch databaseready : databaseready(0)
+
+Dispatch allready : allReady(0)
+
 // MOCK
-Request createProduct : product(JSonString) // mock to productservice - DA USARE PER CARICARE PRODOTTI NEL DB, SOLO PRIMO AVVIO
+//Request createProduct : product(JSonString) // mock to productservice - DA USARE PER CARICARE PRODOTTI NEL DB, SOLO PRIMO AVVIO
 
 // Load request, starting point of the whole scenary
 Request loadrequest: loadrequest(PID)				 // mock to cargomanager
@@ -16,14 +22,14 @@ Reply productrejected : productrejected(MSG)  for controlproduct	// hold manager
 // Sonar detects the product 
 Dispatch doDeposit : doDeposit(X)  // mock to cargomanager
 
-// CARGOROBOT  
-Dispatch waiting : waiting(X)	
-
 // TEMPORANEA PER GESTIRE LA FINE DEL CARICAMENTO E AGGIORNARE LO STATO INTERNO DELL'HOLDMANAGER, SOSTITUIBILE CON ALTRO
 Event productloaded : productloaded(X) 
 
 //cargomanager to cargorobot
-Dispatch load : load(SLOT)
+Request load : load(SLOT)
+
+Reply loadended : loadended(0) 		for load
+Reply loadfailed : productRejecteded(MSG)  for load
 
 // BASIC ROBOT CONTROLS
 Request engage        : engage(OWNER,STEPTIME)	
@@ -37,76 +43,84 @@ Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
 Dispatch setdirection : dir( D )
 Dispatch setrobotstate: setpos(X,Y,D)
 
+Event alarm : alarm(ARG) 
+
 //Dispatch disengage    : disengage(ARG)
- 
-//Request step       : step(TIME)
-//Reply stepdone     : stepdone(V) for step
-//Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
  
 //holdmanager to productservice
 Request getProduct 		 : product(ID)
 Reply 	getProductAnswer : product(JSONSTRING) for getProduct // formato di messaggio coerente con product service
 												
 //Sonar
-Event sonarAlert:		sonarAlert(X)			
-Event sonarok : 		sonarok(X)//terminato lo stato di alert
+Event sonaralert : sonaralert(X)	 // inizia stato di alert	
+Event sonarok    : sonarok(X)		 // terminato stato di alert
+
+Event stopthesystem:stopthesystem(X) // Evento interno per fermare gli altri attori ... vogliamo lasciare solo sonaralert ?
+
+// ------------------------------------------------------------------------
+// CONTEXTS AND EXTERNAL QACTORS
+// ------------------------------------------------------------------------
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
 
-Context ctxbasicrobot  ip  [host="127.0.0.1" port=8020]
+Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
 Context ctx_productservice ip [ host="127.0.0.1" port=8111]
 
 ExternalQActor productservice context ctx_productservice
-ExternalQActor basicrobot context ctxbasicrobot
+ExternalQActor basicrobot context ctx_basicrobot
 
 QActor cargomanager context ctx_cargo { 
 	
 	[#
-		var robot_waiting: Boolean = false;
-		var package_accepted: Boolean = false;
-		var package_ready: Boolean = false;
+		var robotReady: Boolean = false
+		var databaseReady: Boolean = false
+		
 		var PID: Int = 0;
 		var SLOT_TO_LOAD: Int = -1;
-		
 	#]
 	
 	State s0 initial{
-		delay 500   
+		delay 250   
 		println("$name : starting") color green  	
 	}
-	Goto wait
+	Goto waitForTheOthers
+	
+	State waitForTheOthers {
+//		println("$name : waiting for other services") color green  
+		if [# robotReady && databaseReady #] {
+			autodispatch allready : allready(0)
+		}
+	}
+	Transition t
+		whenMsg robotready -> robotReady
+		whenMsg databaseready -> databaseReady
+		whenMsg allready -> wait
 		
+	State robotReady {
+		println("$name : robotmanager ready") color green  
+		[# robotReady = true #]
+	} Goto waitForTheOthers
+	
+	State databaseReady {
+		println("$name : productservice ready") color green  
+		[# databaseReady = true #]
+	} Goto waitForTheOthers
+	
+	// ------------------------------------------------------------------------
+	// QUI COMINCIA LA VERA LOGICA DEL CARGOMANAGER
+	// ------------------------------------------------------------------------
+	
 	State wait{
 		println ("$name : waiting for requests...")	color green
 	}
 	Transition t
-		whenMsg waiting -> robotWaiting
-		whenMsg doDeposit -> deposit
-		whenRequest loadrequest -> doLoad
-		whenEvent sonarAlert -> receivedalert
+		whenRequest loadrequest -> checkLoadRequest
+		whenEvent sonaralert -> receivedalert
 		
-	State verifyConditions{
-		if[# package_ready && robot_waiting && SLOT_TO_LOAD!=-1 && PID != -1 #]{
-			println ("tentativo di load del pid: $PID in slot: $SLOT_TO_LOAD") color green
-			forward cargorobot -m load : load($SLOT_TO_LOAD) //num slot 
-			[#
-				package_ready =false;
-				robot_waiting = false;
-				SLOT_TO_LOAD=-1;
-				PID = -1;
-			#]
-		}
-	}
-	Goto wait
-		
-	State robotWaiting{
-		[# robot_waiting = true #]
-	}
-	Goto verifyConditions
-		
-	State doLoad { //asking holdmanager for pid
+	// Controlla con il productservice se il prodotto è registrato e si fa dare uno slot
+	State checkLoadRequest { //asking holdmanager for pid
 		onMsg ( loadrequest : loadrequest(PID) ){
-			[#
+			[# 
 				PID = payloadArg(0).toInt();
 			#]
 			println("$name : Asking for pid: $PID") color green 
@@ -114,52 +128,62 @@ QActor cargomanager context ctx_cargo {
 		}
 	}
 	Transition t
-		whenReply productaccepted -> loadSuccess
-		whenReply productrejected -> loadFail
-		whenEvent sonarAlert -> receivedalert
+		whenReply productaccepted -> productAccepted
+		whenReply productrejected -> productRejected
 		
-	State loadFail {
+	// Prodotto rifiutato dal productservice
+	State productRejected {
 		onMsg (productrejected: productrejected(ERRORPAYLOAD)){
-			[# val ERRORPAYLOAD = payloadArg(0)#]
+			[# val ERRORPAYLOAD = payloadArg(0) #]
 			println("$name : received error $ERRORPAYLOAD") color green
 			replyTo loadrequest with loadrejected : loadrejected($ERRORPAYLOAD)
 		}
-		
 	}
-	Goto verifyConditions
+	Goto wait
 		
-	State loadSuccess{
-		
+	// Prodotto accettato dal productservice
+	State productAccepted{
 		onMsg (productaccepted: productaccepted(SLOT_TO_LOAD)){
-			[# SLOT_TO_LOAD=payloadArg(0).toInt() #]
+			[#  SLOT_TO_LOAD=payloadArg(0).toInt()  #]
+			println ("$name : product $PID accepted and assigned to slot $SLOT_TO_LOAD") color green
+			replyTo loadrequest with loadaccepted : loadaccepted($PID)
 		}
-		[# package_accepted = true #]
-		
-		println ("$name received loadsuccess, going to load $PID in $SLOT_TO_LOAD") color green
-		
-		replyTo loadrequest with loadaccepted : loadaccepted($PID)
-		
 	}
-	Goto verifyConditions // se arrivaa loadrequest a meta processo verrebbe accettata fare un nuovo stato ogni stato ha anche il possibile messaggio di alert del sonar
-		
-	State deposit{
-		if[#package_accepted#]{
-			[#
-				package_ready=true;
-			#]
-		}
-
-		forward cargorobot -m load : load($SLOT_TO_LOAD)
-		
-	} Goto verifyConditions
-		
-	State receivedalert{
-		println ("sonar in alert state") color green
-	}
-	Transition t3
-	whenEvent sonarok -> verifyConditions
+	Goto waitForDeposit
 	
+	// Attende segnale di deposito dal sonar
+	State waitForDeposit {
+		println ("$name : waiting for sonar deposit signal") color green
+	}
+	Transition t
+		whenMsg doDeposit -> doDeposit
+		whenEvent sonaralert -> receivedalert
+	
+	// Ricevuta richiesta di deposito
+	State doDeposit{
+		println ("$name : package detected, proceeding with the loading") color green
+		request cargorobot -m load : load($SLOT_TO_LOAD)
+	} 
+	Transition t
+		whenEvent productloaded -> loadEnded
 		
+	// Caricamento terminato, reset parametri
+	State loadEnded {
+		println ("$name : loading process ended") color green
+		[#  		
+			PID = 0;
+			SLOT_TO_LOAD = -1;
+		#]
+	} 
+	Goto wait
+	
+	State receivedalert{
+		println ("$name : sonar in alert state") color red
+		emit stopthesystem : stopthesystem(0)
+	}
+	Transition t
+		whenEvent sonarok -> wait // Da rivedere dove va, dovrebbe ripartire da dove si è fermato, forse va bene lasciare wait
+	
 }
 
 QActor cargorobot context ctx_cargo { 
@@ -178,6 +202,8 @@ QActor cargorobot context ctx_cargo {
 		)
 		
 		var TARGETSLOT = -1
+		
+		var currentState = -1 //Contiene un numero che indica lo stato in cui si trova, serve per ripartire dopo l'alert del sonar
 	#]
 	
 	State s0 initial{
@@ -196,14 +222,20 @@ QActor cargorobot context ctx_cargo {
 		
 	State wait {
 		delay 500
+		
+		[# currentState = 0 #]
+		
 		onMsg(engagedone : engagedone(ARG) ) {
 			[# var ARG = payloadArg(0) #]
 			println("$name : robot engaged, response - $ARG") color yellow
+			
+			forward cargomanager -m robotready : robotready(0)
 		}
 		println("$name : waiting for movement requests") color yellow
 	}
 	Transition t
-		whenMsg load -> movetoioport
+		whenRequest load -> movetoioport
+		whenEvent stopthesystem -> systemStopped
 		
 	State movetoioport {
 		delay 2000
@@ -225,11 +257,12 @@ QActor cargorobot context ctx_cargo {
 	Transition t 
 		whenReply moverobotdone -> movetoslot
 		whenReply moverobotfailed -> movefailed
+		whenEvent stopthesystem -> systemStopped
 	
 	State movetoslot {
 		delay 2000
 		onMsg ( moverobotdone : moverobotdone(ARG)) {
-			println("$name : robot movement ended with success")
+//			println("$name : robot movement ended with success") color yellow
 			[#
 				val X = slots[TARGETSLOT].x
 				val Y = slots[TARGETSLOT].y
@@ -245,10 +278,12 @@ QActor cargorobot context ctx_cargo {
 	Transition t
 		whenReply moverobotdone -> movetohome
 		whenReply moverobotfailed -> movefailed
+		whenEvent stopthesystem -> systemStopped
 	
 	State movetohome {
 		delay 2000
 		onMsg ( moverobotdone : moverobotdone(ARG)) {
+//			println("$name : robot movement ended with success") color yellow
 			[#
 				val X = home.x
 				val Y = home.y
@@ -264,12 +299,18 @@ QActor cargorobot context ctx_cargo {
 	Transition t
 		whenReply moverobotdone -> ended
 		whenReply moverobotfailed -> movefailed
+		whenEvent stopthesystem -> systemStopped
 	
 	State ended {
 		emit productloaded :  productloaded($TARGETSLOT)
 		[# TARGETSLOT = -1 #]
 	}
 	Goto wait
+	
+	State systemStopped {
+		println("$name : system forced to stop ") color yellow
+//		emit alarm : alarm(0)	
+	}
 	
 	State movefailed {
 		onMsg ( moverobotdone : moverobotdone(PLANDONE, PLANTODO)) {
@@ -281,74 +322,6 @@ QActor cargorobot context ctx_cargo {
 		}
 	}
 	
-}
-
-QActor mockactor context ctx_cargo{
-	
-	[#
-		var ERROR = false;
-		var ERRORPAYLOAD: String = "";
-		var COUNTLOADS = 0
-	#]
-	
-	State s0 initial{
-		delay 500  
-		println("$name : starting") color cyan 
-//		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
-//		println("$name : loading productservice db") color cyan 
-//		[# 
-//			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
-//			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
-//			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
-//			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
-//			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
-//		#]
-//		request productservice -m createProduct : product($JsonObj1)
-//		request productservice -m createProduct : product($JsonObj2)
-//		request productservice -m createProduct : product($JsonObj3)
-//		request productservice -m createProduct : product($JsonObj4)
-//		request productservice -m createProduct : product($JsonObj5)
-
-	} 
-	Goto load_test
-	
-	State load_test{
-		
-		[# COUNTLOADS++ #]
-		delay 5000
-		if[# COUNTLOADS < 4 #] {
-			request cargomanager -m loadrequest : loadrequest($COUNTLOADS)
-		}
-		//forward cargomanager -m doDeposit : doDeposit(1)	
-	}
-	Transition t
-		whenReply loadaccepted -> deposit
-		whenReply loadrejected -> loadfail
-		
-	State deposit {
-		println("$name : PID found, proceeding to do Deposit") color cyan
-		forward cargomanager -m doDeposit : doDeposit(1)
-	}
-	Transition t
-		whenEvent productloaded -> end //controllo su evento in caso di robot che termina il suo lavoro -> end
-	
-	State loadfail{
-		[# ERROR = true #]
-		onMsg (loadrejected : loadrejected(ERRORPAYLOAD)) {
-			[# val ERRORPAYLOAD = payloadArg(0)#]
-			println("$ERRORPAYLOAD") color red
-		}
-		println("PID not found") color red
-	}
-	
-	State end {
-		if [# ERROR == true #]{
-			println("$name : Failed") color cyan
-		} else{
-			println("$name : Success") color cyan
-		}
-	}
-	Goto load_test
 }
 
 QActor holdmanager context ctx_cargo {
@@ -400,7 +373,7 @@ QActor holdmanager context ctx_cargo {
 	
 	
 	State start initial {
-		delay 500   
+		delay 750  
 		println("$name : starting") color blue 
 		
 		[# val loaded = loadState() #]
@@ -416,6 +389,8 @@ QActor holdmanager context ctx_cargo {
 			println("$name : state file not found, initializing") color blue 
 			[# resetState() #]
 		}
+		
+		forward cargomanager -m databaseready : databaseready(0)
 	}
 	Goto wait
 	
@@ -425,7 +400,6 @@ QActor holdmanager context ctx_cargo {
 	}
 	Transition t 
 		whenRequest controlproduct -> handleControlRequest
-		whenEvent productloaded -> updateHoldState
 		
 	// Invia richiesta al productservice
 	State handleControlRequest {
@@ -447,7 +421,6 @@ QActor holdmanager context ctx_cargo {
 				val jsonObj = parser.parse(jsonString) as JSONObject
 				
 				val pid = (jsonObj["productId"] as Long).toInt()
-				val pname =  (jsonObj["name"] as String)
 				val weight = (jsonObj["weight"] as Long).toInt()
 
 				var rejected = false
@@ -483,7 +456,8 @@ QActor holdmanager context ctx_cargo {
 			
 		}
 	} 
-	Goto wait
+	Transition t
+		whenEvent productloaded -> updateHoldState
 	
 	// Aggiorna lo stato interno della stiva ed il contenuto del file JSON
 	State updateHoldState {
@@ -510,6 +484,71 @@ QActor holdmanager context ctx_cargo {
 		}
 	}
 	Goto wait
-
 }
 
+QActor mockactor context ctx_cargo{
+	
+	[#
+		var ERROR = false;
+		var COUNTLOADS = 0
+	#]
+	
+	State s0 initial{
+		delay 3000
+		println("$name : starting") color cyan 
+//		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
+//		println("$name : loading productservice db") color cyan 
+//		[# 
+//			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
+//			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
+//			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
+//			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
+//			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
+//		#]
+//		request productservice -m createProduct : product($JsonObj1)
+//		request productservice -m createProduct : product($JsonObj2)
+//		request productservice -m createProduct : product($JsonObj3)
+//		request productservice -m createProduct : product($JsonObj4)
+//		request productservice -m createProduct : product($JsonObj5)
+
+	} 
+	Goto load_test
+	
+	State load_test{
+		
+		[# COUNTLOADS++ #]
+		delay 1000
+		if[# COUNTLOADS < 4 #] {
+			request cargomanager -m loadrequest : loadrequest($COUNTLOADS)
+		}	
+	}
+	Transition t
+		whenReply loadaccepted -> deposit
+		whenReply loadrejected -> loadFail
+		
+	State deposit {
+		println("$name : PID found, proceeding to do Deposit") color cyan
+		forward cargomanager -m doDeposit : doDeposit(1)
+	}
+	Goto load_test 			// Da usare per provare ad inviare tante load in cascata
+//	Transition t
+//		whenEvent productloaded -> end //controllo su evento in caso di robot che termina il suo lavoro -> end
+	
+	State loadFail{
+		[# ERROR = true #]
+		onMsg (loadrejected : loadrejected(ERRORPAYLOAD)) {
+			[# val ERRORPAYLOAD = payloadArg(0)#]
+			println("$ERRORPAYLOAD") color red
+		}
+		println("PID not found") color red
+	}
+	
+	State end {
+		if [# ERROR == true #]{
+			println("$name : Failed") color cyan
+		} else{
+			println("$name : Success") color cyan
+		}
+	}
+	Goto load_test
+}

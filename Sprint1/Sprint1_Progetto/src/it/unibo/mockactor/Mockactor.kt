@@ -31,12 +31,11 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
 				var ERROR = false;
-				var ERRORPAYLOAD: String = "";
 				var COUNTLOADS = 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						delay(500) 
+						delay(3000) 
 						CommUtils.outcyan("$name : starting")
 						//genTimer( actor, state )
 					}
@@ -48,7 +47,7 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 				state("load_test") { //this:State
 					action { //it:State
 						 COUNTLOADS++  
-						delay(5000) 
+						delay(1000) 
 						if(  COUNTLOADS < 4  
 						 ){request("loadrequest", "loadrequest($COUNTLOADS)" ,"cargomanager" )  
 						}
@@ -57,8 +56,8 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t17",targetState="deposit",cond=whenReply("loadaccepted"))
-					transition(edgeName="t18",targetState="loadfail",cond=whenReply("loadrejected"))
+					 transition(edgeName="t27",targetState="deposit",cond=whenReply("loadaccepted"))
+					transition(edgeName="t28",targetState="loadFail",cond=whenReply("loadrejected"))
 				}	 
 				state("deposit") { //this:State
 					action { //it:State
@@ -69,9 +68,9 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t19",targetState="end",cond=whenEvent("productloaded"))
+					 transition( edgeName="goto",targetState="load_test", cond=doswitch() )
 				}	 
-				state("loadfail") { //this:State
+				state("loadFail") { //this:State
 					action { //it:State
 						 ERROR = true  
 						if( checkMsgContent( Term.createTerm("loadrejected(X)"), Term.createTerm("loadrejected(ERRORPAYLOAD)"), 

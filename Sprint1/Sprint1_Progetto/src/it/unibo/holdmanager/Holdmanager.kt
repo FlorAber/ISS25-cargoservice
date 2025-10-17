@@ -74,7 +74,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 		return { //this:ActionBasciFsm
 				state("start") { //this:State
 					action { //it:State
-						delay(500) 
+						delay(750) 
 						CommUtils.outblue("$name : starting")
 						 val loaded = loadState()  
 						if(  loaded != null  
@@ -89,6 +89,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 						 {CommUtils.outblue("$name : state file not found, initializing")
 						  resetState()  
 						 }
+						forward("databaseready", "databaseready(0)" ,"cargomanager" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -104,8 +105,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t20",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
-					transition(edgeName="t21",targetState="updateHoldState",cond=whenEvent("productloaded"))
+					 transition(edgeName="t24",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
 				}	 
 				state("handleControlRequest") { //this:State
 					action { //it:State
@@ -120,7 +120,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t22",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
+					 transition(edgeName="t25",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
 				}	 
 				state("checkProductAnswer") { //this:State
 					action { //it:State
@@ -132,7 +132,6 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 												val jsonObj = parser.parse(jsonString) as JSONObject
 												
 												val pid = (jsonObj["productId"] as Long).toInt()
-												val pname =  (jsonObj["name"] as String)
 												val weight = (jsonObj["weight"] as Long).toInt()
 								
 												var rejected = false
@@ -170,7 +169,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
+					 transition(edgeName="t26",targetState="updateHoldState",cond=whenEvent("productloaded"))
 				}	 
 				state("updateHoldState") { //this:State
 					action { //it:State
