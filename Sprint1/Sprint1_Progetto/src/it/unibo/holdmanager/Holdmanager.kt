@@ -105,7 +105,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t24",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
+					 transition(edgeName="t27",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
 				}	 
 				state("handleControlRequest") { //this:State
 					action { //it:State
@@ -120,7 +120,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t25",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
+					 transition(edgeName="t28",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
 				}	 
 				state("checkProductAnswer") { //this:State
 					action { //it:State
@@ -169,7 +169,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t26",targetState="updateHoldState",cond=whenEvent("productloaded"))
+					 transition(edgeName="t29",targetState="updateHoldState",cond=whenEvent("productloaded"))
 				}	 
 				state("updateHoldState") { //this:State
 					action { //it:State

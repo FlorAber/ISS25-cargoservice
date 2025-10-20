@@ -33,8 +33,11 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				var robotReady: Boolean = false
 				var databaseReady: Boolean = false
 				
-				var PID: Int = 0;
-				var SLOT_TO_LOAD: Int = -1;
+				var PID: Int = 0
+				var SLOT_TO_LOAD: Int = -1
+				
+				var currentState: String = ""
+				var hasPendingLoad: Boolean = false
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -85,6 +88,7 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("wait") { //this:State
 					action { //it:State
+						 currentState = "wait"  
 						CommUtils.outgreen("$name : waiting for requests...")
 						//genTimer( actor, state )
 					}
@@ -92,7 +96,7 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t3",targetState="checkLoadRequest",cond=whenRequest("loadrequest"))
-					transition(edgeName="t4",targetState="receivedalert",cond=whenEvent("sonaralert"))
+					interrupthandle(edgeName="t4",targetState="handleAlert",cond=whenEvent("sonaralert"),interruptedStateTransitions)
 				}	 
 				state("checkLoadRequest") { //this:State
 					action { //it:State
@@ -143,6 +147,7 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("waitForDeposit") { //this:State
 					action { //it:State
+						 currentState = "waitForDeposit"  
 						CommUtils.outgreen("$name : waiting for sonar deposit signal")
 						//genTimer( actor, state )
 					}
@@ -150,10 +155,11 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t7",targetState="doDeposit",cond=whenDispatch("doDeposit"))
-					transition(edgeName="t8",targetState="receivedalert",cond=whenEvent("sonaralert"))
+					interrupthandle(edgeName="t8",targetState="handleAlert",cond=whenEvent("sonaralert"),interruptedStateTransitions)
 				}	 
 				state("doDeposit") { //this:State
 					action { //it:State
+						 currentState = "doDeposit"  
 						CommUtils.outgreen("$name : package detected, proceeding with the loading")
 						request("load", "load($SLOT_TO_LOAD)" ,"cargorobot" )  
 						//genTimer( actor, state )
@@ -162,6 +168,7 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t9",targetState="loadEnded",cond=whenEvent("productloaded"))
+					interrupthandle(edgeName="t10",targetState="handleAlert",cond=whenEvent("sonaralert"),interruptedStateTransitions)
 				}	 
 				state("loadEnded") { //this:State
 					action { //it:State
@@ -176,7 +183,7 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					}	 	 
 					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
 				}	 
-				state("receivedalert") { //this:State
+				state("handleAlert") { //this:State
 					action { //it:State
 						CommUtils.outred("$name : sonar in alert state")
 						emit("stopthesystem", "stopthesystem(0)" ) 
@@ -185,7 +192,16 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t10",targetState="wait",cond=whenEvent("sonarok"))
+					 transition(edgeName="t11",targetState="resumeOperations",cond=whenEvent("sonarok"))
+				}	 
+				state("resumeOperations") { //this:State
+					action { //it:State
+						returnFromInterrupt(interruptedStateTransitions)
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
 				}	 
 			}
 		}

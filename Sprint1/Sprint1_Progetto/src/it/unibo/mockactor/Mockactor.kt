@@ -47,22 +47,25 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 				state("load_test") { //this:State
 					action { //it:State
 						 COUNTLOADS++  
-						delay(1000) 
+						delay(5000) 
 						if(  COUNTLOADS < 4  
-						 ){request("loadrequest", "loadrequest($COUNTLOADS)" ,"cargomanager" )  
+						 ){CommUtils.outcyan("$name : richiesta! ")
+						request("loadrequest", "loadrequest($COUNTLOADS)" ,"cargomanager" )  
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t27",targetState="deposit",cond=whenReply("loadaccepted"))
-					transition(edgeName="t28",targetState="loadFail",cond=whenReply("loadrejected"))
+					 transition(edgeName="t30",targetState="deposit",cond=whenReply("loadaccepted"))
+					transition(edgeName="t31",targetState="loadFail",cond=whenReply("loadrejected"))
 				}	 
 				state("deposit") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name : PID found, proceeding to do Deposit")
 						forward("doDeposit", "doDeposit(1)" ,"cargomanager" ) 
+						delay(3000) 
+						emit("sonaralert", "sonaralert(0)" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

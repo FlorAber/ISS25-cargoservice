@@ -55,7 +55,8 @@ Reply 	getProductAnswer : product(JSONSTRING) for getProduct // formato di messa
 Event sonaralert : sonaralert(X)	 // inizia stato di alert	
 Event sonarok    : sonarok(X)		 // terminato stato di alert
 
-Event stopthesystem:stopthesystem(X) // Evento interno per fermare gli altri attori ... vogliamo lasciare solo sonaralert ?
+Event stopthesystem:stopthesystem(X) 		// Evento interno per fermare gli altri attori
+Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli altri attori
 
 // ------------------------------------------------------------------------
 // CONTEXTS AND EXTERNAL QACTORS
@@ -75,8 +76,11 @@ QActor cargomanager context ctx_cargo {
 		var robotReady: Boolean = false
 		var databaseReady: Boolean = false
 		
-		var PID: Int = 0;
-		var SLOT_TO_LOAD: Int = -1;
+		var PID: Int = 0
+		var SLOT_TO_LOAD: Int = -1
+		
+		var currentState: String = ""
+		var hasPendingLoad: Boolean = false
 	#]
 	
 	State s0 initial{
@@ -111,11 +115,13 @@ QActor cargomanager context ctx_cargo {
 	// ------------------------------------------------------------------------
 	
 	State wait{
+		[# currentState = "wait" #]
 		println ("$name : waiting for requests...")	color green
+		
 	}
 	Transition t
 		whenRequest loadrequest -> checkLoadRequest
-		whenEvent sonaralert -> receivedalert
+		whenInterruptEvent sonaralert -> handleAlert
 		
 	// Controlla con il productservice se il prodotto è registrato e si fa dare uno slot
 	State checkLoadRequest { //asking holdmanager for pid
@@ -153,19 +159,22 @@ QActor cargomanager context ctx_cargo {
 	
 	// Attende segnale di deposito dal sonar
 	State waitForDeposit {
+		[# currentState = "waitForDeposit" #]
 		println ("$name : waiting for sonar deposit signal") color green
 	}
 	Transition t
 		whenMsg doDeposit -> doDeposit
-		whenEvent sonaralert -> receivedalert
+		whenInterruptEvent sonaralert -> handleAlert
 	
 	// Ricevuta richiesta di deposito
 	State doDeposit{
+		[# currentState = "doDeposit" #]
 		println ("$name : package detected, proceeding with the loading") color green
 		request cargorobot -m load : load($SLOT_TO_LOAD)
 	} 
 	Transition t
 		whenEvent productloaded -> loadEnded
+		whenInterruptEvent sonaralert -> handleAlert
 		
 	// Caricamento terminato, reset parametri
 	State loadEnded {
@@ -177,12 +186,16 @@ QActor cargomanager context ctx_cargo {
 	} 
 	Goto wait
 	
-	State receivedalert{
+	State handleAlert{
 		println ("$name : sonar in alert state") color red
 		emit stopthesystem : stopthesystem(0)
 	}
 	Transition t
-		whenEvent sonarok -> wait // Da rivedere dove va, dovrebbe ripartire da dove si è fermato, forse va bene lasciare wait
+		whenEvent sonarok -> resumeOperations // Da rivedere dove va, dovrebbe ripartire da dove si è fermato, forse va bene lasciare wait
+
+	State resumeOperations {
+		returnFromInterrupt
+	}
 	
 }
 
@@ -250,14 +263,14 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot IOPORT at Positions ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			delay 500
-			forward basicrobot -m setdirection:dir($D)
+//			delay 500
+//			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t 
 		whenReply moverobotdone -> movetoslot
 		whenReply moverobotfailed -> movefailed
-		whenEvent stopthesystem -> systemStopped
+		whenInterruptEvent stopthesystem -> systemStopped
 	
 	State movetoslot {
 		delay 2000
@@ -271,14 +284,14 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			delay 500
-			forward basicrobot -m setdirection:dir($D)
+//			delay 500
+//			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t
 		whenReply moverobotdone -> movetohome
 		whenReply moverobotfailed -> movefailed
-		whenEvent stopthesystem -> systemStopped
+		whenInterruptEvent stopthesystem -> systemStopped
 	
 	State movetohome {
 		delay 2000
@@ -292,14 +305,14 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot HOME at Position ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			delay 500
-			forward basicrobot -m setdirection:dir($D)
+//			delay 500
+//			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t
 		whenReply moverobotdone -> ended
 		whenReply moverobotfailed -> movefailed
-		whenEvent stopthesystem -> systemStopped
+		whenInterruptEvent stopthesystem -> systemStopped
 	
 	State ended {
 		emit productloaded :  productloaded($TARGETSLOT)
@@ -308,12 +321,32 @@ QActor cargorobot context ctx_cargo {
 	Goto wait
 	
 	State systemStopped {
-		println("$name : system forced to stop ") color yellow
-//		emit alarm : alarm(0)	
+		println("$name : system forced to stop ") color red
+		emit alarm : alarm(blokkabilly)
+	}
+	Transition t
+		whenReply moverobotdone   -> robotStopped  // risposta ad alarm in caso di interruzione alla fine del movimento
+   		whenReply moverobotfailed -> robotStopped  // risposta ad alarm in caso di interruzione durante il movimento
+	
+	State robotStopped {
+		onMsg( moverobotdone : moverobotdone(PLANDONE, PLANTODO)) {
+				[# 	
+				val PLANDONE = payloadArg(0) 
+				val PLANTODO = payloadArg(1)
+			#]		
+			println("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)") color red
+		}
+		onMsg( moverobotfailed : moverobotfailed(PLANDONE, PLANTODO) ) {
+				[# 	
+				val PLANDONE = payloadArg(0) 
+				val PLANTODO = payloadArg(1)
+			#]	
+			println("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)") color red	
+		}
 	}
 	
 	State movefailed {
-		onMsg ( moverobotdone : moverobotdone(PLANDONE, PLANTODO)) {
+		onMsg ( moverobotfailed : moverobotfailed(PLANDONE, PLANTODO)) {
 			[# 	
 				val PLANDONE = payloadArg(0) 
 				val PLANTODO = payloadArg(1)
@@ -517,8 +550,9 @@ QActor mockactor context ctx_cargo{
 	State load_test{
 		
 		[# COUNTLOADS++ #]
-		delay 1000
+		delay 5000
 		if[# COUNTLOADS < 4 #] {
+			println("$name : richiesta! ") color cyan
 			request cargomanager -m loadrequest : loadrequest($COUNTLOADS)
 		}	
 	}
@@ -529,6 +563,9 @@ QActor mockactor context ctx_cargo{
 	State deposit {
 		println("$name : PID found, proceeding to do Deposit") color cyan
 		forward cargomanager -m doDeposit : doDeposit(1)
+		
+		delay 3000
+		emit sonaralert : sonaralert(0)
 	}
 	Goto load_test 			// Da usare per provare ad inviare tante load in cascata
 //	Transition t

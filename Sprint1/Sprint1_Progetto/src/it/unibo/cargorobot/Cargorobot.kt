@@ -66,8 +66,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t11",targetState="wait",cond=whenReply("engagedone"))
-					transition(edgeName="t12",targetState="engage",cond=whenReply("engagerefused"))
+					 transition(edgeName="t12",targetState="wait",cond=whenReply("engagedone"))
+					transition(edgeName="t13",targetState="engage",cond=whenReply("engagerefused"))
 				}	 
 				state("wait") { //this:State
 					action { //it:State
@@ -85,8 +85,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t13",targetState="movetoioport",cond=whenRequest("load"))
-					transition(edgeName="t14",targetState="systemStopped",cond=whenEvent("stopthesystem"))
+					 transition(edgeName="t14",targetState="movetoioport",cond=whenRequest("load"))
+					transition(edgeName="t15",targetState="systemStopped",cond=whenEvent("stopthesystem"))
 				}	 
 				state("movetoioport") { //this:State
 					action { //it:State
@@ -100,17 +100,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val D = ioport.direction
 								CommUtils.outyellow("$name : moving robot to slot IOPORT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-								delay(500) 
-								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t15",targetState="movetoslot",cond=whenReply("moverobotdone"))
-					transition(edgeName="t16",targetState="movefailed",cond=whenReply("moverobotfailed"))
-					transition(edgeName="t17",targetState="systemStopped",cond=whenEvent("stopthesystem"))
+					 transition(edgeName="t16",targetState="movetoslot",cond=whenReply("moverobotdone"))
+					transition(edgeName="t17",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					interrupthandle(edgeName="t18",targetState="systemStopped",cond=whenEvent("stopthesystem"),interruptedStateTransitions)
 				}	 
 				state("movetoslot") { //this:State
 					action { //it:State
@@ -123,17 +121,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val D = slots[TARGETSLOT].direction
 								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-								delay(500) 
-								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t18",targetState="movetohome",cond=whenReply("moverobotdone"))
-					transition(edgeName="t19",targetState="movefailed",cond=whenReply("moverobotfailed"))
-					transition(edgeName="t20",targetState="systemStopped",cond=whenEvent("stopthesystem"))
+					 transition(edgeName="t19",targetState="movetohome",cond=whenReply("moverobotdone"))
+					transition(edgeName="t20",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					interrupthandle(edgeName="t21",targetState="systemStopped",cond=whenEvent("stopthesystem"),interruptedStateTransitions)
 				}	 
 				state("movetohome") { //this:State
 					action { //it:State
@@ -146,17 +142,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val D = home.direction
 								CommUtils.outyellow("$name : moving robot to slot HOME at Position ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-								delay(500) 
-								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t21",targetState="ended",cond=whenReply("moverobotdone"))
-					transition(edgeName="t22",targetState="movefailed",cond=whenReply("moverobotfailed"))
-					transition(edgeName="t23",targetState="systemStopped",cond=whenEvent("stopthesystem"))
+					 transition(edgeName="t22",targetState="ended",cond=whenReply("moverobotdone"))
+					transition(edgeName="t23",targetState="movefailed",cond=whenReply("moverobotfailed"))
+					interrupthandle(edgeName="t24",targetState="systemStopped",cond=whenEvent("stopthesystem"),interruptedStateTransitions)
 				}	 
 				state("ended") { //this:State
 					action { //it:State
@@ -171,7 +165,32 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("systemStopped") { //this:State
 					action { //it:State
-						CommUtils.outyellow("$name : system forced to stop ")
+						CommUtils.outred("$name : system forced to stop ")
+						emit("alarm", "alarm(blokkabilly)" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t25",targetState="robotStopped",cond=whenReply("moverobotdone"))
+					transition(edgeName="t26",targetState="robotStopped",cond=whenReply("moverobotfailed"))
+				}	 
+				state("robotStopped") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(PLANDONE,PLANTODO)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 	
+												val PLANDONE = payloadArg(0) 
+												val PLANTODO = payloadArg(1)
+								CommUtils.outred("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)")
+						}
+						if( checkMsgContent( Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 	
+												val PLANDONE = payloadArg(0) 
+												val PLANTODO = payloadArg(1)
+								CommUtils.outred("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)")
+						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -180,7 +199,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("movefailed") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(PLANDONE,PLANTODO)"), 
+						if( checkMsgContent( Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 	
 												val PLANDONE = payloadArg(0) 

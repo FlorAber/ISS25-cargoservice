@@ -29,6 +29,7 @@ reply( getProductAnswer, product(JSONSTRING) ).  %%for getProduct
 event( sonaralert, sonaralert(X) ).
 event( sonarok, sonarok(X) ).
 event( stopthesystem, stopthesystem(X) ).
+event( resumethesystem, resumethesystem(X) ).
 %====================================================================================
 context(ctx_cargo, "localhost",  "TCP", "8014").
 context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
