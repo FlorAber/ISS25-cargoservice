@@ -196,6 +196,8 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("resumeOperations") { //this:State
 					action { //it:State
+						CommUtils.outred("$name : sonar exited from alert state")
+						emit("resumethesystem", "resumethesystem(0)" ) 
 						returnFromInterrupt(interruptedStateTransitions)
 						//genTimer( actor, state )
 					}

@@ -42,8 +42,11 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				    Position(4, 3, "right")
 				)
 				
-				var TARGETSLOT = -1
 				
+				var moving: Boolean = false			//Indica se il robot si stava muovendo, necessario per ripartire dopo interrupt
+				var destination = Position(0,0,"")	//Se moving a true, utilizzato per portare il robot alla stessa destinazione di quando è stato interrotto
+				
+				var TARGETSLOT = -1
 				var currentState = -1 //Contiene un numero che indica lo stato in cui si trova, serve per ripartire dopo l'alert del sonar
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -98,6 +101,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val X = ioport.x
 												val Y = ioport.y
 												val D = ioport.direction
+												
+												moving = true
+												destination = ioport
 								CommUtils.outyellow("$name : moving robot to slot IOPORT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
@@ -119,6 +125,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val X = slots[TARGETSLOT].x
 												val Y = slots[TARGETSLOT].y
 												val D = slots[TARGETSLOT].direction
+												
+												moving = true
+												destination = slots[TARGETSLOT]
 								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
@@ -140,6 +149,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val X = home.x
 												val Y = home.y
 												val D = home.direction
+												
+												moving = true
+												destination = home
 								CommUtils.outyellow("$name : moving robot to slot HOME at Position ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
@@ -154,8 +166,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("ended") { //this:State
 					action { //it:State
+						 
+									moving = false
+									TARGETSLOT = -1 
 						emit("productloaded", "productloaded($TARGETSLOT)" ) 
-						 TARGETSLOT = -1  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -177,20 +191,25 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("robotStopped") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(PLANDONE,PLANTODO)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								 	
-												val PLANDONE = payloadArg(0) 
-												val PLANTODO = payloadArg(1)
-								CommUtils.outred("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)")
+						CommUtils.outred("$name : robot movement stopped")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t27",targetState="resumeRobot",cond=whenEvent("resumethesystem"))
+				}	 
+				state("resumeRobot") { //this:State
+					action { //it:State
+						CommUtils.outred("$name : robot movement resumed")
+						if(  moving  
+						 ){
+									  val X = destination.x
+									  val Y = destination.y
+									  val D = destination.direction
+						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
-						if( checkMsgContent( Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), Term.createTerm("moverobotfailed(PLANDONE,PLANTODO)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								 	
-												val PLANDONE = payloadArg(0) 
-												val PLANTODO = payloadArg(1)
-								CommUtils.outred("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)")
-						}
+						returnFromInterrupt(interruptedStateTransitions)
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

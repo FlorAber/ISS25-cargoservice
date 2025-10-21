@@ -37,11 +37,14 @@ with Diagram('sprint1_system_overviewArch', show=False, outformat='png', graph_a
      sys >> Edge( label='productloaded', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager
      cargomanager >> Edge( label='stopthesystem', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='sonarok', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager
+     cargomanager >> Edge( label='resumethesystem', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='stopthesystem', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
      cargorobot >> Edge( label='productloaded', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      cargorobot >> Edge( label='alarm', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sys >> Edge( label='resumethesystem', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
      sys >> Edge( label='productloaded', **evattr, decorate='true', fontcolor='darkgreen') >> holdmanager
      mockactor >> Edge( label='sonaralert', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     mockactor >> Edge( label='sonarok', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      cargorobot >> Edge(color='magenta', style='solid', decorate='true', label='<engage<font color="darkgreen"> engagedone engagerefused</font> &nbsp; moverobot<font color="darkgreen"> moverobotdone moverobotfailed</font> &nbsp; >',  fontcolor='magenta') >> basicrobot
      mockactor >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargomanager
      cargomanager >> Edge(color='magenta', style='solid', decorate='true', label='<load<font color="darkgreen"> loadended loadfailed</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
