@@ -19,6 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
+import main.kotlin.*
 
 class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -30,21 +31,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				data class Position(val x: Int, val y: Int, val direction: String)
-		
-				val home = Position(0,0,"down")
-				val ioport = Position(1,4,"up")
-		
-				val slots = arrayOf(
-				    Position(1, 1, "left"),
-				    Position(4, 1, "right"),
-				    Position(1, 3, "left"),
-				    Position(4, 3, "right")
-				)
-				
-				
 				var moving: Boolean = false			//Indica se il robot si stava muovendo, necessario per ripartire dopo interrupt
-				var destination = Position(0,0,"")	//Se moving a true, utilizzato per portare il robot alla stessa destinazione di quando è stato interrotto
+				var destination = ""	//Se moving a true, utilizzato per portare il robot alla stessa destinazione di quando è stato interrotto
 				
 				var TARGETSLOT = -1
 				var currentState = -1 //Contiene un numero che indica lo stato in cui si trova, serve per ripartire dopo l'alert del sonar
@@ -53,6 +41,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						delay(500) 
 						CommUtils.outyellow("$name : starting")
+						solve("consult('pointPicker.pl')","") //set resVar	
+						solve("consult('positions.pl')","") //set resVar	
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -98,12 +88,18 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												TARGETSLOT = payloadArg(0).toInt()
-												val X = ioport.x
-												val Y = ioport.y
-												val D = ioport.direction
+												val DEST = Pos.ioport.name
+								solve("getPoint($DEST,TX,TY,TDIR)","") //set resVar	
+								
+								
+												val X = getCurSol("TX").toString();
+												val Y = getCurSol("TY").toString();
+												val D = getCurSol("TDIR").toString();
 												
+												
+												destination=DEST
 												moving = true
-												destination = ioport
+												
 								CommUtils.outyellow("$name : moving robot to slot IOPORT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
@@ -122,12 +118,21 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val X = slots[TARGETSLOT].x
-												val Y = slots[TARGETSLOT].y
-												val D = slots[TARGETSLOT].direction
+												val slot = "slot$TARGETSLOT"      
+												val DEST = Pos.valueOf(slot).name
+								
+								solve("getPoint($DEST,TX,TY,TDIR)","") //set resVar	
+								
+								
+												val X = getCurSol("TX").toString();
+												val Y = getCurSol("TY").toString();
+												val D = getCurSol("TDIR").toString();
+												
+												
 												
 												moving = true
-												destination = slots[TARGETSLOT]
+												destination = TARGETSLOT.toString()
+											
 								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
@@ -145,13 +150,19 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
+								val DEST = Pos.home.name 
+								solve("getPoint($DEST,TX,TY,TDIR)","") //set resVar	
 								
-												val X = home.x
-												val Y = home.y
-												val D = home.direction
+								
+												val X = getCurSol("TX").toString();
+												val Y = getCurSol("TY").toString();
+												val D = getCurSol("TDIR").toString();
+												
+												
 												
 												moving = true
-												destination = home
+												destination = DEST
+											
 								CommUtils.outyellow("$name : moving robot to slot HOME at Position ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
@@ -203,10 +214,17 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						CommUtils.outred("$name : robot movement resumed")
 						if(  moving  
-						 ){
-									  val X = destination.x
-									  val Y = destination.y
-									  val D = destination.direction
+						 ){val DEST = destination 
+						solve("getPoint($DEST,TX,TY,TDIR)","") //set resVar	
+						
+						
+										val X = getCurSol("TX").toString();
+										val Y = getCurSol("TY").toString();
+										val D = getCurSol("TDIR").toString();
+										
+										
+										
+										moving = true			
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
 						returnFromInterrupt(interruptedStateTransitions)

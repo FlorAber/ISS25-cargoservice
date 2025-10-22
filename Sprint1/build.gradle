@@ -181,6 +181,8 @@ distributions {
              from './sprint1_system_overview.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
+             from './positions.pl'
+             from './pointPicker.pl'
         }
     }
 } 
