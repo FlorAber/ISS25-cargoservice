@@ -63,6 +63,7 @@ Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli
 // ------------------------------------------------------------------------
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
+Context ctx_test   ip  [host="localhost" port=8015]
 
 Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
 Context ctx_productservice ip [ host="127.0.0.1" port=8111]
@@ -560,7 +561,7 @@ QActor holdmanager context ctx_cargo {
 	Goto wait
 }
 
-QActor mockactor context ctx_cargo{
+QActor mockactor context ctx_test {
 	
 	[#
 		var ERROR = false;

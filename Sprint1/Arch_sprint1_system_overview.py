@@ -29,6 +29,7 @@ with Diagram('sprint1_system_overviewArch', show=False, outformat='png', graph_a
           cargomanager=Custom('cargomanager','./qakicons/symActorWithobjSmall.png')
           cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
           holdmanager=Custom('holdmanager','./qakicons/symActorWithobjSmall.png')
+     with Cluster('ctx_test', graph_attr=nodeattr):
           mockactor=Custom('mockactor','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_basicrobot', graph_attr=nodeattr):
           basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
