@@ -17,6 +17,33 @@
      <link rel="stylesheet" type="text/css" href="./css/style.css" />
 
     <title>ISS25 - Sprint 1</title>
+    <style>
+      .test-plan-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background-color: #f4f4f4;
+      }
+      .test-plan-table th {
+        background-color: #2c5f4f;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: bold;
+        border: 1px solid #1a4538;
+      }
+      .test-plan-table td {
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        background-color: white;
+      }
+      .test-plan-table tr:nth-child(even) td {
+        background-color: #f9f9f9;
+      }
+      .test-plan-table tr:hover td {
+        background-color: #e8f4f0;
+      }
+    </style>
   </head>
 
   <body>
@@ -91,13 +118,13 @@
               <div class="text-center"> <img src="resources/map.png" alt="grid" width="25%"/>  </div>
               In particolare si avranno: 
                 <ul>
+                  <li> Home alle coordinate (0,0)</li>
                   <li> Slot 1 alle coordinate (2,1) </li>
                   <li> Slot 2 alle coordinate (3,1) </li>
                   <li> Slot 3 alle coordinate (2,3) </li>
                   <li> Slot 4 alle coordinate (3,3) </li>
                   <li> Slot 5 alle coordinate (4,2) </li>
                 </ul>
-              E la home?? Vediamo se troviamo da qualche parte le coordinate
           </div>
         </div>
 
@@ -187,7 +214,60 @@
             </li>
           </ul>
         </div>
+
+        <div class="textbody">
+          <table class="test-plan-table">
+            <thead>
+              <tr>
+                <th>Test</th>
+                <th>Attori</th>
+                <th>Servizi</th>
+                <th>Descrizione</th>
+                <th>Modello</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Evento di richiesta caricamento</td>
+                <td>MOCKActor; cargoManager;</td>
+                <td></td>
+                <td>Il QActor tester, simulando il MOCKActor, invia una richiesta di caricamento contenente il PID del prodotto al cargoManager</td>
+                <td>test_interactions.qak<br/>CargoSystemTest.java</td>
+              </tr>
+              <tr>
+                <td>Verifica prodotto registrato e peso</td>
+                <td>cargoManager; holdManager;</td>
+                <td>productService;</td>
+                <td>Il cargoManager invia il PID ricevuto a holdManager che controlla, interrogando il productService, che il prodotto sia registrato e che il peso non superi il limite imposto dai vincoli. Invia un messaggio contenente lo slot in cui mettere il prodotto o un messaggio di errore a cargoManager.</td>
+                <td>test_interactions.qak<br/>CargoSystemTest.java</td>
+              </tr>
+              <tr>
+                <td>Arrivo di un carico</td>
+                <td>MOCKActor; cargoManager; cargoRobot</td>
+                <td></td>
+                <td>Il QActor tester, simulando il MOCKActor, invia un messaggio a cargoManager quando rileva la presenza di un pacco contenente lo slot in cui depositare il pacco.</td>
+                <td>test_interactions.qak<br/>CargoSystemTest.java</td>
+              </tr>
+              <tr>
+                <td>Avvio del cargoRobot</td>
+                <td>cargoManager; cargoRobot;</td>
+                <td>basicRobot</td>
+                <td>Il cargoManager invia al cargoRobot un messaggio contenente lo slot a cui andare/ le coordinate dello slot a cui andare. Quest'ultimo pilota il basicRobot.</td>
+                <td>test_interactions.qak<br/>CargoSystemTest.java</td>
+              </tr>
+              <tr>
+                <td>Fine caricamento</td>
+                <td>cargoRobot; cargoManager</td>
+                <td>basicRobot</td>
+                <td>Il cargoRobot pilota il basicRobot fino alla HOME, manda un segnale a cargoManager che si rimette in ascolto di nuove richieste di carico.</td>
+                <td><br/></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+
 
       <footer class="footer">
         <div class="grid-container fluid">
