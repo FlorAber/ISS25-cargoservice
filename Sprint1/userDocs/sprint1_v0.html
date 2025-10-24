@@ -106,22 +106,22 @@
             Il basicrobot fornisce un'interfaccia che permette, tramite l'invio
             di messaggi, di controllarne il movimento. Per gestire questo
             movimento è stato deciso di introdurre un attore
-            <strong> robotmanager </strong> che avrà il compito di controllare
-            il robot in ogni suo movimento e gestire le interruzioni provenienti
+            <strong> cargorobot </strong> che avrà il compito di controllare il
+            robot in ogni suo movimento e gestire le interruzioni provenienti
             dal sonar in caso di malfunzionamento. Questo approccio consente di
             separare le funzionalità dei vari componenti facendo in modo che il
             cargomanager mantenga solo la funzionalità di gestore delle
             comunicazioni.
 
             <div class="textbody">
-              <h4>Interazioni del robotmanager</h4>
+              <h4>Interazioni del cargorobot</h4>
               Dovendo controllare il robot in ogni suo movimento l'attore
               avvierà l'operazione di carico una volta ricevuto un messaggio dal
               cargomanager, questo messaggio dovrà specificare lo slot a cui
-              caricare il prodotto così che il robotmanager possa scegliere la
+              caricare il prodotto così che il cargorobot possa scegliere la
               strada appropriata per fare raggiungere al robot la posizione
               fisica. Una volta terminata l'operazione di caricamento il
-              robotmanager invierà un messaggio al cargomanager per notificarlo.
+              cargorobot invierà un messaggio al cargomanager per notificarlo.
               Inoltre l'attore deve essere capace di gestire i segnali di
               interruzione generati dal sonar (che arriveranno dal cargomanager
               in quanto gestore delle comunicazioni) e fermare il movimento per
@@ -206,7 +206,7 @@
             >holmanager</strong
           >
           a cui portare il carico. Successivamente attenderà il completamento
-          delle operazioni del <strong>robotmanager</strong> prima di tornare in
+          delle operazioni del <strong>cargorobot</strong> prima di tornare in
           attesa di una nuova richiesta di carico. <br />
 
           Oltre al suo normale flusso di esecuzione, il cargomanager dovrà
