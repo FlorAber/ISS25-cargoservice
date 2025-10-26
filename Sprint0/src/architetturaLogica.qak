@@ -14,38 +14,35 @@ Reply loadrejected:		loadrejected(X)
 Dispatch stop:			stop(X)
 Dispatch resume:		resume(X)
 
-
 Request start_load: start_load(pid)
 Dispatch reply_success : reply_success(N)// N if 1 == success, esle fail.
 
-
+Request getProduct 		 : product(ID)
 
 Context ctx_cargo  ip  [host="localhost" port=8014] 
 Context ctx_gui  ip  [host="localhost" port=8015] 
 Context ctx_sensor  ip  [host="localhost" port=8016]
-Context ctx_cargorobot  ip  [host="localhost" port=8017]
 
 Context ctx_test  ip  [host="localhost" port=8018]
 
+Context ctx_cargo  ip  [host="localhost" port=8014]
+Context ctx_test   ip  [host="localhost" port=8015]
 
-QActor cargomanager context ctx_cargo { 
+Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
+Context ctx_productservice ip [ host="127.0.0.1" port=8111]
+
+QActor cargoservice context ctx_cargo { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
-		
-			
+//		request productservice -m getProduct : product($PID)
 	}Transition t0
-		
 }
 
-QActor productservice context ctx_cargo { 
+QActor productservice context ctx_productservice { 
 	State s0 initial{
-		delay 500   
+		delay 500  
 		println("$name STARTS") color green 
-	} 
-	Goto idle 
-	State idle{
-		println("$name IDLE...")
 	}
 }
 
@@ -53,42 +50,35 @@ QActor led context ctx_sensor {
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
-	} 
-	Goto idle 
-	State idle{
-		println("$name IDLE...")
 	}
 }
+
 QActor sonar context ctx_sensor { 
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
-	} 
-	Goto idle 
-	State idle{
-		println("$name IDLE...")
 	}
 }
 
-QActor cargorobot context ctx_cargorobot{ 
+QActor cargorobot context ctx_cargo{ 
+	State s0 initial{
+		delay 500   
+		println("$name STARTS") color green
+	}
+}
+
+QActor basicrobot context ctx_basicrobot{
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
 	} 
-	Goto idle 
-	State idle{
-		println("$name IDLE...")
-	}
 }
 
 QActor mockactor context ctx_test{
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
+		request cargoservice -m loadrequest : "Val" 
 	} 
-	Goto load
-	State load{
-		request cargomanager -m loadrequest : "Val" 
-	}
 }
 

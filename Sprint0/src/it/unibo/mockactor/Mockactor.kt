@@ -34,16 +34,7 @@ class Mockactor ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 					action { //it:State
 						delay(500) 
 						CommUtils.outgreen("$name STARTS")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="load", cond=doswitch() )
-				}	 
-				state("load") { //this:State
-					action { //it:State
-						request("loadrequest", ""Val"" ,"cargomanager" )  
+						request("loadrequest", ""Val"" ,"cargoservice" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
