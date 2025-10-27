@@ -5,8 +5,8 @@ Request loadrequest:	loadrerequest(
 							wheigth
 						)
 //cargomanager	to sensor
-Reply loadaccepted:		loadaccepted(X)
-Reply loadrejected:		loadrejected(X)
+Reply loadaccepted:		loadaccepted(X)  for loadrequest
+Reply loadrejected:		loadrejected(X)  for loadrequest
 
 //cargomanager to all subcscribed
 //Dispatch doDeposit:		doDeposit(pid, Weight, slot)
@@ -25,25 +25,40 @@ Context ctx_sensor  ip  [host="localhost" port=8016]
 
 Context ctx_test  ip  [host="localhost" port=8018]
 
-Context ctx_cargo  ip  [host="localhost" port=8014]
-Context ctx_test   ip  [host="localhost" port=8015]
-
 Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
 Context ctx_productservice ip [ host="127.0.0.1" port=8111]
 
+ExternalQActor productservice context ctx_productservice
+ExternalQActor basicrobot context ctx_basicrobot
+
 QActor cargoservice context ctx_cargo { 
 	State s0 initial{
+		[#
+			val state=1;
+
+		#]
 		delay 500   
 		println("$name STARTS") color green 
 //		request productservice -m getProduct : product($PID)
-	}Transition t0
-}
-
-QActor productservice context ctx_productservice { 
-	State s0 initial{
-		delay 500  
-		println("$name STARTS") color green 
+		
 	}
+	Goto accept if [# state==1 #] else refuse
+	
+			
+	State accept{
+		if[# state==1 #]{
+			replyTo loadrequest with loadaccepted : loadaccepted(1)
+	
+		}
+	}
+	Goto s0
+	
+	State refuse{
+		if[# state!=1 #]{	
+			replyTo loadrequest with loadrejected : loadrejected(1)
+		}
+	}
+	Goto s0
 }
 
 QActor led context ctx_sensor { 
@@ -60,25 +75,28 @@ QActor sonar context ctx_sensor {
 	}
 }
 
-QActor cargorobot context ctx_cargo{ 
+QActor cargorobot context ctx_cargo { 
 	State s0 initial{
-		delay 500   
-		println("$name STARTS") color green
+		
 	}
 }
 
-QActor basicrobot context ctx_basicrobot{
+QActor mockuser context ctx_test{
 	State s0 initial{
 		delay 500   
 		println("$name STARTS") color green 
+		request cargoservice -m loadrequest : loadrequest(1)
 	} 
-}
-
-QActor mockactor context ctx_test{
-	State s0 initial{
-		delay 500   
-		println("$name STARTS") color green 
-		request cargoservice -m loadrequest : "Val" 
-	} 
+	Transition t0
+	whenReply loadaccepted -> accepted
+	whenReply loadrejected -> refused
+	
+	State accepted{
+		
+	}
+	
+	State refused{
+		
+	}
 }
 

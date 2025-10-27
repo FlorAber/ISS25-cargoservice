@@ -32,6 +32,9 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
+						
+									val state=1;
+						
 						delay(500) 
 						CommUtils.outgreen("$name STARTS")
 						//genTimer( actor, state )
@@ -39,6 +42,34 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="accept", cond=doswitchGuarded({ state==1  
+					}) )
+					transition( edgeName="goto",targetState="refuse", cond=doswitchGuarded({! ( state==1  
+					) }) )
+				}	 
+				state("accept") { //this:State
+					action { //it:State
+						if(  state==1  
+						 ){answer("loadrequest", "loadaccepted", "loadaccepted(1)"   )  
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
+				}	 
+				state("refuse") { //this:State
+					action { //it:State
+						if(  state!=1  
+						 ){answer("loadrequest", "loadrejected", "loadrejected(1)"   )  
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="s0", cond=doswitch() )
 				}	 
 			}
 		}
