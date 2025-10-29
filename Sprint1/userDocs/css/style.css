@@ -153,3 +153,25 @@ img {
   border: 1px solid #ddd;
   background-color: white;
 }
+
+.robot-table {
+  width: 95%;
+  border-collapse: collapse;
+  margin: 10px 50px 0px 0px;
+  background-color: #ffffff;
+}
+
+.robot-table th {
+  background-color: #feffec;
+  color: #374151;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  border: 1px solid #ddd;
+}
+
+.robot-table td {
+  padding: 10px 10px;
+  border: 1px solid #ddd;
+  background-color: white;
+}

@@ -131,8 +131,50 @@
             <div class="textbody">
               <h4>Gestione del movimento</h4>
               Il committente fornisce il software del basicrobot che mette a
-              disposizione un messaggio moverobot(TARGETX, TARGETY). Questo
-              messaggio in base alle coordinate inserite muoverà il basicrobot
+              disposizione una serie di messaggi per muovere il robot. Qui sotto
+              vengono riportati i due messaggi di movimento principali tra i quali 
+              dovremo scegliere:
+              <div>
+                <table class="robot-table">
+                  <thead>
+                    <tr>
+                      <th>Messaggio</th>
+                      <th>Funzionamento</th>
+                      <th>Componenti</th>
+                      <th>Note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>moverobot(TARGETX, TARGETY)</td>
+                      <td>
+                        Gestisce le richieste di posizionamento, determina il piano di movimento,
+                        restituisce moverobotdone, se ok, moverobotfailed, se errore. 
+                      </td>
+                      <td>planexec, robotpos</td>
+                      <td>
+                        Gestisce anche il comando di utilità setpos(X,Y,D) per allienare la 
+                        rappresentazione del planner sulla posizione corrente reale del robot 
+                        fissata manualmente.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>doplan(PATH, STEPTIME)</td>
+                      <td>
+                        Gestisce richieste di esecuzione di una serie di mosse, restituisce doplandone, 
+                        se ok, doplanfailed, se errore.
+                      </td>
+                      <td>planexec</td>
+                      <td>
+                        Non usa e non aggiorna alcuna mappa della stanza
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              Useremo il messaggio moverobot(TARGETX, TARGETY) poichè sembra più completo
+              e adatto al nostro caso, inoltre ci da la possibilità di aggiornare la mappa.
+              Questo messaggio in base alle coordinate inserite muoverà il basicrobot
               verso di esse in modo automatico. Per recuperare le coordinate di
               ogni parte rilevante del sistema useremo una base di conoscenza
               prolog. Sfruttando questa base di conoscenza il cargorobot potrà
@@ -177,12 +219,22 @@
             con un messaggio di errore motivazionale in caso contrario.
             <div class="textbody">
               <h4>Tracciamento del carico</h4>
-              L'holdmanager manterrà lo stato della hold all'interno di alcune
-              variabili locali. Per rendere questa informazione persistente,
-              così da poter avere una visione dello stato della hold anche in
-              caso di crash del sistema, al termine dei ogni caricamento lo
-              stato interno dell'holdmanager verrà salvato all'interno di un
-              file json. All'avvio del sistema l'holdmanager verificherà se il
+              Il tracciamento del carico potrà avvenire in due modi:
+              <ul>
+                <li>Tracciamento persistente</li>
+                <li>Tracciamento non persistente</li>
+              </ul>
+              Abbiamo deciso che manterremo questa infomazione in modo persistente
+              per avere una visione dello stato della hold anche in caso di crash
+              del sistema. Questo ci porterà a scegliere come gestire la persistenza
+              e quindi potremo decidere se:
+              <ul>
+                <li>Utilizzare un file json</li>
+                <li>Utilizzare un database leggero (es. SQLite)</li>
+              </ul>
+              Per semplicità e visto che dobbiamo gestire una quantità limitata
+              di dati useremo un file json nel quale verrà salvato lo stato dell'holdmanager.
+              All'avvio del sistema l'holdmanager verificherà se il
               file esiste e in caso positivo caricherà lo stato della hold dalla
               memoria, in caso contrario si occuperà di crearlo ed
               inizializzarlo.
