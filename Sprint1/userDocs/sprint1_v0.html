@@ -78,21 +78,21 @@
             robot in ogni suo movimento e gestire le interruzioni provenienti
             dal sonar in caso di malfunzionamento. Questo approccio consente di
             separare le funzionalità dei vari componenti facendo in modo che il
-            cargomanager mantenga solo la funzionalità di gestore delle
+            cargoservice mantenga solo la funzionalità di gestore delle
             comunicazioni.
 
             <div class="textbody">
               <h4>Interazioni del cargorobot</h4>
               Dovendo controllare il robot in ogni suo movimento l'attore
               avvierà l'operazione di carico una volta ricevuto un messaggio dal
-              cargomanager, questo messaggio dovrà specificare lo slot a cui
+              cargoservice, questo messaggio dovrà specificare lo slot a cui
               caricare il prodotto così che il cargorobot possa scegliere la
               strada appropriata per fare raggiungere al robot la posizione
               fisica. Una volta terminata l'operazione di caricamento il
-              cargorobot invierà un messaggio al cargomanager per notificarlo
+              cargorobot invierà un messaggio al cargoservice per notificarlo
               dell'avvenuto caricamento. Inoltre l'attore deve essere capace di
               gestire i segnali di interruzione generati dal sonar (che
-              arriveranno dal cargomanager in quanto gestore delle
+              arriveranno dal cargoservice in quanto gestore delle
               comunicazioni) e fermare il movimento per poi farlo ripartire
               quando il sistema tornerà funzionante
             </div>
@@ -140,37 +140,18 @@
                   </tbody>
                 </table>
               </div>
-
-              Per muovere il robot è stato deciso di utilizzare il messaggio
-              moverobot(TARGETX, TARGETY). Questo perchè permette di
-              semplificare lo sviluppo delegando le operazioni di scelta del
-              percorso da eseguire al robot stesso. <br />
+               <br />
             </div>
 
             <div class="textbody">
               <h4>Come recuperare le coordinate?</h4>
-              Per recuperare le coordinate dei punti di interesse all'interno
-              della hold sono stati identificati due possibili approcci:
+              risulta fondamentale la possibilità di recuperare le coordinate dei punti di interesse all'interno della hold,
+              sono stati identificati due possibili approcci:
               <ul>
                 <li>Memorizzazione delle coordinate all'interno del sistema</li>
                 <li>
                   Memorizzazione delle coordinate in una base di conoscenza
                   prolog
-                </li>
-              </ul>
-
-              A questo fine è stato deciso di sfruttare il secondo approccio, in
-              quanto più flessibile e scalabile in caso di modifiche future alla
-              mappa. Sfruttando questa base di conoscenza il cargorobot potrà
-              comunicare le coordinate relative alle posizioni al basicrobot. Il
-              predicato prolog prenderà in ingresso due variabili libere x, y e
-              una direzione, unificando la posizione che fa match:
-              <ul>
-                <li>x: ascissa del punto</li>
-                <li>y: ordinata del punto</li>
-                <li>
-                  direzione: permetterà di ruotare il robot verso la posizione
-                  rilevante di interesse
                 </li>
               </ul>
             </div>
@@ -194,16 +175,16 @@
             <br />
 
             Questo attore <strong> holdmanager </strong> fungerà da
-            intermediario tra il cargomanager e il productservice, prendendo in
+            intermediario tra il cargoservice e il productservice, prendendo in
             carico la gestione della hold tramite il tracciamento degli slot
             liberi, di quelli occupati e del peso dei prodotti caricati nella
             nave cargo. A partire da queste conoscenze, al momento della
-            ricezione di una richiesta getProduct proventiente dal cargomanager
+            ricezione di una richiesta <i>controlproduct(pid)</i> proventiente dal cargoservice
             sfrutterà il productservice per verificare se il prodotto è
             registrato, successivamente verificherà se il peso del prodotto è
             adeguato alla capacità massima della stiva e deciderà a che slot
             assegnare il carico (se sono presenti slot liberi). Infine invierà
-            una risposta al cargomanager specificando lo slot a cui caricare il
+            una risposta al cargoservice specificando lo slot a cui caricare il
             prodotto (in caso i controlli abbiano avuto esito positivo) o con un
             messaggio di errore motivazionale in caso contrario.
 
@@ -254,7 +235,7 @@
         <div class="textbody">
           Lo scopo della fase di test è quello di verificare il funzionamento
           del core business, cioè dei componenti
-          <strong> cargomanager </strong>, <strong> productservice</strong> e
+          <strong> cargoservice </strong>, <strong> productservice</strong> e
           <strong> cargorobot </strong>.
 
           <div class="textbody">
@@ -271,45 +252,45 @@
               <tbody>
                 <tr>
                   <td>Evento di richiesta caricamento</td>
-                  <td>MOCKActor; cargoManager;</td>
+                  <td>MOCKActor; cargoservice;</td>
                   <td></td>
                   <td>
                     Il QActor tester, simulando il MOCKActor, invia una
                     richiesta di caricamento contenente il PID del prodotto al
-                    cargoManager
+                    cargoservice
                   </td>
                   <td>test_interactions.qak<br />CargoSystemTest.java</td>
                 </tr>
                 <tr>
                   <td>Verifica prodotto registrato e peso</td>
-                  <td>cargoManager; holdManager;</td>
+                  <td>cargoservice; holdManager;</td>
                   <td>productService;</td>
                   <td>
-                    Il cargoManager invia il PID ricevuto a holdManager che
+                    Il cargoservice invia il PID ricevuto a holdManager che
                     controlla, interrogando il productService, che il prodotto
                     sia registrato e che il peso non superi il limite imposto
                     dai vincoli. Invia un messaggio contenente lo slot in cui
-                    mettere il prodotto o un messaggio di errore a cargoManager.
+                    mettere il prodotto o un messaggio di errore a cargoservice.
                   </td>
                   <td>test_interactions.qak<br />CargoSystemTest.java</td>
                 </tr>
                 <tr>
                   <td>Arrivo di un carico</td>
-                  <td>MOCKActor; cargoManager; cargoRobot</td>
+                  <td>MOCKActor; cargoservice; cargoRobot</td>
                   <td></td>
                   <td>
                     Il QActor tester, simulando il MOCKActor, invia un messaggio
-                    a cargoManager quando rileva la presenza di un pacco
+                    a cargoservice quando rileva la presenza di un pacco
                     contenente lo slot in cui depositare il pacco.
                   </td>
                   <td>test_interactions.qak<br />CargoSystemTest.java</td>
                 </tr>
                 <tr>
                   <td>Avvio del cargoRobot</td>
-                  <td>cargoManager; cargoRobot;</td>
+                  <td>cargoservice; cargoRobot;</td>
                   <td>basicRobot</td>
                   <td>
-                    Il cargoManager invia al cargoRobot un messaggio contenente
+                    Il cargoservice invia al cargoRobot un messaggio contenente
                     lo slot a cui andare/ le coordinate dello slot a cui andare.
                     Quest'ultimo pilota il basicRobot.
                   </td>
@@ -317,11 +298,11 @@
                 </tr>
                 <tr>
                   <td>Fine caricamento</td>
-                  <td>cargoRobot; cargoManager</td>
+                  <td>cargoRobot; cargoservice</td>
                   <td>basicRobot</td>
                   <td>
                     Il cargoRobot pilota il basicRobot fino alla HOME, manda un
-                    segnale a cargoManager che si rimette in ascolto di nuove
+                    segnale a cargoservice che si rimette in ascolto di nuove
                     richieste di carico.
                   </td>
                   <td><br /></td>
@@ -368,28 +349,67 @@
         </div>
 
         <div class="textparagraph">
-          <h3>Cosa fa il cargomanager?</h3>
-          <div class="textbody"></div>
-          Il cargomanager è l'attore che ha il compito di controllare il
+          <h3>comportamento del cargoservice</h3>
+          <div class="textbody">
+            Il cargoservice è l'attore che ha il compito di controllare il
           funzionamento del sistema e coordinare le comunicazioni tra i diversi
-          componenti. Al momento della ricezione di una richiesta di caricamento
-          questa verrà inoltrata all'<strong>holdmanager</strong>, rimanendo in
-          attesa una risposta. Al momento della ricezione della risposta
-          risponderà al richiedente e, se la risposta sarà positiva, rimarrà in
+          componenti. Al momento della ricezione di una richiesta di caricamento da parte dell'utente, contenente
+          il PID del prodotto che intende depositare,
+          verrà inviata all'<strong>holdmanager</strong> una richiesta <i>controlproduct(pid)</i>, rimanendo dunque in
+          attesa di una risposta corrispondente all'esito, <i>productaccepted(slot)</i> o <i>productrejected()</i>
+          conseguenti ai controlli di cui è responsabile <strong>holdmanager</strong>.
+          Al momento della ricezione della risposta
+          comunicherà all'utente l'esito e, se sarà positivo, rimarrà in
           attesa del segnale di carico proveniente dal sonar, in caso contrario
           tornerà nello stato di attesa delle richieste di carico. Al momento
           della ricezione del segnale dal sonar comunicherà al
-          <strong>cargorobot</strong> lo slot indicato dall'<strong
-            >holmanager</strong
-          >
-          a cui portare il carico. Successivamente attenderà il completamento
-          delle operazioni del <strong>cargorobot</strong> prima di tornare in
+          <strong>cargorobot</strong> tramite richiesta <i>load(slot)</i> lo slot precedentemente indicato dall'<strong>holdmanager</strong> 
+          in cui andare a depositare il prodotto. Successivamente attenderà il completamento
+          delle operazioni del <strong>cargorobot</strong>, il quale risponderà con <i>loadended()</i> in caso
+          di successo o <i>loadfailed()</i> in caso di errore,
+          prima di tornare in
           attesa di una nuova richiesta di carico. <br />
 
-          Oltre al suo normale flusso di esecuzione, il cargomanager dovrà
+          Oltre al suo normale flusso di esecuzione, il cargoservice dovrà
           gestire i segnali di interruzione provenienti dal sonar in caso di
           malfunzionamento, così da andare a sospendere le attività di tutti i
           componenti del sistema fino al rientro dell'errore
+          </div>
+          
+        </div>
+      
+
+      <div class="textparagraph">
+          <h3>comportamento del cargorobot</h3>
+          <div class="textbody">
+            Per muovere il DDR robot è stato deciso di utilizzare il messaggio
+              moverobot(TARGETX, TARGETY). Questo perchè permette di
+              semplificare lo sviluppo delegando le operazioni di scelta del
+              percorso da eseguire al basicrobot.
+          Dunque il cargorobot ha essenzialmente il compito di tradurre 
+          lo slot ricevuto tramite richiesta <i>load(slot)</i> in coordinate
+          assolute. A questo fine è stato deciso di sfruttare il secondo approccio
+          indicato in fase di analisi ovvero sfruttare una base di conoscenza
+          prolog, in quanto più flessibile e scalabile in caso di modifiche future alla
+          mappa. Sfruttando questa base di conoscenza il cargorobot potrà
+          comunicare le coordinate relative alle posizioni al basicrobot. Nella base di conoscenza sono definiti dei predicati del tipo:
+          <i>position(X, Y, DIR, P).</i>
+          che associano a ciascun punto della mappa (come slot, home, ioport)
+           le coordinate assolute (X, Y) e la direzione DIR.
+            Il predicato di accesso:
+             <i>getPoint(P, X, Y, DIR) :- position(X, Y, DIR, P).</i>
+          consente al cargorobot di ottenere le coordinate e la direzione relative a una determinata posizione P.
+              <ul>
+                <li>x: ascissa del punto</li>
+                <li>y: ordinata del punto</li>
+                <li>
+                  direzione: permetterà di ruotare il robot verso la posizione
+                  rilevante di interesse
+                </li>
+              </ul>
+
+          </div>
+          
         </div>
       </div>
 
