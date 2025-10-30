@@ -32,10 +32,9 @@ event( stopthesystem, stopthesystem(X) ).
 event( resumethesystem, resumethesystem(X) ).
 %====================================================================================
 context(ctx_cargo, "localhost",  "TCP", "8014").
-context(ctx_test, "localhost",  "TCP", "8015").
 context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
-context(ctx_productservice, "127.0.0.1",  "TCP", "8111").
- qactor( productservice, ctx_productservice, "external").
+context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
+ qactor( productservice, ctxproductservice, "external").
   qactor( basicrobot, ctx_basicrobot, "external").
   qactor( cargomanager, ctx_cargo, "it.unibo.cargomanager.Cargomanager").
  static(cargomanager).
@@ -43,5 +42,3 @@ context(ctx_productservice, "127.0.0.1",  "TCP", "8111").
  static(cargorobot).
   qactor( holdmanager, ctx_cargo, "it.unibo.holdmanager.Holdmanager").
  static(holdmanager).
-  qactor( mockactor, ctx_test, "it.unibo.mockactor.Mockactor").
- static(mockactor).

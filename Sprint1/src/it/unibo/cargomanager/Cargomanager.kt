@@ -36,7 +36,6 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				var PID: Int = 0
 				var SLOT_TO_LOAD: Int = -1
 				
-				var currentState: String = ""
 				var hasPendingLoad: Boolean = false
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
@@ -88,7 +87,6 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("wait") { //this:State
 					action { //it:State
-						 currentState = "wait"  
 						CommUtils.outgreen("$name : waiting for requests...")
 						//genTimer( actor, state )
 					}
@@ -147,7 +145,6 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("waitForDeposit") { //this:State
 					action { //it:State
-						 currentState = "waitForDeposit"  
 						CommUtils.outgreen("$name : waiting for sonar deposit signal")
 						//genTimer( actor, state )
 					}
@@ -159,7 +156,6 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("doDeposit") { //this:State
 					action { //it:State
-						 currentState = "doDeposit"  
 						CommUtils.outgreen("$name : package detected, proceeding with the loading")
 						request("load", "load($SLOT_TO_LOAD)" ,"cargorobot" )  
 						//genTimer( actor, state )

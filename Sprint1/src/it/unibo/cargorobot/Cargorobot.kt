@@ -35,7 +35,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				var destination = ""	//Se moving a true, utilizzato per portare il robot alla stessa destinazione di quando è stato interrotto
 				
 				var TARGETSLOT = -1
-				var currentState = -1 //Contiene un numero che indica lo stato in cui si trova, serve per ripartire dopo l'alert del sonar
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -65,7 +64,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("wait") { //this:State
 					action { //it:State
 						delay(500) 
-						 currentState = 0  
 						if( checkMsgContent( Term.createTerm("engagedone(ARG)"), Term.createTerm("engagedone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 var ARG = payloadArg(0)  
