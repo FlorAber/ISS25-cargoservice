@@ -252,10 +252,10 @@
               <tbody>
                 <tr>
                   <td>Evento di richiesta caricamento</td>
-                  <td>MOCKActor; cargoservice;</td>
+                  <td>mockuser; cargoservice;</td>
                   <td></td>
                   <td>
-                    Il QActor tester, simulando il MOCKActor, invia una
+                    Il QActor tester, simulando il mockuser, invia una
                     richiesta di caricamento contenente il PID del prodotto al
                     cargoservice
                   </td>
@@ -276,10 +276,10 @@
                 </tr>
                 <tr>
                   <td>Arrivo di un carico</td>
-                  <td>MOCKActor; cargoservice; cargoRobot</td>
+                  <td>mockuser; cargoservice; cargoRobot</td>
                   <td></td>
                   <td>
-                    Il QActor tester, simulando il MOCKActor, invia un messaggio
+                    Il QActor tester, simulando il mockuser, invia un messaggio
                     a cargoservice quando rileva la presenza di un pacco
                     contenente lo slot in cui depositare il pacco.
                   </td>
@@ -416,7 +416,31 @@
             </ul>
           </div>
         </div>
+
+<div class="textparagraph">
+          <h3>comportamento di holdmanager</h3>
+          <div class="textbody">
+           Al momento della ricezione della richiesta <i>controlproduct(pid)</i> da
+            parte del cargoservice, holdmanager si occuperà di gestire il
+            controllo del prodotto relazionandosi direttamente con <strong>productservice</strong>.
+            Nello specifico holdmanager invierà una richiesta <i>getProduct(pid)</i> a <strong>productservice</strong>
+            per recuperare le informazioni riguardanti il prodotto specificato, in base al
+            payload della risposta <i>getProductAnswer(JSonString)</i> holdmanager ottiene
+            i dati del prodotto in formato JSON e se il pid risulta maggiore di 0
+            (prodotto registrato) e il peso del prodotto sommato al peso attuale non 
+            eccede il limite massimo della hold, allora verrà scelto uno slot libero
+            (il primo disponibile in ordine numerico) a cui assegnare il prodotto.
+            Infine verrà inviata una risposta al cargoservice con il messaggio
+            <i>productaccepted(slot)</i> specificando lo slot scelto, altrimenti
+            verrà inviata una risposta di rifiuto <i>productrejected()</i>.
+            nel momento in cui termina il caricamento di un prodotto, holdmanager aggiornerà il file json
+            che tiene traccia dello stato della hold.
+          </div>
+        </div>
+
       </div>
+
+      
 
       <h2>Project Architecture</h2>
       <div class="medium-12 text-center remark">
