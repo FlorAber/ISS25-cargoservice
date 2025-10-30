@@ -361,8 +361,10 @@
             <i>productaccepted(slot)</i> o <i>productrejected()</i> conseguenti
             ai controlli di cui è responsabile <strong>holdmanager</strong>. Al
             momento della ricezione della risposta comunicherà all'utente
-            l'esito e, se sarà positivo, rimarrà in attesa del segnale di carico
-            proveniente dal sonar, in caso contrario tornerà nello stato di
+            l'esito e, se sarà positivo, inizialmente scatenerà un evento (utile
+            per l'interazione con i componenti non ancora definiti in questa
+            fase) e successivamente rimarrà in attesa del segnale di carico
+            proveniente dal sonar. In caso contrario tornerà nello stato di
             attesa delle richieste di carico. Al momento della ricezione del
             segnale dal sonar comunicherà al <strong>cargorobot</strong> tramite
             richiesta <i>load(slot)</i> lo slot precedentemente indicato

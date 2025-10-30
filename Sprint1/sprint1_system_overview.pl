@@ -10,7 +10,6 @@ reply( loadrejected, loadrejected(X) ).  %%for loadrequest
 request( controlproduct, controlproduct(PID) ).
 reply( productaccepted, productaccepted(SLOT) ).  %%for controlproduct
 reply( productrejected, productrejected(MSG) ).  %%for controlproduct
-event( waitingForDeposit, waitingfordeposit(X) ).
 event( doDeposit, doDeposit(X) ).
 event( productloaded, productloaded(X) ).
 request( load, load(SLOT) ).
@@ -33,6 +32,7 @@ event( stopthesystem, stopthesystem(X) ).
 event( resumethesystem, resumethesystem(X) ).
 %====================================================================================
 context(ctx_cargo, "localhost",  "TCP", "8014").
+context(ctx_test, "127.0.0.1",  "TCP", "8050").
 context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
 context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  qactor( productservice, ctxproductservice, "external").
@@ -43,3 +43,5 @@ context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  static(cargorobot).
   qactor( holdmanager, ctx_cargo, "it.unibo.holdmanager.Holdmanager").
  static(holdmanager).
+  qactor( mockuser, ctx_test, "it.unibo.mockuser.Mockuser").
+ static(mockuser).

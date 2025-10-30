@@ -20,7 +20,6 @@ Reply productaccepted : productaccepted(SLOT) for controlproduct	// hold manager
 Reply productrejected : productrejected(MSG)  for controlproduct	// hold manager to cargomanager
 
 // Sonar detects the product 
-Event waitingForDeposit : waitingfordeposit(X)    // sent after load request accepted, used to trigger the sonar sensor
 Event doDeposit : doDeposit(X) 					 // mock to cargomanager
 
 // TEMPORANEA PER GESTIRE LA FINE DEL CARICAMENTO E AGGIORNARE LO STATO INTERNO DELL'HOLDMANAGER, SOSTITUIBILE CON ALTRO
@@ -598,7 +597,7 @@ QActor mockuser context ctx_test {
 		
 	State deposit {
 		println("$name : PID found, proceeding to do Deposit") color cyan
-		forward cargomanager -m doDeposit : doDeposit(1)
+		emit doDeposit : doDeposit(1)
 		
 		if [# COUNTLOADS == 2 || COUNTLOADS == 4 #] {
 			delay 3000

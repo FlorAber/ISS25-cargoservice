@@ -63,7 +63,7 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 				state("deposit") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name : PID found, proceeding to do Deposit")
-						forward("doDeposit", "doDeposit(1)" ,"cargomanager" ) 
+						emit("doDeposit", "doDeposit(1)" ) 
 						if(  COUNTLOADS == 2 || COUNTLOADS == 4  
 						 ){delay(3000) 
 						emit("sonaralert", "sonaralert(0)" ) 
