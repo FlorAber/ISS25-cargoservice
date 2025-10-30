@@ -151,7 +151,7 @@ class Cargomanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t7",targetState="doDeposit",cond=whenDispatch("doDeposit"))
+					 transition(edgeName="t7",targetState="doDeposit",cond=whenEvent("doDeposit"))
 					interrupthandle(edgeName="t8",targetState="handleAlert",cond=whenEvent("sonaralert"),interruptedStateTransitions)
 				}	 
 				state("doDeposit") { //this:State

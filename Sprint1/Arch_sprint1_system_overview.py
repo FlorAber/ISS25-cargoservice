@@ -33,6 +33,7 @@ with Diagram('sprint1_system_overviewArch', show=False, outformat='png', graph_a
           basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
      with Cluster('ctxproductservice', graph_attr=nodeattr):
           productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
+     sys >> Edge( label='doDeposit', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager
      sys >> Edge( label='productloaded', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager
      cargomanager >> Edge( label='stopthesystem', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='sonarok', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager

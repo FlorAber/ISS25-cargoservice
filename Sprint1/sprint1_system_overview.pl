@@ -10,7 +10,8 @@ reply( loadrejected, loadrejected(X) ).  %%for loadrequest
 request( controlproduct, controlproduct(PID) ).
 reply( productaccepted, productaccepted(SLOT) ).  %%for controlproduct
 reply( productrejected, productrejected(MSG) ).  %%for controlproduct
-dispatch( doDeposit, doDeposit(X) ).
+event( waitingForDeposit, waitingfordeposit(X) ).
+event( doDeposit, doDeposit(X) ).
 event( productloaded, productloaded(X) ).
 request( load, load(SLOT) ).
 reply( loadended, loadended(0) ).  %%for load
