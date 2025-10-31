@@ -11,6 +11,8 @@ request( controlproduct, controlproduct(PID) ).
 reply( productaccepted, productaccepted(SLOT) ).  %%for controlproduct
 reply( productrejected, productrejected(MSG) ).  %%for controlproduct
 event( doDeposit, doDeposit(X) ).
+event( waitingForDeposit, waitingfordeposit(X) ).
+event( stopWaitingForDeposit, stopWaitingForDeposit(X) ).
 event( productloaded, productloaded(X) ).
 request( load, load(SLOT) ).
 reply( loadended, loadended(0) ).  %%for load
@@ -37,8 +39,8 @@ context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
 context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  qactor( productservice, ctxproductservice, "external").
   qactor( basicrobot, ctx_basicrobot, "external").
-  qactor( cargomanager, ctx_cargo, "it.unibo.cargomanager.Cargomanager").
- static(cargomanager).
+  qactor( cargoservice, ctx_cargo, "it.unibo.cargoservice.Cargoservice").
+ static(cargoservice).
   qactor( cargorobot, ctx_cargo, "it.unibo.cargorobot.Cargorobot").
  static(cargorobot).
   qactor( holdmanager, ctx_cargo, "it.unibo.holdmanager.Holdmanager").

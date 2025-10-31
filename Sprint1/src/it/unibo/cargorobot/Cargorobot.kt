@@ -68,7 +68,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 var ARG = payloadArg(0)  
 								CommUtils.outyellow("$name : robot engaged, response - $ARG")
-								forward("robotready", "robotready(0)" ,"cargomanager" ) 
+								forward("robotready", "robotready(0)" ,"cargoservice" ) 
 						}
 						CommUtils.outyellow("$name : waiting for movement requests")
 						//genTimer( actor, state )

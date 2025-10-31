@@ -26,7 +26,7 @@ with Diagram('sprint1_system_overviewArch', show=False, outformat='png', graph_a
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_cargo', graph_attr=nodeattr):
-          cargomanager=Custom('cargomanager','./qakicons/symActorWithobjSmall.png')
+          cargoservice=Custom('cargoservice','./qakicons/symActorWithobjSmall.png')
           cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
           holdmanager=Custom('holdmanager','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_test', graph_attr=nodeattr):
@@ -35,11 +35,13 @@ with Diagram('sprint1_system_overviewArch', show=False, outformat='png', graph_a
           basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
      with Cluster('ctxproductservice', graph_attr=nodeattr):
           productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
-     sys >> Edge( label='doDeposit', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager
-     sys >> Edge( label='productloaded', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager
-     cargomanager >> Edge( label='stopthesystem', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     sys >> Edge( label='sonarok', **evattr, decorate='true', fontcolor='darkgreen') >> cargomanager
-     cargomanager >> Edge( label='resumethesystem', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     cargoservice >> Edge( label='waitingForDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sys >> Edge( label='doDeposit', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
+     cargoservice >> Edge( label='stopWaitingForDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sys >> Edge( label='productloaded', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
+     cargoservice >> Edge( label='stopthesystem', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sys >> Edge( label='sonarok', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
+     cargoservice >> Edge( label='resumethesystem', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='stopthesystem', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
      cargorobot >> Edge( label='productloaded', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      cargorobot >> Edge( label='alarm', **eventedgeattr, decorate='true', fontcolor='red') >> sys
@@ -48,11 +50,11 @@ with Diagram('sprint1_system_overviewArch', show=False, outformat='png', graph_a
      mockuser >> Edge( label='doDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      mockuser >> Edge( label='sonaralert', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      mockuser >> Edge( label='sonarok', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<controlproduct<font color="darkgreen"> productaccepted productrejected</font> &nbsp; >',  fontcolor='magenta') >> holdmanager
      cargorobot >> Edge(color='magenta', style='solid', decorate='true', label='<engage<font color="darkgreen"> engagedone engagerefused</font> &nbsp; moverobot<font color="darkgreen"> moverobotdone moverobotfailed</font> &nbsp; >',  fontcolor='magenta') >> basicrobot
-     cargomanager >> Edge(color='magenta', style='solid', decorate='true', label='<load<font color="darkgreen"> loadended loadfailed</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
-     cargomanager >> Edge(color='magenta', style='solid', decorate='true', label='<controlproduct<font color="darkgreen"> productaccepted productrejected</font> &nbsp; >',  fontcolor='magenta') >> holdmanager
+     mockuser >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
      holdmanager >> Edge(color='magenta', style='solid', decorate='true', label='<getProduct<font color="darkgreen"> getProductAnswer</font> &nbsp; >',  fontcolor='magenta') >> productservice
-     mockuser >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargomanager
-     holdmanager >> Edge(color='blue', style='solid',  decorate='true', label='<databaseready &nbsp; >',  fontcolor='blue') >> cargomanager
-     cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<robotready &nbsp; >',  fontcolor='blue') >> cargomanager
+     cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<load<font color="darkgreen"> loadended loadfailed</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
+     cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<robotready &nbsp; >',  fontcolor='blue') >> cargoservice
+     holdmanager >> Edge(color='blue', style='solid',  decorate='true', label='<databaseready &nbsp; >',  fontcolor='blue') >> cargoservice
 diag

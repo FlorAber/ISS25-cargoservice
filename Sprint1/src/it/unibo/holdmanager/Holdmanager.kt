@@ -89,7 +89,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 						 {CommUtils.outblue("$name : state file not found, initializing")
 						  resetState()  
 						 }
-						forward("databaseready", "databaseready(0)" ,"cargomanager" ) 
+						forward("databaseready", "databaseready(0)" ,"cargoservice" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

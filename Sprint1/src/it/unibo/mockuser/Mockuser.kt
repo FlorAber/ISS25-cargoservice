@@ -50,7 +50,7 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 						delay(5000) 
 						if(  COUNTLOADS < 5  
 						 ){CommUtils.outcyan("$name : richiesta! ")
-						request("loadrequest", "loadrequest($COUNTLOADS)" ,"cargomanager" )  
+						request("loadrequest", "loadrequest($COUNTLOADS)" ,"cargoservice" )  
 						}
 						//genTimer( actor, state )
 					}

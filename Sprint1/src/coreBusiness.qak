@@ -1,6 +1,6 @@
 System sprint1_system_overview
 
-// MESSAGGI DI AVVIO DEL SISTEMA IL CARGOMANAGER PARTE DOPO AVERLI RICEVUTI ENTRAMBI INVIANDOSI UN allRady
+// MESSAGGI DI AVVIO DEL SISTEMA IL cargoservice PARTE DOPO AVERLI RICEVUTI ENTRAMBI INVIANDOSI UN allRady
 Dispatch robotready : robotready(0)
 Dispatch databaseready : databaseready(0)
 
@@ -10,22 +10,23 @@ Dispatch allready : allReady(0)
 //Request createProduct : product(JSonString) // mock to productservice - DA USARE PER CARICARE PRODOTTI NEL DB, SOLO PRIMO AVVIO
 
 // Load request, starting point of the whole scenary
-Request loadrequest: loadrequest(PID)				 // mock to cargomanager
-Reply loadaccepted : loadaccepted(X) for loadrequest // cargomanager to mock
-Reply loadrejected : loadrejected(X) for loadrequest // cargomanager to mock
+Request loadrequest: loadrequest(PID)				 // mock to cargoservice
+Reply loadaccepted : loadaccepted(X) for loadrequest // cargoservice to mock
+Reply loadrejected : loadrejected(X) for loadrequest // cargoservice to mock
 
 // Check product existance in hold manager
-Request controlproduct : controlproduct(PID)  						// cargomanager to hold manager
-Reply productaccepted : productaccepted(SLOT) for controlproduct	// hold manager to cargomanager 
-Reply productrejected : productrejected(MSG)  for controlproduct	// hold manager to cargomanager
+Request controlproduct : controlproduct(PID)  						// cargoservice to hold manager
+Reply productaccepted : productaccepted(SLOT) for controlproduct	// hold manager to cargoservice 
+Reply productrejected : productrejected(MSG)  for controlproduct	// hold manager to cargoservice
 
 // Sonar detects the product 
-Event doDeposit : doDeposit(X) 					 // mock to cargomanager
-
+Event doDeposit : doDeposit(X) 					 // user to cargoservice
+Event waitingForDeposit : waitingfordeposit(X)    // sent after load request accepted, used to trigger the sonar sensor
+Event stopWaitingForDeposit : stopWaitingForDeposit(X)
 // TEMPORANEA PER GESTIRE LA FINE DEL CARICAMENTO E AGGIORNARE LO STATO INTERNO DELL'HOLDMANAGER, SOSTITUIBILE CON ALTRO
 Event productloaded : productloaded(X) 
 
-//cargomanager to cargorobot
+//cargoservice to cargorobot
 Request load : load(SLOT)
 
 Reply loadended : loadended(0) 		for load
@@ -71,7 +72,7 @@ Context ctxproductservice ip [ host="127.0.0.1" port=8111]
 ExternalQActor productservice context ctxproductservice
 ExternalQActor basicrobot context ctx_basicrobot
 
-QActor cargomanager context ctx_cargo { 
+QActor cargoservice context ctx_cargo { 
 	
 	[#
 		var robotReady: Boolean = false
@@ -111,7 +112,7 @@ QActor cargomanager context ctx_cargo {
 	} Goto waitForTheOthers
 	
 	// ------------------------------------------------------------------------
-	// QUI COMINCIA LA VERA LOGICA DEL CARGOMANAGER
+	// QUI COMINCIA LA VERA LOGICA DEL cargoservice
 	// ------------------------------------------------------------------------
 	
 	State wait{
@@ -159,6 +160,7 @@ QActor cargomanager context ctx_cargo {
 	// Attende segnale di deposito dal sonar
 	State waitForDeposit {
 		println ("$name : waiting for sonar deposit signal") color green
+		emit waitingForDeposit : waitingForDeposit
 	}
 	Transition t
 		whenEvent doDeposit -> doDeposit
@@ -168,6 +170,7 @@ QActor cargomanager context ctx_cargo {
 	State doDeposit{
 		println ("$name : package detected, proceeding with the loading") color green
 		request cargorobot -m load : load($SLOT_TO_LOAD)
+		emit stopWaitingForDeposit : stopWaitingForDeposit
 	} 
 	Transition t
 		whenEvent productloaded -> loadEnded
@@ -229,7 +232,7 @@ QActor cargorobot context ctx_cargo {
 			[# var ARG = payloadArg(0) #]
 			println("$name : robot engaged, response - $ARG") color yellow
 			
-			forward cargomanager -m robotready : robotready(0)
+			forward cargoservice -m robotready : robotready(0)
 		}
 		println("$name : waiting for movement requests") color yellow
 	}
@@ -458,7 +461,7 @@ QActor holdmanager context ctx_cargo {
 			[# resetState() #]
 		}
 		
-		forward cargomanager -m databaseready : databaseready(0)
+		forward cargoservice -m databaseready : databaseready(0)
 	}
 	Goto wait
 	
@@ -588,7 +591,7 @@ QActor mockuser context ctx_test {
 		delay 5000
 		if[# COUNTLOADS < 5 #] {
 			println("$name : richiesta! ") color cyan
-			request cargomanager -m loadrequest : loadrequest($COUNTLOADS)
+			request cargoservice -m loadrequest : loadrequest($COUNTLOADS)
 		}	
 	}
 	Transition t
