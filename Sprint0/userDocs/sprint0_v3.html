@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="it">
+  <head>
+    <!-- <script type="text/javascript" src="../css/issStyle.js"></script> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.4/dist/css/foundation.min.css"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.4/dist/js/foundation.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" type="text/css" href="../../resources/_styles/style.css" />
+
+    <title>ISS25 - Sprint 0</title>
+  </head>
+
+  <body>
+    <div id="top">
+      <h1>LABORATORIO DI INGEGNERIA DEI SISTEMI SOFTWARE - Sprint 0</h1>
+    </div>
+    <div class="body">
+      <h2>Introduction</h2>
+      <div class="remark">
+        <div class="textbody">
+          Lo scopo del team è quello realizzare un sistema software sulla base
+          dei requisiti forniti dal cliente e presentanti nel
+          <a href="../../resources/TemaFinale25.html"> tema finale 2025</a>.
+          <br/>
+          L'obiettivo dello Sprint 0 è di analizzare i requisiti forniti dal
+          cliente, comprenderli pienamente e costruire un modello di riferimento
+          del sistema che formalizzi i requisiti.
+        </div>
+      </div>
+
+      <h2>Requirements</h2>
+
+      <div class="remark">
+        <a
+          href="../../resources/TemaFinale25.html"
+          class="button primary"
+          target="_blank"
+        >
+          Client requirements
+        </a>
+      </div>
+
+      <h2>Requirement analysis</h2>
+
+      <div class="remark">
+        A partire dai requisiti forniti dal cliente, si possono individuare diversi componenti del sistema:
+
+        <div class="textparagraph">
+            <h3>cargoservice</h3>
+            <div class="textbody">
+                Sistema software che si occupa della gestione della nave cargo.
+                È in grado di ricevere richieste di caricamento di prodotti tramite l'invio di un messaggio contenente il PID del prodotto da caricare e si occupa di coordinare tutte
+                le operazioni all'interno del sistema <br/>
+                Ad oggi non è possibile definire le caratteristiche della GUI non essendo specificati abbastanza requisiti. <br/>
+                Alla richiesta di caricamento di un prodotto, il cargoservice potrà rispondere con un messaggio di conferma, nel quale viene confermata la possibilità di caricamento, o con un messaggio che specifica le motivazioni per cui il caricamento non può essere effettuato che possono essere:
+                <ul>
+                    <li> Prodotto non registrato nel database </li>
+                    <li> Peso totale della hold superiore ad un limite massimo (maxLoad)</li>
+                    <li> Hold piena, non ci sono slot liberi a cui caricare il prodotto </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- <div class="textparagraph">
+          <h3>productservice</h3>
+          <div class="textbody">
+            Servizio fornito dal committente che verrà integrato all'interno del sistema e si occupa della gestione del database di prodotti.
+            È costituito da un'entità con la quale è possibile comunicare tramite l'invio di messaggi, in particolare per richiedere informazioni sui prodotti è
+            possibile inviare un messaggio contenente il PID del prodotto di interesse e si riceverà in risposta un messaggio contenente le informazioni richieste, se il prodotto è registrato, 
+            o un messaggio di errore in caso contrario.
+          </div>
+        </div> -->
+
+        <div class="textparagraph">
+          <h3>sensor</h3>
+          <div class="textbody">
+            Sottosistema incaricato della gestione di due dispositivi fisici forniti dal cliente: un led e un sonar.
+            Per questo sarà costituito da un RaspBerryPi. Ad oggi non sono state ancora definite ulteriori specifiche
+          </div>
+        </div>
+
+        <div class="textparagraph">
+          <h3>cargorobot</h3>
+          <div class="textbody">
+            Il cargorobot è un componente incaricato di controllare un Differential Drive Robot fornito dal committente chiamato basicrobot, la cui documentazione è visibile al seguente
+            <a href="../../resources/BasicRobot24.html">link</a>.
+            Essendo il basicrobot controllabile tramite l'invio di messaggi il cargorobot non potrà essere espresso come un semplice POJO ma sarà necessario modellarlo come componente attivo.
+            L'attivazione del cargorobt dovrà avvenire tramite l'invio di messaggi provenienti dal cargoservice.
+          </div>
+        </div>
+
+        <div class="textparagraph">
+          <h3>hold</h3>
+          <div class="textbody">
+            La hold rappresenta l'ambiente in cui il robot si muove. È formata
+            da una stanza rettangolare nella quale sono presenti 5 slot di
+            carico e una porta di I/O da cui entrano i container. Il robot
+            quando fermo si trova nella posizione HOME e occupa una porzione di spazio pari
+            alle sue dimensioni. <br/>
+            Questa mappa può dunque essere rappresentata come una griglia bidimensionale 
+            dove ogni punto ha coordinate discrete misurate in termini di dimensioni del robot. 
+            La dimensione del robot sarà l'unità di misura principale per gli spostamenti. <br />
+            Le informazioni riguardanti le locazioni fisiche del sistema sono già presenti all'interno 
+            del robot e pertanto non sono modificabili.
+            <div class="medium-12 text-center margin-5">
+              <img src="./resources/map.png" class="" alt="map" width="25%" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Model</h2>
+      <div class="remark">
+        Poichè si è osservato che il sistema richiesto dal cliente è un sistema costituito da un insieme di componenti attivi che comunicano tra loro tramite scambio di messaggi,
+        questo risulta essere distante dalle tecnologie implementative tradizionali. 
+        Per costruire un modello infatti è necessario utilizzare un linguaggio formale per la rappresentazione di sistemi distribuiti, in quanto strumenti tradizionali come ad esempio UML, 
+        presentano un abstraction gap no trascurabile, permettendo di rappresentare solamente comunicazioni tra i componenti basate su procedure-call.
+        Per questo motivo è stato deciso di utilizzare il linguaggio QAK, un Domain Specific Language che permette di modellare sistemi distribuiti basati su componenti attivi, chiamati attori, che interagiscono tramite scambio di messaggi. 
+        QAK costituisce un linguaggio formale, ed è per questo comprensibile anche alla macchina, e per questo risulta essere un valido strumento per la formalizzazione dei requsiti con un linguaggio non ambiguo. 
+      </div>
+
+      <h2>Logical Model</h2>
+      <div class="medium-12 text-center remark">
+        <img
+          src="../sprint0_system_overviewarch.png"
+          class="text-center"
+          alt="map"
+          width="25%"
+        />
+      </div>
+
+      <h2>Test plans</h2>
+      <div class="remark">
+        <div class="textbody">
+          Lo scopo della fase di test è quello di definire e formalizzare test funzionali volti a verificare il corretto comportamento del core business del sistema, ossia del componente <strong> cargoservice </strong>, in particolare:
+          <ul>
+            <li>
+              Un attore esterno avrà lo scopo di comunicare con il cargoservice inviandogli una richiesta di carico e ne successivamente ne verificherà l'esito
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Work plans</h2>
+      <div class="remark">
+        <div class="textbody">
+          Il progetto verrà sviluppato in 3 sprint, secondo un ordine di
+          priorità delle funzionalità:
+          <ol>
+            <li>
+              Sprint 1 - Core Business : si svilupperà un modello che realizzi le funzionalità principali del sistema, tra cui il movimento del basicrobot. Tempo di sviluppo stimato 50 ore uomo.
+            </li>
+            <li>Sprint 2 - Sensor :  si realizzerà la parte del sistema che si occupa della gestione di led e sonar. Tempo di sviluppo stimato 40 ore uomo. </li>
+            <li>Sprint 3 - GUI : si realizzerà l'interfaccia grafica che permetterà di visualizzare lo stato del sistema. Tempo di sviluppo stimato 20 ore uomo. </li>
+          </ol>
+      </div>
+
+      <footer class="footer">
+        <div class="grid-container fluid">
+          <div class="grid-x grid-margin-x align-middle">
+            <div class="small-12 medium-3 text-center">
+              <a class="button change disabled"> &larr; Previous Sprint </a>
+            </div>
+
+            <div class="small-12 medium-4 text-center">
+              Fasano Andrea : andrea.fasano3@studio.unibo.it <br />
+              <!-- 0001189592 -->
+              Florian Alberto : alberto.florian@studio.unibo.it <br />
+              <!-- 0001189572 -->
+              Sampaoli Giacomo : giacomo.sampaoli@studio.unibo.it
+              <!-- 0001176431 -->
+            </div>
+
+            <div class="small-12 medium-2 align-middle text-center">
+              <a
+                href="https://github.com/FlorAber/ISS25-cargoservice"
+                class="button primary"
+                target="_blank"
+              >
+                GitHub Repository
+              </a>
+            </div>
+
+            <div class="small-12 medium-3 text-right">
+              <a class="button change" href="../../Sprint1/userDocs/sprint1_v1.html"> Next Sprint &rarr; </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
