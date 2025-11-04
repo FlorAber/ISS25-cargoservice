@@ -96,135 +96,142 @@
           </div>
         </div>
 
-        <h3>Come muovere il basicrobot?</h3>
-        <div class="textbody">
-          Il basicrobot fornisce un'interfaccia che permette, tramite l'invio di
-          messaggi, di controllarne il movimento. Per gestire questo movimento è
-          stato deciso di introdurre un attore
-          <strong> cargorobot </strong> che avrà il compito di controllare il
-          robot in ogni suo movimento e gestire le interruzioni provenienti dal
-          sonar in caso di malfunzionamento. Questo approccio consente di
-          separare le funzionalità dei vari componenti facendo in modo che il
-          cargoservice mantenga solo la funzionalità di gestore delle
-          comunicazioni.
-
+        <div class="textparagraph">
+          <h3>Come muovere il basicrobot?</h3>
           <div class="textbody">
-            <h4>Interazioni del cargorobot</h4>
-            Dovendo controllare il robot, l'attore avvierà l'operazione di
-            carico una volta ricevuto un messaggio dal cargoservice, questo
-            messaggio dovrà specificare lo slot a cui caricare il prodotto così
-            che il cargorobot possa scegliere la strada appropriata per fare
-            raggiungere al robot la giusta posizione fisica. Una volta terminato
-            lo spostamento il cargorobot invierà un messaggio al cargoservice
-            per notificarlo dell'avvenuto caricamento. Inoltre l'attore deve
-            essere capace di gestire i segnali di interruzione generati dal
-            sonar (che arriveranno dal cargoservice in quanto gestore delle
-            comunicazioni) fermando il robot e facendolo ripartire quando il
-            sistema tornerà funzionante.
-          </div>
+            Il basicrobot fornisce un'interfaccia che permette, tramite l'invio
+            di messaggi, di controllarne il movimento. Per gestire questo
+            movimento è stato deciso di introdurre un attore
+            <strong> cargorobot </strong> che avrà il compito di controllare il
+            robot in ogni suo movimento e gestire le interruzioni provenienti
+            dal sonar in caso di malfunzionamento. Questo approccio consente di
+            separare le funzionalità dei vari componenti facendo in modo che il
+            cargoservice mantenga solo la funzionalità di gestore delle
+            comunicazioni.
 
-          <div class="textbody">
+            <div class="textbody">
+              <h4>Interazioni del cargorobot</h4>
+              Dovendo controllare il robot, l'attore avvierà l'operazione di
+              carico una volta ricevuto un messaggio dal cargoservice, questo
+              messaggio dovrà specificare lo slot a cui caricare il prodotto
+              così che il cargorobot possa scegliere la strada appropriata per
+              fare raggiungere al robot la giusta posizione fisica. Una volta
+              terminato lo spostamento il cargorobot invierà un messaggio al
+              cargoservice per notificarlo dell'avvenuto caricamento. Inoltre
+              l'attore deve essere capace di gestire i segnali di interruzione
+              generati dal sonar (che arriveranno dal cargoservice in quanto
+              gestore delle comunicazioni) fermando il robot e facendolo
+              ripartire quando il sistema tornerà funzionante.
+            </div>
+
+            <div class="textparagraph"></div>
+            <div class="textbody">
+              <br />
+              <h4>Gestione del movimento</h4>
+              Il basicrobot mette a disposizione diversi messaggi per muovere il
+              DDR robot. Sono stati identificati due messaggi principali che
+              permettono di definire un piano di esecuzione per spostare il
+              robot da un punto A ad un punto B.
+              <table class="robot-table">
+                <thead>
+                  <tr>
+                    <th>Messaggio</th>
+                    <th>Funzionamento</th>
+                    <th>Componenti</th>
+                    <th>Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>moverobot(TARGETX, TARGETY)</td>
+                    <td>
+                      Gestisce le richieste di posizionamento, determina il
+                      piano di movimento, restituisce moverobotdone, se ok,
+                      moverobotfailed, se errore.
+                    </td>
+                    <td>planexec, robotpos</td>
+                    <td>
+                      Gestisce anche il comando di utilità setpos(X,Y,D) per
+                      allienare la rappresentazione del planner sulla posizione
+                      corrente reale del robot fissata manualmente.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>doplan(PATH, STEPTIME)</td>
+                    <td>
+                      Gestisce richieste di esecuzione di una serie di mosse,
+                      restituisce doplandone, se ok, doplanfailed, se errore.
+                    </td>
+                    <td>planexec</td>
+                    <td>Non usa e non aggiorna alcuna mappa della stanza</td>
+                  </tr>
+                </tbody>
+              </table>
+              Per semplificare lo sviluppo delegando le operazioni di scelta del
+              percorso da eseguire al basicrobot, il quale è munito di un
+              sistema automatico di pianificazioned del percorso, è stato deciso
+              di utilizzare il messaggio <i>moverobot(TARGETX, TARGETY)</i>. Il
+              cargorobot dovrà dunque essere in grado di tradurre
+              l'identificatore dello slot ricevuto nelle rispettive coordinate
+              assolute.
+            </div>
             <br />
-            <h4>Gestione del movimento</h4>
-            Il basicrobot mette a disposizione diversi messaggi per muovere il
-            DDR robot. Sono stati identificati due messaggi principali che
-            permettono di definire un piano di esecuzione per spostare il robot
-            da un punto A ad un punto B.
-            <table class="robot-table">
-              <thead>
-                <tr>
-                  <th>Messaggio</th>
-                  <th>Funzionamento</th>
-                  <th>Componenti</th>
-                  <th>Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>moverobot(TARGETX, TARGETY)</td>
-                  <td>
-                    Gestisce le richieste di posizionamento, determina il piano
-                    di movimento, restituisce moverobotdone, se ok,
-                    moverobotfailed, se errore.
-                  </td>
-                  <td>planexec, robotpos</td>
-                  <td>
-                    Gestisce anche il comando di utilità setpos(X,Y,D) per
-                    allienare la rappresentazione del planner sulla posizione
-                    corrente reale del robot fissata manualmente.
-                  </td>
-                </tr>
-                <tr>
-                  <td>doplan(PATH, STEPTIME)</td>
-                  <td>
-                    Gestisce richieste di esecuzione di una serie di mosse,
-                    restituisce doplandone, se ok, doplanfailed, se errore.
-                  </td>
-                  <td>planexec</td>
-                  <td>Non usa e non aggiorna alcuna mappa della stanza</td>
-                </tr>
-              </tbody>
-            </table>
-            Per semplificare lo sviluppo delegando le operazioni di scelta del
-            percorso da eseguire al basicrobot, il quale è munito di un sistema
-            automatico di pianificazioned del percorso, è stato deciso di
-            utilizzare il messaggio <i>moverobot(TARGETX, TARGETY)</i>. Il
-            cargorobot dovrà dunque essere in grado di tradurre l'identificatore
-            dello slot ricevuto nelle rispettive coordinate assolute.
-          </div>
-          <br />
-          <div class="textbody">
-            <h4>Come recuperare le coordinate?</h4>
-            risulta fondamentale la possibilità di recuperare le coordinate dei
-            punti di interesse all'interno della hold, sono stati identificati
-            due possibili approcci:
-            <ul>
-              <li>
-                Memorizzazione delle coordinate all'interno del codice sorgente
-              </li>
-              <li>
-                Memorizzazione delle coordinate in una base di conoscenza prolog
-              </li>
-            </ul>
+            <div class="textbody">
+              <h4>Come recuperare le coordinate?</h4>
+              risulta fondamentale la possibilità di recuperare le coordinate
+              dei punti di interesse all'interno della hold, sono stati
+              identificati due possibili approcci:
+              <ul>
+                <li>
+                  Memorizzazione delle coordinate all'interno del codice
+                  sorgente
+                </li>
+                <li>
+                  Memorizzazione delle coordinate in una base di conoscenza
+                  prolog
+                </li>
+              </ul>
 
-            A questo fine l'analista consiglia di sfruttare il secondo approccio
-            in quanto più flessibile e scalabile in caso di modifiche future
-            alla mappa.
+              A questo fine l'analista consiglia di sfruttare il secondo
+              approccio in quanto più flessibile e scalabile in caso di
+              modifiche future alla mappa.
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="textparagraph">
-        <h3>Come sfruttare il productservice e gestire la hold?</h3>
-        <div class="textbody">
-          Lo stato della hold (slot liberi e peso della nave cargo) deve essere
-          gestito da uno degli attori del sistema; per fare in modo che il
-          cargoservice mantenga solo la funzionalità di gestore delle
-          comunicazioni si ritiene opportuno affidare questa responsabilità ad
-          un attore dedicato di nome <strong> holdmanager </strong>, il quale si
-          occuperà anche dell'interfacciamento con il
-          <strong> productservice </strong>. Il productservice viene fornito dal
-          committente e permette di recuperare le informazioni riguardanti un
-          prodotto tramite l'invio di un messaggio
-          <strong> getProduct </strong> nel quale viene specificato il PID del
-          prodotto da ricercare.
-          <br />
-
-          Questo attore <strong> holdmanager </strong> fungerà da intermediario
-          tra il cargoservice e il productservice, prendendo in carico la
-          gestione della hold tramite il tracciamento degli slot liberi, di
-          quelli occupati e del peso dei prodotti caricati nella nave cargo.
-
+        <div class="textparagraph">
+          <h3>Come sfruttare il productservice e gestire la hold?</h3>
           <div class="textbody">
-            <h4>Tracciamento del carico</h4>
-            Il tracciamento del carico potrà avvenire in due modi:
-            <ul>
-              <li>Tracciamento persistente</li>
-              <li>Tracciamento non persistente</li>
-            </ul>
+            Lo stato della hold (slot liberi e peso della nave cargo) deve
+            essere gestito da uno degli attori del sistema; per fare in modo che
+            il cargoservice mantenga solo la funzionalità di gestore delle
+            comunicazioni si ritiene opportuno affidare questa responsabilità ad
+            un attore dedicato di nome <strong> holdmanager </strong>, il quale
+            si occuperà anche dell'interfacciamento con il
+            <strong> productservice </strong>. Il productservice viene fornito
+            dal committente e permette di recuperare le informazioni riguardanti
+            un prodotto tramite l'invio di un messaggio
+            <strong> getProduct </strong> nel quale viene specificato il PID del
+            prodotto da ricercare.
+            <br />
 
-            Per avere una visione dello stato della hold anche in caso di crash
-            del sistema si ritiene opportuno seguire il primo approccio.
+            Questo attore <strong> holdmanager </strong> fungerà da
+            intermediario tra il cargoservice e il productservice, prendendo in
+            carico la gestione della hold tramite il tracciamento degli slot
+            liberi, di quelli occupati e del peso dei prodotti caricati nella
+            nave cargo.
+            <br />
+            <div class="textbody">
+              <h4>Tracciamento del carico</h4>
+              Il tracciamento del carico potrà avvenire in due modi:
+              <ul>
+                <li>Tracciamento persistente</li>
+                <li>Tracciamento non persistente</li>
+              </ul>
+
+              Per avere una visione dello stato della hold anche in caso di
+              crash del sistema si ritiene opportuno seguire il primo approccio.
+            </div>
           </div>
         </div>
       </div>
@@ -314,135 +321,129 @@
 
     <h2>Project</h2>
     <div class="remark">
+      Per seguire il single responsibility principle è stato deciso di affidare
+      a diversi attori la gestione delle distinte parti del sistema.
+
       <div class="textparagraph">
-        Per seguire il single responsibility principle è stato deciso di
-        affidare a diversi attori la gestione delle distinte parti del sistema.
+        <h3>comportamento del cargoservice</h3>
+        <div class="textbody">
+          Il cargoservice è l'attore che ha il compito di controllare il
+          funzionamento del sistema e coordinare le comunicazioni tra i diversi
+          componenti. Al momento della ricezione di una richiesta di caricamento
+          da parte dell'utente, contenente il PID del prodotto che intende
+          depositare, verrà inviata all'<strong>holdmanager</strong> una
+          richiesta <i>controlproduct(pid)</i>, rimanendo dunque in attesa di
+          una risposta corrispondente all'esito, <i>productaccepted(slot)</i> o
+          <i>productrejected()</i> conseguenti ai controlli di cui è
+          responsabile <strong>holdmanager</strong>. Al momento della ricezione
+          della risposta comunicherà all'utente l'esito e, se sarà positivo,
+          inizialmente scatenerà un evento (utile per l'interazione con i
+          componenti non ancora definiti in questa fase) e successivamente
+          rimarrà in attesa del segnale di carico proveniente dal sonar. In caso
+          contrario tornerà nello stato di attesa delle richieste di carico. Al
+          momento della ricezione del segnale dal sonar comunicherà al
+          <strong>cargorobot</strong> tramite richiesta <i>load(slot)</i> lo
+          slot precedentemente indicato dall'<strong>holdmanager</strong> in cui
+          andare a depositare il prodotto. Successivamente attenderà il
+          completamento delle operazioni del <strong>cargorobot</strong>, il
+          quale risponderà con <i>loadended()</i> in caso di successo o
+          <i>loadfailed()</i> in caso di errore, prima di tornare in attesa di
+          una nuova richiesta di carico. <br />
 
-        <div class="textparagraph">
-          <h3>comportamento del cargoservice</h3>
-          <div class="textbody">
-            Il cargoservice è l'attore che ha il compito di controllare il
-            funzionamento del sistema e coordinare le comunicazioni tra i
-            diversi componenti. Al momento della ricezione di una richiesta di
-            caricamento da parte dell'utente, contenente il PID del prodotto che
-            intende depositare, verrà inviata all'<strong>holdmanager</strong>
-            una richiesta <i>controlproduct(pid)</i>, rimanendo dunque in attesa
-            di una risposta corrispondente all'esito,
-            <i>productaccepted(slot)</i> o <i>productrejected()</i> conseguenti
-            ai controlli di cui è responsabile <strong>holdmanager</strong>. Al
-            momento della ricezione della risposta comunicherà all'utente
-            l'esito e, se sarà positivo, inizialmente scatenerà un evento (utile
-            per l'interazione con i componenti non ancora definiti in questa
-            fase) e successivamente rimarrà in attesa del segnale di carico
-            proveniente dal sonar. In caso contrario tornerà nello stato di
-            attesa delle richieste di carico. Al momento della ricezione del
-            segnale dal sonar comunicherà al <strong>cargorobot</strong> tramite
-            richiesta <i>load(slot)</i> lo slot precedentemente indicato
-            dall'<strong>holdmanager</strong> in cui andare a depositare il
-            prodotto. Successivamente attenderà il completamento delle
-            operazioni del <strong>cargorobot</strong>, il quale risponderà con
-            <i>loadended()</i> in caso di successo o <i>loadfailed()</i> in caso
-            di errore, prima di tornare in attesa di una nuova richiesta di
-            carico. <br />
-
-            Oltre al suo normale flusso di esecuzione, il cargoservice dovrà
-            gestire i segnali di interruzione provenienti dal sonar in caso di
-            malfunzionamento, così da andare a sospendere le attività di tutti i
-            componenti del sistema fino al rientro dell'errore
-          </div>
+          Oltre al suo normale flusso di esecuzione, il cargoservice dovrà
+          gestire i segnali di interruzione provenienti dal sonar in caso di
+          malfunzionamento, così da andare a sospendere le attività di tutti i
+          componenti del sistema fino al rientro dell'errore
         </div>
+      </div>
 
-        <div class="textparagraph">
-          <h3>comportamento del cargorobot</h3>
-          <div class="textbody">
-            Al momento della ricezione della richiesta <i>load(slot)</i> da
-            parte del cargoservice, il cargorobot si occuperà di inviare le
-            istruzioni di spostamento al basicrobot. In particolare vengono
-            identificate 3 fasi di movimento principali, le quali verranno
-            eseguite in sequenza:
-            <ul>
-              <li>Spostamento dalla posizione corrente alla ioport</li>
-              <li>Spostamento dalla ioport allo slot specificato</li>
-              <li>Spostamento dallo slot alla home</li>
-            </ul>
+      <div class="textparagraph">
+        <h3>comportamento del cargorobot</h3>
+        <div class="textbody">
+          Al momento della ricezione della richiesta <i>load(slot)</i> da parte
+          del cargoservice, il cargorobot si occuperà di inviare le istruzioni
+          di spostamento al basicrobot. In particolare vengono identificate 3
+          fasi di movimento principali, le quali verranno eseguite in sequenza:
+          <ul>
+            <li>Spostamento dalla posizione corrente alla ioport</li>
+            <li>Spostamento dalla ioport allo slot specificato</li>
+            <li>Spostamento dallo slot alla home</li>
+          </ul>
 
-            Le coordinate delle diverse destinazioni verranno recuperate da una
-            base di conoscenza prolog. Nella base di conoscenza sono definiti
-            dei predicati del tipo:
-            <i>position(X, Y, DIR, P).</i>
-            che associano a ciascun punto della mappa (come slot, home, ioport)
-            le coordinate assolute (X, Y) e la direzione DIR. Il predicato di
-            accesso:
-            <i>getPoint(P, X, Y, DIR) :- position(X, Y, DIR, P).</i>
-            consente al cargorobot di ottenere le coordinate e la direzione
-            relative a una determinata posizione P.
-            <ul>
-              <li>x: ascissa del punto</li>
-              <li>y: ordinata del punto</li>
-              <li>
-                direzione: permetterà di ruotare il robot verso la posizione
-                rilevante di interesse
-              </li>
-            </ul>
-          </div>
+          Le coordinate delle diverse destinazioni verranno recuperate da una
+          base di conoscenza prolog. Nella base di conoscenza sono definiti dei
+          predicati del tipo:
+          <i>position(X, Y, DIR, P).</i>
+          che associano a ciascun punto della mappa (come slot, home, ioport) le
+          coordinate assolute (X, Y) e la direzione DIR. Il predicato di
+          accesso:
+          <i>getPoint(P, X, Y, DIR) :- position(X, Y, DIR, P).</i>
+          consente al cargorobot di ottenere le coordinate e la direzione
+          relative a una determinata posizione P.
+          <ul>
+            <li>x: ascissa del punto</li>
+            <li>y: ordinata del punto</li>
+            <li>
+              direzione: permetterà di ruotare il robot verso la posizione
+              rilevante di interesse
+            </li>
+          </ul>
         </div>
+      </div>
 
-        <div class="textparagraph">
-          <h3>comportamento di holdmanager</h3>
-          <div class="textbody">
-            Al momento della ricezione della richiesta
-            <i>controlproduct(pid)</i> da parte del cargoservice, holdmanager si
-            occuperà di gestire il controllo del prodotto relazionandosi
-            direttamente con <strong>productservice</strong>. Al momento della
-            ricezione di una richiesta <i>controlproduct(pid)</i> proveniente
-            dal cargoservice invierà una richiesta <i>getProduct(pid)</i> a
-            <strong>productservice</strong> per recuperare le informazioni
-            riguardanti il prodotto specificato. In base al payload della
-            risposta <i>getProductAnswer(JSonString)</i> holdmanager otterrà i
-            dati del prodotto in formato JSON e se il PID risulterà essere
-            maggiore di 0 (prodotto registrato) verificherà se il peso del
-            prodotto è adeguato alla capacità massima della stiva e deciderà a
-            che slot assegnare il carico (se sono presenti slot liberi). Infine,
-            in caso i controlli abbiano avuto esito positivo, invierà una
-            risposta al cargoservice con il messaggio
-            <i>productaccepted(slot)</i> specificando lo slot scelto, in caso
-            contrario verrà inviata una risposta di rifiuto
-            <i>productrejected()</i>. Per la memorizzazione persistente dello
-            stato della hold, data la sua semplicità e la limitata quantità di
-            dati da gestire, è stato deciso di memorizzarne lo stato all'interno
-            di un file JSON in quanto non richiede la creazione di nuovi
-            componenti e risulta più semplice da implementare. Inoltre la
-            gestione della persistenza tramite file json locale permette, in
-            caso di necessità, anche agli altri attori del sistema di accedere
-            facilmente alle informazioni riguardanti lo stato della hold.
-            All'avvio del sistema l'holdmanager verificherà se il file esiste e
-            in caso positivo caricherà lo stato della hold dalla memoria, in
-            caso contrario si occuperà di creare il file ed inizializzarlo. Per
-            avere una visione d'insieme del sistema nel file JSON verranno
-            memorizzati 3 array, in cui ogni elemento corrisponde ad uno slot
-            della hold:
-            <ul>
-              <li>
-                pids : se il valore è 0 lo slot è libero, se maggiore di zero lo
-                slot è occupato e il valore associato corrisponderà al PID del
-                prodotto caricato in quello slot
-              </li>
-              <li>
-                names: ogni elemento contiene il nome del prodotto caricato
-                nello slot associato o una stringa vuota se lo slot è libero
-              </li>
-              <li>
-                weights : ogni elemento corrisponde al peso del prodotto
-                caricato nello slot associato, se il valore è 0 lo slot è
-                libero. La somma di questi valori permetterà di ottenere il peso
-                attuale della hold
-              </li>
-            </ul>
-            Oltre a questi array nel file JSON verrà memorizzato anche
-            <i>MAXLOAD</i>, cioè il peso massimo che la hold può sostenere
-            <br />
-            Il file JSON avrà dunque la seguente struttura:
-            <pre>
+      <div class="textparagraph">
+        <h3>comportamento di holdmanager</h3>
+        <div class="textbody">
+          Al momento della ricezione della richiesta
+          <i>controlproduct(pid)</i> da parte del cargoservice, holdmanager si
+          occuperà di gestire il controllo del prodotto relazionandosi
+          direttamente con <strong>productservice</strong>. Al momento della
+          ricezione di una richiesta <i>controlproduct(pid)</i> proveniente dal
+          cargoservice invierà una richiesta <i>getProduct(pid)</i> a
+          <strong>productservice</strong> per recuperare le informazioni
+          riguardanti il prodotto specificato. In base al payload della risposta
+          <i>getProductAnswer(JSonString)</i> holdmanager otterrà i dati del
+          prodotto in formato JSON e se il PID risulterà essere maggiore di 0
+          (prodotto registrato) verificherà se il peso del prodotto è adeguato
+          alla capacità massima della stiva e deciderà a che slot assegnare il
+          carico (se sono presenti slot liberi). Infine, in caso i controlli
+          abbiano avuto esito positivo, invierà una risposta al cargoservice con
+          il messaggio <i>productaccepted(slot)</i> specificando lo slot scelto,
+          in caso contrario verrà inviata una risposta di rifiuto
+          <i>productrejected()</i>. Per la memorizzazione persistente dello
+          stato della hold, data la sua semplicità e la limitata quantità di
+          dati da gestire, è stato deciso di memorizzarne lo stato all'interno
+          di un file JSON in quanto non richiede la creazione di nuovi
+          componenti e risulta più semplice da implementare. Inoltre la gestione
+          della persistenza tramite file json locale permette, in caso di
+          necessità, anche agli altri attori del sistema di accedere facilmente
+          alle informazioni riguardanti lo stato della hold. All'avvio del
+          sistema l'holdmanager verificherà se il file esiste e in caso positivo
+          caricherà lo stato della hold dalla memoria, in caso contrario si
+          occuperà di creare il file ed inizializzarlo. Per avere una visione
+          d'insieme del sistema nel file JSON verranno memorizzati 3 array, in
+          cui ogni elemento corrisponde ad uno slot della hold:
+          <ul>
+            <li>
+              pids : se il valore è 0 lo slot è libero, se maggiore di zero lo
+              slot è occupato e il valore associato corrisponderà al PID del
+              prodotto caricato in quello slot
+            </li>
+            <li>
+              names: ogni elemento contiene il nome del prodotto caricato nello
+              slot associato o una stringa vuota se lo slot è libero
+            </li>
+            <li>
+              weights : ogni elemento corrisponde al peso del prodotto caricato
+              nello slot associato, se il valore è 0 lo slot è libero. La somma
+              di questi valori permetterà di ottenere il peso attuale della hold
+            </li>
+          </ul>
+          Oltre a questi array nel file JSON verrà memorizzato anche
+          <i>MAXLOAD</i>, cioè il peso massimo che la hold può sostenere
+          <br />
+          Il file JSON avrà dunque la seguente struttura:
+          <pre>
   {
     "pids": [0, 0, 0, 0],
     "names": ["", "", "", ""],
@@ -450,16 +451,17 @@
     "MAXLOAD": 100
   }
               </pre
-            >
+          >
 
-            Nel momento in cui terminerà il caricamento del prodotto,
-            holdmanager aggiornerà il file JSON utilizzato per tracciare lo
-            stato della hold
-          </div>
+          Nel momento in cui terminerà il caricamento del prodotto, holdmanager
+          aggiornerà il file JSON utilizzato per tracciare lo stato della hold
         </div>
       </div>
 
+    </div>
+
       <h2>System Design</h2>
+
       <div class="medium-12 text-center remark">
         <img
           src="../sprint1_system_overviewarch.png"
@@ -467,6 +469,7 @@
           alt="map"
           width="100%"
         />
+
       </div>
 
       <footer class="footer">
