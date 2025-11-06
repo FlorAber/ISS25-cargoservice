@@ -114,7 +114,7 @@
             
             <br>
             In merito il committente ha fornito un ambiente virtuale <a href="../../resources/VirtualRobot23.html">WEnv</a> che simula un Differential Drive Robot e ha già al suo interno
-            la realizzazione della mappa della hold che serve alla realizzazione del sistema. 
+            la rappresentazione virtuale della stiva della nave richiesta dal committente. 
             
             <br>
             Viene inoltre fornito <a href="../../resources/BasicRobot24.html">basicrobot</a>, un componente software che permette di controllare il DDR virtuale contenuto all'interno di WEnv tramite l'invio di messaggi,
@@ -191,13 +191,13 @@ Reply   envmap        : envmap(MAP)  for getenvmap
             carico e una porta di I/O da cui entrano i container. Il robot
             quando fermo si trova nella posizione HOME e occupa una porzione di spazio pari
             alle sue dimensioni. <br/>
-            Questa mappa può dunque essere rappresentata come una griglia bidimensionale 
+            La stiva della nave può dunque essere rappresentata come una griglia bidimensionale 
             dove ogni punto ha coordinate discrete misurate in termini di dimensioni del robot. 
             La dimensione del robot sarà l'unità di misura principale per gli spostamenti. <br />
-            Le informazioni riguardanti le locazioni fisiche del sistema sono già presenti all'interno 
-            del robot e pertanto non sono modificabili.
-
-            Lo stato di questo componente verra visualizzato tramite la GUI.
+            
+            Lo stato di questo componente verrà aggiornato durante la normale esecuzione del sistema
+            e verra visualizzato tramite la GUI, componente di cui al momento non si hanno sufficienti
+            informazioni per compiere un'analisi dei requisiti dettagliata.
 
             <div class="medium-12 text-center margin-5">
               <img src="./resources/map.png" class="" alt="map" width="25%" />
@@ -371,7 +371,7 @@ Reply   envmap        : envmap(MAP)  for getenvmap
             </div>
 
             <div class="small-12 medium-3 text-right">
-              <a class="button change" href="../../Sprint1/userDocs/sprint1_v1.html"> Next Sprint &rarr; </a>
+              <a class="button change" href="../../Sprint1/userDocs/sprint1_v2.html"> Next Sprint &rarr; </a>
             </div>
           </div>
         </div>
