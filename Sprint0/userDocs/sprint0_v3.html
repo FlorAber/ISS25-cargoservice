@@ -15,6 +15,10 @@
     ></script>
     <link rel="stylesheet" type="text/css" href="../../resources/_styles/style.css" />
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
     <title>ISS25 - Sprint 0</title>
   </head>
 
@@ -60,7 +64,9 @@
                 È in grado di ricevere richieste di caricamento di prodotti tramite l'invio di un messaggio contenente il PID del prodotto da caricare e si occupa di coordinare tutte
                 le operazioni all'interno del sistema <br/>
                 Ad oggi non è possibile definire le caratteristiche della GUI non essendo specificati abbastanza requisiti. <br/>
-                Alla richiesta di caricamento di un prodotto, il cargoservice potrà rispondere con un messaggio di conferma, nel quale viene confermata la possibilità di caricamento, o con un messaggio che specifica le motivazioni per cui il caricamento non può essere effettuato che possono essere:
+                Alla richiesta di caricamento di un prodotto da parte dell'utente, 
+                il cargoservice potrà rispondere con un messaggio <i>loadaccepted()</i> in caso 
+                sia possibile procedere al carico del prodotto, o con un messaggio <i>loadrejected(ERRPAYLOAD)</i> che specifica le motivazioni per cui il caricamento non può essere effettuato, che possono essere:
                 <ul>
                     <li> Prodotto non registrato nel database </li>
                     <li> Peso totale della hold superiore ad un limite massimo (maxLoad)</li>
@@ -90,10 +96,90 @@
         <div class="textparagraph">
           <h3>cargorobot</h3>
           <div class="textbody">
-            Il cargorobot è un componente incaricato di controllare un Differential Drive Robot fornito dal committente chiamato basicrobot, la cui documentazione è visibile al seguente
+             <!-- Il cargorobot è un componente incaricato di controllare un Differential Drive Robot fornito dal committente chiamato basicrobot, la cui documentazione è visibile al seguente
             <a href="../../resources/BasicRobot24.html">link</a>.
             Essendo il basicrobot controllabile tramite l'invio di messaggi il cargorobot non potrà essere espresso come un semplice POJO ma sarà necessario modellarlo come componente attivo.
             L'attivazione del cargorobt dovrà avvenire tramite l'invio di messaggi provenienti dal cargoservice.
+            -->
+            Da requisiti evinciamo che questo componente avrà il compito di occuparsi del caricamento
+            dei container all'interno della hold.
+            Per fare ciò dovrà essere in grado di:
+            <ul>
+                <li> Muoversi liberamente all'interno della hold </li>
+                <li> Caricare i container che vengono consegnati alla posizione della I/O Port e posizionarli negli slot di carico disponibili</li>
+            </ul>
+
+            Il primo punto richiede che il cargorobot sia in grado di muoversi all'interno della hold,
+            evitando ostacoli e rispettando i vincoli fisici dell'ambiente. 
+            
+            <br>
+            In merito il committente ha fornito un ambiente virtuale <a href="../../resources/VirtualRobot23.html">WEnv</a> che simula un Differential Drive Robot e ha già al suo interno
+            la realizzazione della mappa della hold che serve alla realizzazione del sistema. 
+            
+            <br>
+            Viene inoltre fornito <a href="../../resources/BasicRobot24.html">basicrobot</a>, un componente software che permette di controllare il DDR virtuale contenuto all'interno di WEnv tramite l'invio di messaggi,
+            si tratta di un'entità attiva a stati finiti, in grado di cambiare stato a seconda 
+            dei messaggi che riceve o autonomamente, definiamo dunque il basicrobot come un attore.
+            basicrobot permette di effettuare singole mosse con il DDR o sequenze di mosse, a seconda del messaggio di
+            richiesta.
+            <br>
+            Siamo inoltre a conoscenza del fatto che il basicrobot incorpora un <strong>planner</strong>,
+            un componente software che si occupa di calcolare il percorso ottimale per raggiungere una destinazione a partire dalla posizione attuale del robot.
+
+            <br>
+            <br><br>
+            Di seguito sono riportati i messaggi con cui è possibile interfacciarsi con il basicrobot:
+
+            <br><br><br>
+            <pre style="width: 80%; padding: 1px; border: 5px solid #ccc; border-radius: 5px; overflow: auto;"><code>
+Dispatch cmd       	: cmd(MOVE)         
+Dispatch end       	: end(ARG)         
+    
+Request step       : step(TIME)	
+Reply stepdone     : stepdone(V)                 for step
+Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
+
+Event  sonardata   : sonar( DISTANCE ) 	   
+Event obstacle     : obstacle(X) 
+Event info         : info(X)    
+
+Request  doplan     : doplan( PATH, STEPTIME )
+Reply doplandone    : doplandone( ARG )    for doplan
+Reply doplanfailed  : doplanfailed( ARG )  for doplan
+
+Dispatch setrobotstate: setpos(X,Y,D) //D =up|down!left|right
+
+Request engage        : engage(OWNER, STEPTIME)	
+Reply   engagedone    : engagedone(ARG)    for engage
+Reply   engagerefused : engagerefused(ARG) for engage
+
+Dispatch disengage    : disengage(ARG)
+
+Request checkowner    : checkowner(CALLER)
+Reply checkownerok    : checkownerok(ARG)      for checkowner
+Reply checkownerfailed: checkownerfailed(ARG)  for checkowner
+    
+Event alarm           : alarm(X)
+Dispatch nextmove     : nextmove(M)
+Dispatch nomoremove   : nomoremove(M)
+    
+Dispatch setdirection : dir( D )  //D =up|down!left|right
+
+//Inglobamento endosimbitico di robotpos
+Request moverobot    :  moverobot(TARGETX, TARGETY)  
+Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
+Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
+    
+//Richieste di info 
+Request getrobotstate : getrobotstate(ARG)
+Reply robotstate      : robotstate(POS,DIR)  for getrobotstate
+
+Request getenvmap     : getenvmap(X)
+Reply   envmap        : envmap(MAP)  for getenvmap
+</code></pre>
+<br>
+<br>
+
           </div>
         </div>
 
@@ -110,6 +196,9 @@
             La dimensione del robot sarà l'unità di misura principale per gli spostamenti. <br />
             Le informazioni riguardanti le locazioni fisiche del sistema sono già presenti all'interno 
             del robot e pertanto non sono modificabili.
+
+            Lo stato di questo componente verra visualizzato tramite la GUI.
+
             <div class="medium-12 text-center margin-5">
               <img src="./resources/map.png" class="" alt="map" width="25%" />
             </div>
@@ -122,7 +211,7 @@
         Poichè si è osservato che il sistema richiesto dal cliente è un sistema costituito da un insieme di componenti attivi che comunicano tra loro tramite scambio di messaggi,
         questo risulta essere distante dalle tecnologie implementative tradizionali. 
         Per costruire un modello infatti è necessario utilizzare un linguaggio formale per la rappresentazione di sistemi distribuiti, in quanto strumenti tradizionali come ad esempio UML, 
-        presentano un abstraction gap no trascurabile, permettendo di rappresentare solamente comunicazioni tra i componenti basate su procedure-call.
+        presentano un abstraction gap non trascurabile, permettendo di rappresentare solamente comunicazioni tra i componenti basate su procedure-call.
         Per questo motivo è stato deciso di utilizzare il linguaggio QAK, un Domain Specific Language che permette di modellare sistemi distribuiti basati su componenti attivi, chiamati attori, che interagiscono tramite scambio di messaggi. 
         QAK costituisce un linguaggio formale, ed è per questo comprensibile anche alla macchina, e per questo risulta essere un valido strumento per la formalizzazione dei requsiti con un linguaggio non ambiguo. 
       </div>
@@ -140,12 +229,104 @@
       <h2>Test plans</h2>
       <div class="remark">
         <div class="textbody">
-          Lo scopo della fase di test è quello di definire e formalizzare test funzionali volti a verificare il corretto comportamento del core business del sistema, ossia del componente <strong> cargoservice </strong>, in particolare:
-          <ul>
-            <li>
-              Un attore esterno avrà lo scopo di comunicare con il cargoservice inviandogli una richiesta di carico e ne successivamente ne verificherà l'esito
-            </li>
-          </ul>
+         Il piano di test che è possibile stilare in questa fase del progetto è relativo
+         al verificare che il corebusiness risponda alle richieste di carico con i messaggi
+         attesi, <i>loadaccepted()</i> o <i>loadrejected(ERRPAYLOAD)</i>.
+<pre style="width: 80%; padding: 1px; border: 5px solid #ccc; border-radius: 5px; overflow: auto;"><code>
+// Test load request accepted
+  @Test
+    public void testLoadRequestAccepted() throws Exception {
+        //Costruzione di richiesta con PID valido.
+
+        String load_req = CommUtils.buildRequest("tester",
+                "load_product", "load_product(1)", 
+                "cargoservice").toString();
+        
+        System.out.println("Richiesta: " + load_req);
+        
+        //Risposta accettata perchè peso legato al PID inferiore di MaxLoad 
+        String response = conn.request(load_req);
+        
+        System.out.println("Risposta: " + response); // Risposta contenente lo slot libero dove posizionare il container
+        
+        //Verifica che sia stata accettata
+        assertTrue("TEST: richiesta accettata", 
+                 response.contains("load_accepted"));
+    }
+
+
+
+// Test load request rejected weight exceeded
+    @Test
+    public void testLoadRequestRejectedWeightExceeded() throws Exception {
+        //Costruzione di richiesta con PID non valido.
+
+        String load_req = CommUtils.buildRequest("tester",
+                "load_product", "load_product(5)", 
+                "cargoservice").toString();
+        
+        System.out.println("Richiesta: " + load_req);
+        
+        //Risposta rifiutata perchè PID non registrato
+        String response = conn.request(load_req);
+        
+        System.out.println("Risposta: " + response); // Risposta contenente l'errore
+        
+        //Verifica che sia stata rifiutata
+        assertTrue("TEST: richiesta rifiutata", 
+                 response.contains("load_rejected")
+                 && response.contains("overweight"));
+    }
+
+
+// Test load request rejected no slot available
+    @Test
+    public void testLoadRequestRejectedNoSlot() throws Exception {
+        //Costruzione di richiesta con PID non valido.
+
+        String load_req = CommUtils.buildRequest("tester",
+                "load_product", "load_product(6)", 
+                "cargoservice").toString();
+        
+        System.out.println("Richiesta: " + load_req);
+        
+        //Risposta rifiutata perchè PID non registrato
+        String response = conn.request(load_req);
+        
+        System.out.println("Risposta: " + response); // Risposta contenente l'errore
+        
+        //Verifica che sia stata rifiutata
+        assertTrue("TEST: richiesta rifiutata", 
+                 response.contains("load_rejected")
+                 && response.contains("noslotavailable"));
+    }
+
+// Test load request rejected PID not registered
+    @Test
+    public void testLoadRequestRejectedPIDNotRegistered() throws Exception {
+        //Costruzione di richiesta con PID non valido.
+
+        String load_req = CommUtils.buildRequest("tester",
+                "load_product", "load_product(999)", 
+                "cargoservice").toString();
+        
+        System.out.println("Richiesta: " + load_req);
+        
+        //Risposta rifiutata perchè PID non registrato
+        String response = conn.request(load_req);
+        
+        System.out.println("Risposta: " + response); // Risposta contenente l'errore
+        
+        //Verifica che sia stata rifiutata
+        assertTrue("TEST: richiesta rifiutata", 
+                 response.contains("load_rejected")
+                 && response.contains("pidnotregistered"));
+    }
+
+</code></pre>
+<br>
+<br>
+         
         </div>
       </div>
 
