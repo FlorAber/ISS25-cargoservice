@@ -16,6 +16,10 @@
     <!-- <link rel="stylesheet" type="text/css" href="../../resources/_styles/style.css" /> -->
     <link rel="stylesheet" type="text/css" href="./css/style.css" />
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
     <title>ISS25 - Sprint 1</title>
   </head>
 
@@ -51,13 +55,40 @@
       <h2>Requirements</h2>
 
       <div class="remark">
-        <a
-          href="../../resources/TemaFinale25.html"
-          class="button primary"
-          target="_blank"
-        >
-          Client requirements
-        </a>
+        I requisiti che intendiamo soddisfare in questo sprint sono i
+        seguenti:
+        <ul>
+          <li>
+            Il sistema deve essere in grado di ricevere richieste di carico da
+            parte dell'utente, contenenti il PID del prodotto da caricare
+          </li>
+          <li>
+            Il sistema deve essere in grado di verificare che il prodotto sia
+            registrato e che il peso non superi il limite imposto dai vincoli
+          </li>
+          <li>
+            Il sistema deve essere in grado di gestire lo stato della hold,
+            tracciando gli slot liberi e occupati e il peso totale dei prodotti
+            caricati
+          </li>
+          <li>
+            Il sistema deve essere in grado di inviare al basicrobot le
+            istruzioni per spostarsi verso lo slot in cui depositare il prodotto
+          </li>
+          <li>
+            Il sistema deve essere in grado di gestire i segnali di interruzione
+            provenienti dal sonar in caso di malfunzionamento
+          </li>
+
+        </ul>
+        In sintesi ci occuperemo di implementare il core business del sistema,
+        ovvero i componenti che troviamo all'interno del contesto
+        <strong>ctx_cargo</strong>.
+        
+        Per aiutarci nello sviluppo del sistema faremo uso di entitò mock,
+        che simulano il funzionamento di componenti esterni non ancora
+        implementati.
+
       </div>
 
       <h2>Problem analysis</h2>
@@ -66,7 +97,8 @@
         <div class="textparagraph">
           <h3>Come si rappresenta la hold?</h3>
           <div class="textbody">
-            Il robot rappresenta internamente la hold come un piano cartesiano.
+            Come analizzato durante il precedente sprint, il DDR virtuale
+            rappresenta internamente la hold come un piano cartesiano.
             Questa viene quindi suddivisa in una griglia dove ciascuna cella è
             un quadrato avente lato pari alla dimensione del basicrobot, così da
             poter formalizzare il concetto di posizione, intesa come una coppia
@@ -88,8 +120,8 @@
               <li>Slot 4 alle coordinate (3,3)</li>
               <li>Slot 5 alle coordinate (4,2)</li>
               <li>
-                Come scelta progettuale, non essendo specificata nella mappa
-                data dal committente, è stato deciso di posizionare la IOPort
+                Non essendo specificata nella documentazione fornita
+                dal committente, suggeriamo di posizionare la IOPort
                 alle coordinate (1,5)
               </li>
             </ul>
@@ -99,37 +131,16 @@
         <div class="textparagraph">
           <h3>Come muovere il basicrobot?</h3>
           <div class="textbody">
-            Il basicrobot fornisce un'interfaccia che permette, tramite l'invio
-            di messaggi, di controllarne il movimento. Per gestire questo
-            movimento è stato deciso di introdurre un attore
-            <strong> cargorobot </strong> che avrà il compito di controllare il
-            robot in ogni suo movimento e gestire le interruzioni provenienti
-            dal sonar in caso di malfunzionamento. Questo approccio consente di
-            separare le funzionalità dei vari componenti facendo in modo che il
+            Al componente <strong>cargorobot</strong> spetta il compito di
+            comunicare con basicrobot per mezzo di messaggi, come analizzato
+            nello sprint precedente. Questo approccio favorisce la separazione
+            delle funzionalità dei vari componenti facendo in modo che il
             cargoservice mantenga solo la funzionalità di gestore delle
             comunicazioni.
-
-            <div class="textbody">
-              <h4>Interazioni del cargorobot</h4>
-              Dovendo controllare il robot, l'attore avvierà l'operazione di
-              carico una volta ricevuto un messaggio dal cargoservice, questo
-              messaggio dovrà specificare lo slot a cui caricare il prodotto
-              così che il cargorobot possa scegliere la strada appropriata per
-              fare raggiungere al robot la giusta posizione fisica. Una volta
-              terminato lo spostamento il cargorobot invierà un messaggio al
-              cargoservice per notificarlo dell'avvenuto caricamento. Inoltre
-              l'attore deve essere capace di gestire i segnali di interruzione
-              generati dal sonar (che arriveranno dal cargoservice in quanto
-              gestore delle comunicazioni) fermando il robot e facendolo
-              ripartire quando il sistema tornerà funzionante.
-            </div>
-
-            <div class="textparagraph"></div>
-            <div class="textbody">
-              <br />
-              <h4>Gestione del movimento</h4>
-              Il basicrobot mette a disposizione diversi messaggi per muovere il
-              DDR robot. Sono stati identificati due messaggi principali che
+            <br />
+            <h4>Gestione del movimento</h4>
+            Il basicrobot mette a disposizione diversi messaggi per muovere il
+            DDR. Sono stati identificati due messaggi principali che
               permettono di definire un piano di esecuzione per spostare il
               robot da un punto A ad un punto B.
               <table class="robot-table">
@@ -169,8 +180,8 @@
               </table>
               Per semplificare lo sviluppo delegando le operazioni di scelta del
               percorso da eseguire al basicrobot, il quale è munito di un
-              sistema automatico di pianificazioned del percorso, è stato deciso
-              di utilizzare il messaggio <i>moverobot(TARGETX, TARGETY)</i>. Il
+              sistema automatico di pianificazione del percorso affidato al componente <strong>planner</strong>,
+               è stato deciso di utilizzare il messaggio <i>moverobot(TARGETX, TARGETY)</i>. Il
               cargorobot dovrà dunque essere in grado di tradurre
               l'identificatore dello slot ricevuto nelle rispettive coordinate
               assolute.
@@ -197,9 +208,7 @@
               modifiche future alla mappa.
             </div>
           </div>
-        </div>
-
-        <div class="textparagraph">
+          <div class="textparagraph">
           <h3>Come sfruttare il productservice e gestire la hold?</h3>
           <div class="textbody">
             Lo stato della hold (slot liberi e peso della nave cargo) deve
@@ -232,8 +241,26 @@
               Per avere una visione dello stato della hold anche in caso di
               crash del sistema si ritiene opportuno seguire il primo approccio.
             </div>
-          </div>
+
+          
+            
         </div>
+
+        
+          </div>
+            
+        </div>
+        <h2>Logical Architecture</h2>
+
+      <div class="medium-12 text-center remark">
+        <img
+          src="./resources/sprint1_LogicalModel.png"
+          class="text-center"
+          alt="map"
+          width="100%"
+        />
+
+      </div>
       </div>
     </div>
 
@@ -329,19 +356,42 @@
         <div class="textbody">
           Il cargoservice è l'attore che ha il compito di controllare il
           funzionamento del sistema e coordinare le comunicazioni tra i diversi
-          componenti. Al momento della ricezione di una richiesta di caricamento
+          componenti. 
+          <br>
+          <br>
+          Al momento della ricezione di una richiesta di caricamento
           da parte dell'utente, contenente il PID del prodotto che intende
           depositare, verrà inviata all'<strong>holdmanager</strong> una
           richiesta <i>controlproduct(pid)</i>, rimanendo dunque in attesa di
           una risposta corrispondente all'esito, <i>productaccepted(slot)</i> o
           <i>productrejected()</i> conseguenti ai controlli di cui è
-          responsabile <strong>holdmanager</strong>. Al momento della ricezione
+          responsabile <strong>holdmanager</strong>.
+          
+          <pre style="width: 80%; padding: 1px; border: 5px solid #ccc; border-radius: 5px; overflow: auto;"><code>
+State checkLoadRequest { //asking holdmanager for pid
+		onMsg ( loadrequest : loadrequest(PID) ){
+			[# 
+				PID = payloadArg(0).toInt();
+			#]
+			println("$name : Asking for pid: $PID") color green 
+			request holdmanager -m controlproduct : controlproduct($PID)
+		}
+	}
+	Transition t
+		whenReply productaccepted -> productAccepted
+		whenReply productrejected -> productRejected
+</code></pre>
+          
+          <br>
+          <br>
+          Al momento della ricezione
           della risposta comunicherà all'utente l'esito e, se sarà positivo,
           inizialmente scatenerà un evento (utile per l'interazione con i
           componenti non ancora definiti in questa fase) e successivamente
           rimarrà in attesa del segnale di carico proveniente dal sonar. In caso
           contrario tornerà nello stato di attesa delle richieste di carico. Al
-          momento della ricezione del segnale dal sonar comunicherà al
+          momento della ricezione del segnale da parte del sonar che indica la presenza del
+          prodotto, comunicherà al
           <strong>cargorobot</strong> tramite richiesta <i>load(slot)</i> lo
           slot precedentemente indicato dall'<strong>holdmanager</strong> in cui
           andare a depositare il prodotto. Successivamente attenderà il
@@ -349,6 +399,12 @@
           quale risponderà con <i>loadended()</i> in caso di successo o
           <i>loadfailed()</i> in caso di errore, prima di tornare in attesa di
           una nuova richiesta di carico. <br />
+          <br>
+          <pre>
+            <code>
+
+            </code>
+          </pre>
 
           Oltre al suo normale flusso di esecuzione, il cargoservice dovrà
           gestire i segnali di interruzione provenienti dal sonar in caso di
@@ -478,7 +534,7 @@
             <div class="small-12 medium-3 text-center">
               <a
                 class="button change"
-                href="../../Sprint0/userDocs/sprint0_v2.html"
+                href="../../Sprint0/userDocs/sprint0_v3.html"
               >
                 &larr; Previous Sprint
               </a>
