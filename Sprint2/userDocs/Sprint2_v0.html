@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="it">
+  <head>
+    <!-- <script type="text/javascript" src="../css/issStyle.js"></script> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.4/dist/css/foundation.min.css"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.4/dist/js/foundation.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <!-- <link rel="stylesheet" type="text/css" href="../../resources/_styles/style.css" /> -->
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+    <title>ISS25 - Sprint 2</title>
+  </head>
+
+  <body>
+    <div id="top">
+      <h1>LABORATORIO DI INGEGNERIA DEI SISTEMI SOFTWARE - Sprint 2</h1>
+    </div>
+    <div class="body">
+      <h2>Introduction</h2>
+      <div class="remark">
+        <div class="textbody grid-x grid-margin-x align-middle">
+          <div class="medium-8">
+            Nello Sprint precedente sono state analizzate le problematiche e progettato il sistema relativo al Core Business
+            del sistema cargoservice. L'output finale è stato una modellazione di alto livello del sistema e una
+            prima implementazione funzionante del core business (figura a destra).
+             <br />
+            <br />
+            L'obiettivo dello Sprint 2 è di analizzare le problematiche relative 
+            al componente Sensor, sorte in fase di analisi dei requisiti
+            e realizzarne
+            un'implementazione funzionante integrandola con il corebusiness del sistema cargoservice, 
+            da fornire al committente.
+            D'ora in avanti ci riferiremo al corebusiness del sistema chiamandolo
+            semplicemente <strong>cargoservice</strong>.
+          </div>
+          <div class="medium-4">
+            <img
+              src="../../Sprint1/sprint1_system_overviewarch.png"
+              alt="Sprint 1 System Overview"
+              width="100%"
+            />
+          </div>
+        </div>
+        
+    </div>
+    <h2>Requirements</h2>
+
+      <div class="remark">
+        I requisiti che intendiamo soddisfare in questo sprint sono i
+        seguenti:
+        <ul>
+          <li>
+            Il sistema deve essere in grado di rilevare l'arrivo di un nuovo
+            prodotto tramite il sonar, distanza D < DFREE/2, durante un tempo ragionevole (ad es. 3 sec) e comunicarlo al
+            cargoservice.
+          </li>
+          <li>
+            Il sistema deve essere in grado di rilevare il malfunzionamento del
+            sonar, D>DFREE e comunicarlo al cargoservice.
+          </li>
+          <li>
+            Il sistema deve essere in grado accendere un led fisico in caso di 
+            rilevamento di un malfunzionamento del sonar.
+          </li>
+          <li>
+            Il sistema deve essere in grado di riprendere il normale
+            funzionamento dopo la risoluzione del malfunzionamento del sonar, D<=DFREE.
+          </li>
+        </ul>
+        
+
+      </div>
+      <h2>Problem analysis</h2>
+
+      <div class="remark">
+        <div class="textparagraph">
+          <h3>Come modellare Sensor e i suoi componenti?</h3>
+            <div class="textbody">Dall'analisi dei requisiti emerge la necessità di gestire 
+                
+            </div>
+        </div>
+        <div class="textparagraph">
+          <h3>Sonar</h3>
+          <div class="textbody">bbbbbbbbb</div>
+        </div>
+
+        <div class="textparagraph">
+          <h3>Led</h3>
+          <div class="textbody">ccccccccc</div>
+        </div>
+        
+        
+        
+    </div>
+</body> 
