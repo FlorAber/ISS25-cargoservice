@@ -88,17 +88,103 @@
         <div class="textparagraph">
           <h3>Come modellare Sensor e i suoi componenti?</h3>
             <div class="textbody">Dall'analisi dei requisiti emerge la necessità di gestire 
+            almeno due componenti hardware: un sonar per il rilevamento dei prodotti e un led per la segnalazione di malfunzionamenti.
+            Si è gia deciso in precedenza che per l'implementazione del sistema si sarebbe utilizzata una scheda Raspberry Pi.
+
+            <br/>
+            A questo punto ci si è posti il problema di come modellare il contesto sensor e i suoi componenti.
+            La scelta finale ricade su due opzioni principali:
+            <ul>
+              <li>Modellare sensor come un unico componente che si occupa di gestire sia il <strong>sonar</strong> che il <strong>led</strong> modellati come POJO;</li>
+              <li>Modellare sensor come un contesto che a sua volta contiene due attori, uno <strong>sonar</strong> e uno <strong>led</strong>.</li>
+            </ul>
+            Si suggerisce la seconda opzione in quanto consente di separare le responsabilità dei due componenti hardware
+            e permette a led e sonar di intercettare e gestire in modo autonomo le comunicazioni con <strong>cargoservice</strong>.
                 
             </div>
         </div>
         <div class="textparagraph">
           <h3>Sonar</h3>
-          <div class="textbody">bbbbbbbbb</div>
+          <div class="textbody">Parlando in dettaglio del componente sonar ci si è domandati se
+            fosse opportuno fare in modo che il sonar comunicasse direttamente con il cargoservice ogni 
+            volta che rileva un evento di interesse (rilevamento prodotto o malfunzionamento)
+            oppure se fosse meglio che il sonar comunicasse con cargoservice ogni distanza rilevata.
+            Siccome il sistema cargoservice è stato modellato per reagire ad eventi specifici
+            piuttosto che a flussi continui di dati, si suggerisce che il sonar comunichi con cargoservice
+            solo quando rileva un evento di interesse.
+            <br/>
+            siamo in grado di individuare subito almeno 2 interazioni principali con <strong>cargoservice</strong>:
+            <ul>
+              <li>il sonar ha rilevato un prodotto (D < DFREE/2) e comunica l'evento a cargoservice;</li>
+              <li>il sonar rileva un malfunzionamento (D > DFREE) e comunica l'evento a cargoservice.</li>
+            </ul>
+            Si nota che per semplicità non sono stati inseriti stati di transizione tra gli stati principali, verranno esplicitati in fase di progettazione.
+
+            Sorge spontaneo domandarsi come il componente software sonar possa relazionarsi con il componente hardware sonar.
+            Fortunatamente il committente ha precedentemente fornito uno script Python che si occupa di interfacciarsi con l'hardware e restituire la distanza rilevata, 
+            ottenendo una misurazione al secondo della distanza <strong>D</strong>.
+
+            <pre>
+              <code># File: sonar.py
+import RPi.GPIO as GPIO
+import time
+import sys
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+TRIG = 17
+ECHO = 27
+
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
+GPIO.output(TRIG, False)   # TRIG parte LOW
+
+print ('Waiting a few seconds for the sensor to settle')
+time.sleep(2)
+
+while True:
+    GPIO.output(TRIG, True)    #invia impulso TRIG
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+
+    pulse_start = time.time()
+    #attendi che ECHO parta e memorizza tempo
+    while GPIO.input(ECHO)==0:
+        pulse_start = time.time()
+    # register the last timestamp at which the receiver detects the signal.
+    while GPIO.input(ECHO)==1:
+        pulse_end = time.time()
+    pulse_duration = pulse_end - pulse_start
+
+    # velocità del suono ~= 340m/s 
+    # distanza = v*t 
+    # il tempo ottenuto misura un roundtrip -> distanza = v*t/2
+    distance = pulse_duration * 17165
+    distance = round(distance, 1)
+    print ('Distance:', distance,'cm')
+    sys.stdout.flush()
+    time.sleep(1)
+
+              </code>
+            </pre>
+
+          </div>
         </div>
 
         <div class="textparagraph">
           <h3>Led</h3>
-          <div class="textbody">ccccccccc</div>
+          <div class="textbody">Il led come da requisiti ha il compito di accendersi e spegnersi 
+            in base allo stato di funzionamento del sonar.
+            Questa interazione puo avvenire in tre modi:
+            <ul>  
+              <li>Il led intercetta gli eventi di interesse inviati dal sonar a cargoservice e si accende/spegne di conseguenza;</li>
+              <li>Il cargoservice invia un messaggio al led per accendersi/spegnersi in base allo stato del sonar.</li>
+              <li>Il sonar comunica con messaggi diretti al led i propri cambi di stato.</li>
+            </ul>
+            Si suggerisce la prima opzione in quanto consente di mantenere il led
+            come un componente autonomo che non necessita di comunicare direttamente con gli altri componenti del sistema.
+
+          </div>
         </div>
         
         
