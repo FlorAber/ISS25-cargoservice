@@ -154,9 +154,9 @@ task dovesiamo {
 
 distributions {
     main {
-        distributionBaseName = 'sprint2'
+        distributionBaseName = 'sprint2_sensors_model'
         contents { 
-             from './sprint2.pl'
+             from './sprint2_sensors_model.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
         }

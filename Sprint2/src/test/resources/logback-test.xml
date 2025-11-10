@@ -2,7 +2,7 @@
   
     <!-- Appender per scrivere i log in un file -->
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>logs/app_sprint2Test.log</file>
+        <file>logs/app_sprint2_sensors_modelTest.log</file>
         <append>true</append>
         <encoder>
              <!-- <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern> -->
