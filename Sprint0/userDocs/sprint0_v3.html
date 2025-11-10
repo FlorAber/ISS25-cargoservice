@@ -94,15 +94,26 @@
           </div>
         </div>
 
-        <!-- <div class="textparagraph">
+        <div class="textparagraph">
           <h3>productservice</h3>
           <div class="textbody">
-            Servizio fornito dal committente che verrà integrato all'interno del sistema e si occupa della gestione del database di prodotti.
-            È costituito da un'entità con la quale è possibile comunicare tramite l'invio di messaggi, in particolare per richiedere informazioni sui prodotti è
-            possibile inviare un messaggio contenente il PID del prodotto di interesse e si riceverà in risposta un messaggio contenente le informazioni richieste, se il prodotto è registrato, 
-            o un messaggio di errore in caso contrario.
+            Sistema fornito dal committente che verrà integrato all'interno del
+            sistema software e si occupa della gestione del database di
+            prodotti. È costituito da un'entità con la quale è possibile
+            comunicare tramite l'invio di messaggi, in particolare:
+            <pre><code>Request createProduct        : product(String)                          //Creazione prodotto, String JSON '{"productId":31,"name":"p31","weight":311}'
+Reply   createdProduct       : productid(ID) for createProduct   
+    
+Request deleteProduct        : product( ID )                            //Eliminazione del prodotto avente l'identificativo passato come parametro
+Reply   deletedProduct       : product(String) for deleteProduct
+
+Request getProduct           : product( ID )                            //Richiesta per ottenere informazioni sul prodotto avente l'identificativo passato come parametro
+Reply   getProductAnswer     : product( JSonString ) for getProduct 
+ 
+Request getAllProducts       : dummy( ID )                              //Richiesta per ottenere elenco di tutti i prodotti presenti nel database
+Reply   getAllProductsAnswer : products(  String ) for getAllProducts </code></pre>
           </div>
-        </div> -->
+        </div>
 
         <div class="textparagraph">
           <h3>sensor</h3>

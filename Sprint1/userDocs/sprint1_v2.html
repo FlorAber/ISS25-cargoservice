@@ -55,7 +55,8 @@
       <h2>Requirements</h2>
 
       <div class="remark">
-        I requisiti che intendiamo soddisfare in questo sprint sono i
+        <!-- FORSE FARE COPIA E INCOLLA HA SENSO -->
+        I requisiti che si vuole soddisfare in questo sprint sono i
         seguenti:
         <ul>
           <li>
@@ -81,14 +82,6 @@
           </li>
 
         </ul>
-        In sintesi ci occuperemo di implementare il core business del sistema,
-        ovvero i componenti che troviamo all'interno del contesto
-        <strong>ctx_cargo</strong>.
-        
-        Per aiutarci nello sviluppo del sistema faremo uso di entitò mock,
-        che simulano il funzionamento di componenti esterni non ancora
-        implementati.
-
       </div>
 
       <h2>Problem analysis</h2>
@@ -97,7 +90,7 @@
         <div class="textparagraph">
           <h3>Come si rappresenta la hold?</h3>
           <div class="textbody">
-            Come analizzato durante il precedente sprint, il DDR virtuale
+            Come analizzato durante il precedente sprint, il DDR
             rappresenta internamente la hold come un piano cartesiano.
             Questa viene quindi suddivisa in una griglia dove ciascuna cella è
             un quadrato avente lato pari alla dimensione del basicrobot, così da
@@ -132,7 +125,7 @@
           <h3>Come muovere il basicrobot?</h3>
           <div class="textbody">
             Al componente <strong>cargorobot</strong> spetta il compito di
-            comunicare con basicrobot per mezzo di messaggi, come analizzato
+            comunicare con basicrobot attraverso messaggi, come analizzato
             nello sprint precedente. Questo approccio favorisce la separazione
             delle funzionalità dei vari componenti facendo in modo che il
             cargoservice mantenga solo la funzionalità di gestore delle
@@ -181,10 +174,8 @@
               Per semplificare lo sviluppo delegando le operazioni di scelta del
               percorso da eseguire al basicrobot, il quale è munito di un
               sistema automatico di pianificazione del percorso affidato al componente <strong>planner</strong>,
-               è stato deciso di utilizzare il messaggio <i>moverobot(TARGETX, TARGETY)</i>. Il
-              cargorobot dovrà dunque essere in grado di tradurre
-              l'identificatore dello slot ricevuto nelle rispettive coordinate
-              assolute.
+              si consiglia l'utilizzo del messaggio <i>moverobot(TARGETX, TARGETY)</i>.
+              Così facendo il cargorobot dovrà essere in grado di tradurre l'identificatore dello slot ricevuto nelle rispettive coordinate assolute.
             </div>
             <br />
             <div class="textbody">
@@ -203,12 +194,13 @@
                 </li>
               </ul>
 
-              A questo fine l'analista consiglia di sfruttare il secondo
+              A questo fine si ritiene opportuno sfruttare il secondo
               approccio in quanto più flessibile e scalabile in caso di
               modifiche future alla mappa.
             </div>
           </div>
-          <div class="textparagraph">
+        
+        <div class="textparagraph">
           <h3>Come sfruttare il productservice e gestire la hold?</h3>
           <div class="textbody">
             Lo stato della hold (slot liberi e peso della nave cargo) deve
@@ -247,8 +239,15 @@
         </div>
 
         
+        </div>
+        
+        <div class="textparagraph">
+          <h3> Come simulare i componenti non appartenenti al core business? </h3>
+          <div class="textbody">
+            Essendo lo Sprint1 incentrato sullo sviluppo del core business, i componenti non appartenenti a questa parte del sistema possono essere simulati nelle loro interazioni con il cargoservice tramite entità fittizie.
           </div>
-            
+        </div>
+        
         </div>
         <h2>Logical Architecture</h2>
 
@@ -367,97 +366,87 @@
           <i>productrejected()</i> conseguenti ai controlli di cui è
           responsabile <strong>holdmanager</strong>.
           
-          <pre style="width: 80%; padding: 1px; border: 5px solid #ccc; border-radius: 5px; overflow: auto;"><code>
-State checkLoadRequest { //asking holdmanager for pid
-		onMsg ( loadrequest : loadrequest(PID) ){
-			[# 
-				PID = payloadArg(0).toInt();
-			#]
-			println("$name : Asking for pid: $PID") color green 
-			request holdmanager -m controlproduct : controlproduct($PID)
-		}
-	}
-	Transition t
-		whenReply productaccepted -> productAccepted
-		whenReply productrejected -> productRejected
-</code></pre>
-          
-          <br>
-          <br>
+          <pre style="width: 80%; padding: 1px; border: 5px solid #ccc; border-radius: 5px; overflow: auto;"><code>State checkLoadRequest { //asking holdmanager for pid
+  onMsg ( loadrequest : loadrequest(PID) ){
+    [# 
+      PID = payloadArg(0).toInt();
+    #]
+    println("$name : Asking for pid: $PID") color green 
+    request holdmanager -m controlproduct : controlproduct($PID)
+  }
+}
+Transition t
+whenReply productaccepted -> productAccepted
+whenReply productrejected -> productRejected
+</code></pre><br/>
           Al momento della ricezione
           della risposta comunicherà all'utente l'esito e, se sarà positivo,
           inizialmente scatenerà un evento (utile per l'interazione con i
           componenti non ancora definiti in questa fase) e successivamente
           rimarrà in attesa del segnale di carico proveniente dal sonar. In caso
           contrario tornerà nello stato di attesa delle richieste di carico.
-          
-          
 
           Al momento della ricezione del segnale da parte del sonar che indica la presenza del
           prodotto, comunicherà al
           <strong>cargorobot</strong> tramite richiesta <i>load(slot)</i> lo
           slot precedentemente indicato dall'<strong>holdmanager</strong> in cui
           andare a depositare il prodotto.
-           <pre style="width: 80%; padding: 1px; border: 5px solid #ccc; border-radius: 5px; overflow: auto;"><code>
-// Attende segnale di deposito dal sonar
-	State waitForDeposit {
-		println ("$name : waiting for sonar deposit signal") color green
-		emit waitingForDeposit : waitingForDeposit
-	}
-	Transition t
-		whenEvent doDeposit -> doDeposit
-		whenInterruptEvent sonaralert -> handleAlert
-	
-	// Ricevuta richiesta di deposito
-	State doDeposit{
-		println ("$name : package detected, proceeding with the loading") color green
-		request cargorobot -m load : load($SLOT_TO_LOAD)
-		emit stopWaitingForDeposit : stopWaitingForDeposit
-	} 
-	Transition t
-		whenEvent productloaded -> loadEnded
-		whenInterruptEvent sonaralert -> handleAlert
-		
-	// Caricamento terminato, reset parametri
-	State loadEnded {
-		println ("$name : loading process ended") color green
-		[#  		
-			PID = 0;
-			SLOT_TO_LOAD = -1;
-		#]
-	} 
-	Goto wait
-</code></pre>
+           
+<pre><code>// Attende segnale di deposito dal sonar
+State waitForDeposit {
+  println ("$name : waiting for sonar deposit signal") color green
+  emit waitingForDeposit : waitingForDeposit
+}
+Transition t
+  whenEvent doDeposit -> doDeposit
+  whenInterruptEvent sonaralert -> handleAlert
+
+// Ricevuta richiesta di deposito
+State doDeposit{
+  println ("$name : package detected, proceeding with the loading") color green
+  request cargorobot -m load : load($SLOT_TO_LOAD)
+  emit stopWaitingForDeposit : stopWaitingForDeposit
+} 
+Transition t
+  whenEvent productloaded -> loadEnded
+  whenInterruptEvent sonaralert -> handleAlert
+  
+// Caricamento terminato, reset parametri
+State loadEnded {
+  println ("$name : loading process ended") color green
+  [#  		
+    PID = 0;
+    SLOT_TO_LOAD = -1;
+  #]
+} 
+Goto wait</code></pre><br/>
           Successivamente attenderà il
           completamento delle operazioni del <strong>cargorobot</strong>, il
           quale risponderà con <i>loadended()</i> quando avrà terminato la procedura
           di caricamento, prima di tornare in attesa di
-          una nuova richiesta di carico. <br />
-          <br>
-          <pre>
-            <code>
-State wait{
-		println ("$name : waiting for requests...")	color green
-		
-	}
-	Transition t
-		whenRequest loadrequest -> checkLoadRequest
-		whenInterruptEvent sonaralert -> handleAlert
-            </code>
-          </pre>
+          una nuova richiesta di carico. 
 
-          Oltre al suo normale flusso di esecuzione, il cargoservice dovrà
-          gestire i segnali di interruzione provenienti dal sonar in caso di
-          malfunzionamento, così da andare a sospendere le attività di tutti i
-          componenti del sistema fino al rientro dell'errore
-<pre>
-            <code>
-  whenInterruptEvent sonaralert -> handleAlert
-  //dichiarato in ogni stato dell'attore
-            </code>
-          </pre>
-        
+          <pre><code>State wait{
+  println ("$name : waiting for requests...")	color green	
+}
+Transition t
+	whenRequest loadrequest -> checkLoadRequest
+	whenInterruptEvent sonaralert -> handleAlert
+</code></pre><br/>
 
+  Oltre al suo normale flusso di esecuzione, il cargoservice dovrà
+  gestire i segnali di interruzione provenienti dal sonar in caso di
+  malfunzionamento, così da andare a sospendere le attività di tutti i
+  componenti del sistema fino al rientro dell'errore
+
+<pre><code>whenInterruptEvent sonaralert -> handleAlert //dichiarato in ogni stato dell'attore
+
+State handleAlert{
+  println ("$name : sonar in alert state") color red
+  emit stopthesystem : stopthesystem(0)
+}
+Transition t
+  whenEvent sonarok -> resumeOperations</code></pre>
         </div>
       </div>
 
@@ -474,63 +463,49 @@ State wait{
             <li>Spostamento dallo slot alla home</li>
           </ul>
 
-<pre>
-            <code>
-State movetoioport {
-		delay 2000
-		onMsg (load : load(SLOT)) {
-			
-			[#
-				TARGETSLOT = payloadArg(0).toInt()
-				val DEST = Pos.ioport.name
-				#]
-				solve (getPoint($DEST,TX,TY,TDIR))
-				[#
-
-				val X = getCurSol("TX").toString();
-				val Y = getCurSol("TY").toString();
-				val D = getCurSol("TDIR").toString();
-				
-				
-				destination=DEST
-				moving = true
-				
-			#]
-			
-			println("$name : moving robot to slot IOPORT at Positions ($X,$Y)") color yellow
-			request basicrobot -m moverobot:moverobot($X,$Y)
-		}
-	}
-	Transition t 
-		whenReply moverobotdone -> movetoslot
-		whenReply moverobotfailed -> movefailed
-		whenInterruptEvent stopthesystem -> systemStopped
+<pre><code>State movetoioport {
+  delay 2000
+  onMsg (load : load(SLOT)) {
+    
+    [#
+      TARGETSLOT = payloadArg(0).toInt()
+      val DEST = Pos.ioport.name
+    #]
+    solve (getPoint($DEST,TX,TY,TDIR))
+    [#
+      val X = getCurSol("TX").toString();
+      val Y = getCurSol("TY").toString();
+      val D = getCurSol("TDIR").toString();  
+      destination=DEST
+      moving = true  
+    #]
+    println("$name : moving robot to slot IOPORT at Positions ($X,$Y)") color yellow
+    request basicrobot -m moverobot:moverobot($X,$Y)
+  }
+}
+Transition t 
+  whenReply moverobotdone -> movetoslot
+  whenReply moverobotfailed -> movefailed
+  whenInterruptEvent stopthesystem -> systemStopped
 	
 State movetoslot {
-		delay 2000
-		onMsg ( moverobotdone : moverobotdone(ARG)) {
-			
-			[#
-				val slot = "slot$TARGETSLOT"      
-				val DEST = Pos.valueOf(slot).name
-
-				#]
-				solve (getPoint($DEST,TX,TY,TDIR))
-				[#
-
-				val X = getCurSol("TX").toString();
-				val Y = getCurSol("TY").toString();
-				val D = getCurSol("TDIR").toString();
-				
-				
-				
-				moving = true
-				destination = TARGETSLOT.toString()
-			
-			#]
-			
-			println("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)") color yellow
-			request basicrobot -m moverobot:moverobot($X,$Y)
+  delay 2000
+  onMsg ( moverobotdone : moverobotdone(ARG)) {
+    [#
+      val slot = "slot$TARGETSLOT"      
+      val DEST = Pos.valueOf(slot).name
+    #]
+    solve (getPoint($DEST,TX,TY,TDIR))
+    [#
+      val X = getCurSol("TX").toString();
+      val Y = getCurSol("TY").toString();
+      val D = getCurSol("TDIR").toString();
+      moving = true
+      destination = TARGETSLOT.toString()
+    #]
+    
+    println("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)") color yellow
+    request basicrobot -m moverobot:moverobot($X,$Y)
 		}
 	}
 	Transition t
@@ -539,35 +514,31 @@ State movetoslot {
 		whenInterruptEvent stopthesystem -> systemStopped
 	
 State movetohome {
-		delay 2000
-		onMsg ( moverobotdone : moverobotdone(ARG)) {
-			[#val DEST = Pos.home.name#]
-			solve (getPoint($DEST,TX,TY,TDIR))
-				[#
+  delay 2000
+  onMsg ( moverobotdone : moverobotdone(ARG)) {
+    [#val DEST = Pos.home.name#]
+    solve (getPoint($DEST,TX,TY,TDIR))
+      [#
 
-				val X = getCurSol("TX").toString();
-				val Y = getCurSol("TY").toString();
-				val D = getCurSol("TDIR").toString();
-				
-				
-				
-				moving = true
-				destination = DEST
-			
-			#]
-			
-			println("$name : moving robot to slot HOME at Position ($X,$Y)") color yellow
-			request basicrobot -m moverobot:moverobot($X,$Y)
-		}
-	}
-	Transition t
-		whenReply moverobotdone -> ended
-		whenReply moverobotfailed -> movefailed
-		whenInterruptEvent stopthesystem -> systemStopped
-            </code>
-          </pre>
-
-          
+      val X = getCurSol("TX").toString();
+      val Y = getCurSol("TY").toString();
+      val D = getCurSol("TDIR").toString();
+      
+      
+      
+      moving = true
+      destination = DEST
+    
+    #]
+    
+    println("$name : moving robot to slot HOME at Position ($X,$Y)") color yellow
+    request basicrobot -m moverobot:moverobot($X,$Y)
+  }
+}
+Transition t
+  whenReply moverobotdone -> ended
+  whenReply moverobotfailed -> movefailed
+  whenInterruptEvent stopthesystem -> systemStopped</code></pre><br/>
 
           Le coordinate delle diverse destinazioni verranno recuperate da una
           base di conoscenza prolog. Nella base di conoscenza sono definiti dei
@@ -602,19 +573,16 @@ State movetohome {
           <strong>productservice</strong> per recuperare le informazioni
           riguardanti il prodotto specificato.
           
-          <pre>
-            <code>
-State handleControlRequest {
-		onMsg( controlproduct : controlproduct(PID) ) {
-			[# val PID = payloadArg(0).toInt() #]
-			println("$name : received control request for PID : $PID") color blue 
-			request productservice -m getProduct : product($PID)
-		}
+<pre><code>State handleControlRequest {
+	onMsg( controlproduct : controlproduct(PID) ) {
+    [# val PID = payloadArg(0).toInt() #]
+    println("$name : received control request for PID : $PID") color blue 
+    request productservice -m getProduct : product($PID)
 	}
-	Transition t
-		whenReply getProductAnswer -> checkProductAnswer
-            </code>
-          </pre>
+}
+Transition t
+  whenReply getProductAnswer -> checkProductAnswer
+</code></pre><br/>
           
           In base al payload della risposta
           <i>getProductAnswer(JSonString)</i> holdmanager otterrà i dati del
@@ -627,55 +595,51 @@ State handleControlRequest {
           in caso contrario verrà inviata una risposta di rifiuto
           <i>productrejected()</i>. 
 
-                    <pre>
-            <code>
-State checkProductAnswer {
-		onMsg ( getProductAnswer : product(JsonString) ) {
-			[# 				
-				val parser = JSONParser()
-				val jsonString = payloadArg(0).toString()
-				val jsonObj = parser.parse(jsonString) as JSONObject
-				
-				val pid = (jsonObj["productId"] as Long).toInt()
-				val weight = (jsonObj["weight"] as Long).toInt()
+<pre><code>State checkProductAnswer {
+  onMsg ( getProductAnswer : product(JsonString) ) {
+    [# 				
+      val parser = JSONParser()
+      val jsonString = payloadArg(0).toString()
+      val jsonObj = parser.parse(jsonString) as JSONObject
+      
+      val pid = (jsonObj["productId"] as Long).toInt()
+      val weight = (jsonObj["weight"] as Long).toInt()
 
-				var rejected = false
-				var ERMSG = ""	
-				var SLOT = 0		
-				
-				if( pid > 0 ) {														// Prodotto registrato
-					if ( MAXLOAD >= (weights.sumOf {it} + weight)) {				// Capienza stiva sufficiente
-						SLOT = pids.indexOfFirst { it == 0 }
-						if(SLOT < 0) {											    // Nessuno slot libero
-							rejected = true
-							ERMSG = "Tutti_gli_slot_sono_gia_occupati"
-						}
-					} else {
-						rejected = true
-						ERMSG = "Capienza_stiva_non_sufficiente"
-					}
-				} else {
-					rejected = true
-					ERMSG = "Prodotto_non_registrato"
-				}
-				
-			#]
-			
-			if [# rejected #] {
-				println("$name : product rejected") color blue
-				replyTo controlproduct with productrejected : productrejected($ERMSG)
-			} else {
-				println("$name : product accepted") color blue 
-				[# waitingProduct = jsonObj #]
-				replyTo controlproduct with productaccepted : productaccepted($SLOT)
-			}
-			
-		}
-	} 
-	Transition t
-		whenEvent productloaded -> updateHoldState
-            </code>
-          </pre>
+      var rejected = false
+      var ERMSG = ""	
+      var SLOT = 0		
+      
+      if( pid > 0 ) {					// Prodotto registrato
+        if ( MAXLOAD >= (weights.sumOf {it} + weight)) {	// Capienza stiva sufficiente
+          SLOT = pids.indexOfFirst { it == 0 }
+          if(SLOT < 0) {	                                // Nessuno slot libero
+            rejected = true
+            ERMSG = "Tutti_gli_slot_sono_gia_occupati"
+          }
+        } else {
+          rejected = true
+          ERMSG = "Capienza_stiva_non_sufficiente"
+        }
+      } else {
+        rejected = true
+        ERMSG = "Prodotto_non_registrato"
+      }
+      
+    #]
+    
+    if [# rejected #] {
+      println("$name : product rejected") color blue
+      replyTo controlproduct with productrejected : productrejected($ERMSG)
+    } else {
+      println("$name : product accepted") color blue 
+      [# waitingProduct = jsonObj #]
+      replyTo controlproduct with productaccepted : productaccepted($SLOT)
+    }
+    
+  }
+} 
+Transition t
+whenEvent productloaded -> updateHoldState</code></pre><br/>
 
           Per la memorizzazione persistente dello
           stato della hold, data la sua semplicità e la limitata quantità di
@@ -710,18 +674,15 @@ State checkProductAnswer {
           <i>MAXLOAD</i>, cioè il peso massimo che la hold può sostenere
           <br />
           Il file JSON avrà dunque la seguente struttura:
-          <pre>
-  {
-    "pids": [0, 0, 0, 0],
-    "names": ["", "", "", ""],
-    "weights": [0, 0, 0, 0],
-    "MAXLOAD": 100
-  }
-              </pre
-          >
+<pre><code>{
+  "pids": [0, 0, 0, 0],
+  "names": ["", "", "", ""],
+  "weights": [0, 0, 0, 0],
+  "MAXLOAD": 100
+}</code></pre>
 
           Nel momento in cui terminerà il caricamento del prodotto, holdmanager
-          aggiornerà il file JSON utilizzato per tracciare lo stato della hold
+          aggiornerà il contenuto del file JSON.
         </div>
       </div>
 
