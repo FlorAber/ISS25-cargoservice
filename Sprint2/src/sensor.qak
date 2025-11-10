@@ -11,10 +11,10 @@ Event alarm : alarm(ARG)
 Event sonaralert : sonaralert(X)	 // inizia stato di alert	
 Event sonarok    : sonarok(X)		 // terminato stato di alert
 
-Event stopthesystem:stopthesystem(X) 		// Evento interno per fermare gli altri attori
-Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli altri attori
+Event stopthesystem:stopthesystem(X) 		// Evento interno per fermare gli altri attori NON USATO DAL SONAR
+Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli altri attori NON USATO DAL SONAR
 
-
+Event measurement	: measurement(CM) // evento di invio della misurazione rilevata
 
 
 Request loadrequest: loadrequest(PID)
@@ -24,23 +24,127 @@ Reply loadrejected : loadrejected(X) for loadrequest // cargoservice to mock
 
 
 
-Context ctx_cargo  ip  [host="127.0.0.1" port=8014]
-
-Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
-Context ctxproductservice ip [ host="127.0.0.1" port=8111]
+//Context ctx_cargo  ip  [host="127.0.0.1" port=8014]
+//
+//Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
+//Context ctxproductservice ip [ host="127.0.0.1" port=8111]
 
 Context ctx_sensor  ip  [host="localhost" port=8016]
 
-ExternalQActor productservice context ctxproductservice
-ExternalQActor basicrobot context ctx_basicrobot
-ExternalQActor cargoservice context ctx_cargo
+//ExternalQActor productservice context ctxproductservice
+//ExternalQActor basicrobot context ctx_basicrobot
+//ExternalQActor cargoservice context ctx_cargo
+
+QActor sonarsimulator context ctx_sensor{
+	State s0 initial{
+		delay 2000
+		println("$name: starting") color cyan
+	}
+	Goto work
+	
+	State work{
+		delay 1000 // attendo che sonarlistener entri in attesa
+		
+		// misurazioni non consistenti
+		emitlocalstream measurement      : measurement(30)
+	    delay 1000
+		emitlocalstream measurement      : measurement(15)
+	    delay 1000
+		emitlocalstream measurement      : measurement(10)
+	    delay 1000
+		emitlocalstream measurement      : measurement(0)
+	    delay 1000
+		emitlocalstream measurement      : measurement(40)
+		
+		// assente per 4 secondi
+		emitlocalstream measurement      : measurement(20)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(20)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(20)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(20)
+	    delay 1000
+	    
+		// presente per 3 secondi
+		emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	    
+	    // di nuovo presente per 3 secondi
+	    emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	    		emit waitingForDeposit : waitingForDeposit(1)
+	    emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	   
+	     
+	    // guasto per 5 secondi
+	    emitlocalstream measurement      : measurement(31)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(31)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(31)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(31)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(31)
+	    delay 1000
+	    
+	    // di nuovo presente per 2 secondi, assente per 3
+	    emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(10)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(20)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(20)
+	    delay 1000
+	    emitlocalstream measurement      : measurement(20)
+	    delay 1000
+	   
+	}
+	
+	State work2{
+		[#
+			while(true) {
+				// 1/12 di probabilità di un guasto 
+				if ((0..11).random() == 0) {
+		 #]
+		 			emitlocalstream measurement : measurement(100)
+		    		delay 1000
+		    		emitlocalstream measurement : measurement(100)
+		    		delay 1000
+		    		emitlocalstream measurement : measurement(100)
+		    		delay 5000 // guasto per 5 secondi
+		 [#
+		    	}
+		    	else {
+		#]
+					emitlocalstream measurement : measurement(10)
+		    		delay 1000
+		[#	
+				}
+			}
+		#]
+	}
+}
 
 
-QActor mockuser context ctx_sensor {
+QActor measuresprocessor context ctx_sensor {
 	
 	[#
-		var ERROR = false;
-		var COUNTLOADS = 0
+		val DFREE = 30
+		var guasto = false
+		var counterError = 0
+		var counterDeposit = 0
+		var doDepositSent = false
+		var deposit = false
 	#]
 	
 	State s0 initial{
@@ -61,54 +165,93 @@ QActor mockuser context ctx_sensor {
 //		request productservice -m createProduct : product($JsonObj4)
 //		request productservice -m createProduct : product($JsonObj5)
 
+	 	subscribeTo sonarsimulator  for measurement
 	} 
-	Goto load_test
+	Goto listen_for_measurement
 	
-	State load_test{
-		
-		[# COUNTLOADS++ #]
-		delay 5000
-		if[# COUNTLOADS < 5 #] {
-			println("$name : richiesta! ") color cyan
-			request cargoservice -m loadrequest : loadrequest($COUNTLOADS)
-		}	
+	
+	State listen_for_measurement {
+		//aspetto
 	}
 	Transition t
-		whenReply loadaccepted -> deposit
-		whenReply loadrejected -> loadFail
+		whenEvent measurement -> process
+		whenEvent waitingForDeposit -> checkForDeposit
+		whenEvent stopWaitingForDeposit -> stopWaitingDeposit
 		
-	State deposit {
-		println("$name : PID found, proceeding to do Deposit") color cyan
-		emit doDeposit : doDeposit(1)
+	State process{
+		[# var M = -1 #]
+		onMsg(measurement : measurement(X)){
+			[#
+				M = payloadArg(0).toInt()
+			#]
+		}
 		
-		if [# COUNTLOADS == 2 || COUNTLOADS == 4 #] {
-			delay 3000
-			emit sonaralert : sonaralert(0)
+		if[# M < DFREE/2 #]{
+			println("$name container presente") color cyan
+			[#
+				counterError = 0
+				counterDeposit += 1
+			#]
 			
-			delay 3000
-			emit sonarok : sonarok(0)
+			if[# deposit && counterDeposit >= 3 && !doDepositSent #]{
+				println("$name invio deposito") color green
+				emit doDeposit : doDeposit(1)
+				[# doDepositSent = true #]
+			}
 		}
-
+		
+		if[# M >= DFREE/2 && M <= DFREE #]{
+			println("$name container assente") color cyan
+			[#
+				counterError = 0
+				counterDeposit = 0
+				doDepositSent = false
+			#]
+		}
+		
+		if[# M > DFREE #]{
+			println("$name possibile guasto") color red
+			[#
+				counterError += 1
+				counterDeposit = 0
+				doDepositSent = false
+			#]
+		}
+		
+		if[# counterError >= 3 && !guasto #]{
+			println("$name GUASTO") color red
+			[# 
+				guasto = true 
+			#]
+			emit sonaralert : sonaralert(1)
+		} else {
+			if [# guasto && counterError < 3 #] {
+				println("$name GUASTO RIENTRATO") color yellow
+				[# guasto = false #]
+				emit sonarok : sonarok(1)
+			}
+		}
 	}
-	Goto load_test 			// Da usare per provare ad inviare tante load in cascata
-//	Transition t
-//		whenEvent productloaded -> end //controllo su evento in caso di robot che termina il suo lavoro -> end
+	Goto listen_for_measurement
 	
-	State loadFail{
-		[# ERROR = true #]
-		onMsg (loadrejected : loadrejected(ERRORPAYLOAD)) {
-			[# val ERRORPAYLOAD = payloadArg(0)#]
-			println("$ERRORPAYLOAD") color red
+	State checkForDeposit{
+		[#deposit = true #]
+		println("$name checking for deposit") color cyan
+		
+		if[# counterDeposit >= 3 #]{
+			println("$name invio deposito") color green
+			[# doDepositSent = true #]
+			emit doDeposit : doDeposit(1)
+			
+		} 
+		else {
+			println("$name deposit NOT confirmed: needing other measurements") color cyan
 		}
-		println("PID not found") color red
 	}
+	Goto listen_for_measurement
 	
-	State end {
-		if [# ERROR == true #]{
-			println("$name : Failed") color cyan
-		} else{
-			println("$name : Success") color cyan
-		}
+	State stopWaitingDeposit{
+		[# deposit = false#]
 	}
-	Goto load_test
+	Goto listen_for_measurement
 }

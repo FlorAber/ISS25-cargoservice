@@ -25,16 +25,14 @@ with Diagram('sprint2_sensors_modelArch', show=False, outformat='png', graph_att
   with Cluster('env'):
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
-     with Cluster('ctx_cargo', graph_attr=nodeattr):
-          cargoservice=Custom('cargoservice(ext)','./qakicons/externalQActor.png')
-     with Cluster('ctx_basicrobot', graph_attr=nodeattr):
-          basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
-     with Cluster('ctxproductservice', graph_attr=nodeattr):
-          productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
      with Cluster('ctx_sensor', graph_attr=nodeattr):
-          mockuser=Custom('mockuser','./qakicons/symActorWithobjSmall.png')
-     mockuser >> Edge( label='doDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     mockuser >> Edge( label='sonaralert', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     mockuser >> Edge( label='sonarok', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     mockuser >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
+          sonarsimulator=Custom('sonarsimulator','./qakicons/symActorWithobjSmall.png')
+          measuresprocessor=Custom('measuresprocessor','./qakicons/symActorWithobjSmall.png')
+     sonarsimulator >> Edge( label='waitingForDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sonarsimulator >> Edge( label='measurement', **eventedgeattr, decorate='true', fontcolor='red') >> measuresprocessor
+     sys >> Edge( label='waitingForDeposit', **evattr, decorate='true', fontcolor='darkgreen') >> measuresprocessor
+     sys >> Edge( label='stopWaitingForDeposit', **evattr, decorate='true', fontcolor='darkgreen') >> measuresprocessor
+     measuresprocessor >> Edge( label='doDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     measuresprocessor >> Edge( label='sonaralert', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     measuresprocessor >> Edge( label='sonarok', **eventedgeattr, decorate='true', fontcolor='red') >> sys
 diag

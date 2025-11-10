@@ -68,10 +68,9 @@ dependencies {
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core-jvm', version: "$kotlinVersion"
 
 	//SOCKET.IO  
-//    implementation group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
+    implementation group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
     //javax.websocket api is only the specification
-//    implementation group: 'org.glassfish.tyrus.bundles', name: 'tyrus-standalone-client', version: '1.9'
-  	  implementation group: 'org.java-websocket', name: 'Java-WebSocket', version: '1.6.0'
+    implementation group: 'org.glassfish.tyrus.bundles', name: 'tyrus-standalone-client', version: '1.9'
 
 	//HTTP
     implementation 'org.apache.httpcomponents:httpclient:4.5'
@@ -149,7 +148,7 @@ eclipse {
 
 application {
     //Define the main class for the application.
-    mainClassName    = 'it.unibo.ctx_productservice.MainCtx_productserviceKt'
+    mainClassName    = 'it.unibo.ctx_cargo.MainCtx_cargoKt'
 }
  
  jar {
@@ -172,9 +171,9 @@ task dovesiamo {
 
 distributions {
     main {
-        distributionBaseName = 'sprint1_core_business'
+        distributionBaseName = 'sprint1_system_overview'
         contents { 
-             from './sprint1_core_business.pl'
+             from './sprint1_system_overview.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
         }
@@ -185,7 +184,7 @@ task run0(type: JavaExec) {
     group = "Execution"
     description = "Run the main class with JavaExecTask"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'it.unibo.ctx_productservice.MainCtx_productserviceKt'
+    main = 'it.unibo.ctx_cargo.MainCtx_cargoKt'
 }
 
 /*
