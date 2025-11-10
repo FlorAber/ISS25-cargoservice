@@ -20,3 +20,5 @@ context(ctx_sensor, "localhost",  "TCP", "8016").
  static(sonarsimulator).
   qactor( measuresprocessor, ctx_sensor, "it.unibo.measuresprocessor.Measuresprocessor").
  static(measuresprocessor).
+  qactor( led, ctx_sensor, "it.unibo.led.Led").
+ static(led).

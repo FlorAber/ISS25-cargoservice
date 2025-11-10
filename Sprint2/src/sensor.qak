@@ -255,3 +255,28 @@ QActor measuresprocessor context ctx_sensor {
 	}
 	Goto listen_for_measurement
 }
+
+QActor led context ctx_sensor{
+	State s0 initial{
+		println("$name starting") color cyan
+ 	}
+ 	Goto wait
+ 	
+ 	State wait{
+ 		println("$name waiting for interrupts") color cyan
+ 	}
+ 	
+ 	Transition t
+ 		whenEvent sonaralert -> acceso
+ 		whenEvent sonarok -> spento
+ 		
+ 	State acceso{
+ 		println("$name acceso") color red
+ 	}
+ 	Goto wait
+ 	
+ 	State spento{
+ 		println("$name spento") color green
+ 	}
+ 	Goto wait
+}

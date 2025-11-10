@@ -28,6 +28,7 @@ with Diagram('sprint2_sensors_modelArch', show=False, outformat='png', graph_att
      with Cluster('ctx_sensor', graph_attr=nodeattr):
           sonarsimulator=Custom('sonarsimulator','./qakicons/symActorWithobjSmall.png')
           measuresprocessor=Custom('measuresprocessor','./qakicons/symActorWithobjSmall.png')
+          led=Custom('led','./qakicons/symActorWithobjSmall.png')
      sonarsimulator >> Edge( label='waitingForDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sonarsimulator >> Edge( label='measurement', **eventedgeattr, decorate='true', fontcolor='red') >> measuresprocessor
      sys >> Edge( label='waitingForDeposit', **evattr, decorate='true', fontcolor='darkgreen') >> measuresprocessor
@@ -35,4 +36,6 @@ with Diagram('sprint2_sensors_modelArch', show=False, outformat='png', graph_att
      measuresprocessor >> Edge( label='doDeposit', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      measuresprocessor >> Edge( label='sonaralert', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      measuresprocessor >> Edge( label='sonarok', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sys >> Edge( label='sonaralert', **evattr, decorate='true', fontcolor='darkgreen') >> led
+     sys >> Edge( label='sonarok', **evattr, decorate='true', fontcolor='darkgreen') >> led
 diag
