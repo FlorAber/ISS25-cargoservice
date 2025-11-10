@@ -1,0 +1,114 @@
+System sprint2_sensors_model
+
+
+Event doDeposit : doDeposit(X) 					 // user to cargoservice
+Event waitingForDeposit : waitingfordeposit(X)    // sent after load request accepted, used to trigger the sonar sensor
+Event stopWaitingForDeposit : stopWaitingForDeposit(X)
+// TEMPORANEA PER GESTIRE LA FINE DEL CARICAMENTO E AGGIORNARE LO STATO INTERNO DELL'HOLDMANAGER, SOSTITUIBILE CON ALTRO
+Event productloaded : productloaded(X) 
+Event alarm : alarm(ARG) 
+
+Event sonaralert : sonaralert(X)	 // inizia stato di alert	
+Event sonarok    : sonarok(X)		 // terminato stato di alert
+
+Event stopthesystem:stopthesystem(X) 		// Evento interno per fermare gli altri attori
+Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli altri attori
+
+
+
+
+Request loadrequest: loadrequest(PID)
+Reply loadaccepted : loadaccepted(X) for loadrequest // cargoservice to mock
+Reply loadrejected : loadrejected(X) for loadrequest // cargoservice to mock
+
+
+
+
+Context ctx_cargo  ip  [host="127.0.0.1" port=8014]
+
+Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
+Context ctxproductservice ip [ host="127.0.0.1" port=8111]
+
+Context ctx_sensor  ip  [host="localhost" port=8016]
+
+ExternalQActor productservice context ctxproductservice
+ExternalQActor basicrobot context ctx_basicrobot
+ExternalQActor cargoservice context ctx_cargo
+
+
+QActor mockuser context ctx_sensor {
+	
+	[#
+		var ERROR = false;
+		var COUNTLOADS = 0
+	#]
+	
+	State s0 initial{
+		delay 3000
+		println("$name : starting") color cyan 
+//		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
+//		println("$name : loading productservice db") color cyan 
+//		[# 
+//			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
+//			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
+//			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
+//			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
+//			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
+//		#]
+//		request productservice -m createProduct : product($JsonObj1)
+//		request productservice -m createProduct : product($JsonObj2)
+//		request productservice -m createProduct : product($JsonObj3)
+//		request productservice -m createProduct : product($JsonObj4)
+//		request productservice -m createProduct : product($JsonObj5)
+
+	} 
+	Goto load_test
+	
+	State load_test{
+		
+		[# COUNTLOADS++ #]
+		delay 5000
+		if[# COUNTLOADS < 5 #] {
+			println("$name : richiesta! ") color cyan
+			request cargoservice -m loadrequest : loadrequest($COUNTLOADS)
+		}	
+	}
+	Transition t
+		whenReply loadaccepted -> deposit
+		whenReply loadrejected -> loadFail
+		
+	State deposit {
+		println("$name : PID found, proceeding to do Deposit") color cyan
+		emit doDeposit : doDeposit(1)
+		
+		if [# COUNTLOADS == 2 || COUNTLOADS == 4 #] {
+			delay 3000
+			emit sonaralert : sonaralert(0)
+			
+			delay 3000
+			emit sonarok : sonarok(0)
+		}
+
+	}
+	Goto load_test 			// Da usare per provare ad inviare tante load in cascata
+//	Transition t
+//		whenEvent productloaded -> end //controllo su evento in caso di robot che termina il suo lavoro -> end
+	
+	State loadFail{
+		[# ERROR = true #]
+		onMsg (loadrejected : loadrejected(ERRORPAYLOAD)) {
+			[# val ERRORPAYLOAD = payloadArg(0)#]
+			println("$ERRORPAYLOAD") color red
+		}
+		println("PID not found") color red
+	}
+	
+	State end {
+		if [# ERROR == true #]{
+			println("$name : Failed") color cyan
+		} else{
+			println("$name : Success") color cyan
+		}
+	}
+	Goto load_test
+}
