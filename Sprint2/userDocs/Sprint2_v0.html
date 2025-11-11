@@ -168,7 +168,23 @@ while True:
               </code>
             </pre>
 
-          </div>
+            <h4>
+              Il ciclo del componente software sonar 
+            </h4>
+            
+              <div class="textbody">
+                Il componente software che rappresenta il sonar di fatto dovrà risolvere
+                  due problemi principali:
+                  <ul>
+                    <li>Interfacciarsi con lo script Python per ottenere le misurazioni della distanza dal sonar fisico;</li>
+                    <li>Comunicare con cargoservice quando si verificano eventi di interesse.</li>
+                  </ul>
+            pertanto in questa fase si suggerisce di modellare un componente chiamato <strong>measuresprocessor</strong> per la
+            realizzazione della fase di processing delle misurazioni ottenute dall'hardware e un componente <strong>sonarsimulator</strong>
+            per simulare il comportamento del sonar fisico, utile alla fase di testing.
+          
+        </div>
+        </div>
         </div>
 
         <div class="textparagraph">
@@ -189,5 +205,24 @@ while True:
         
         
         
+    </div>
+    <h2>Logical Architecture</h2>
+
+      <div class="medium-12 text-center remark">
+        <img
+          src="../sprint2_sensors_modelarch.png"
+          class="text-center"
+          alt="map"
+          width="75%"
+        />
+
+      </div>
+
+      <h2>Test plans</h2>
+    <div class="remark">
+      <div class="textbody">
+        Lo scopo della fase di test è quello di verificare il corretto funzionamento del
+        sistema modellato, cioè del contesto <strong>sensor</strong>.
+    </div>
     </div>
 </body> 
