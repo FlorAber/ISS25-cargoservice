@@ -16,9 +16,9 @@ reply( loadaccepted, loadaccepted(X) ).  %%for loadrequest
 reply( loadrejected, loadrejected(X) ).  %%for loadrequest
 %====================================================================================
 context(ctx_sensor, "localhost",  "TCP", "8016").
- qactor( sonarsimulator, ctx_sensor, "it.unibo.sonarsimulator.Sonarsimulator").
- static(sonarsimulator).
-  qactor( measuresprocessor, ctx_sensor, "it.unibo.measuresprocessor.Measuresprocessor").
- static(measuresprocessor).
+ qactor( sonar, ctx_sensor, "it.unibo.sonar.Sonar").
+ static(sonar).
+  qactor( sonarmanager, ctx_sensor, "it.unibo.sonarmanager.Sonarmanager").
+ static(sonarmanager).
   qactor( led, ctx_sensor, "it.unibo.led.Led").
  static(led).

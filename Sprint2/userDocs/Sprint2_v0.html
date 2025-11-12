@@ -61,23 +61,19 @@
         I requisiti che intendiamo soddisfare in questo sprint sono i
         seguenti:
         <ul>
-          <li>
-            Il sistema deve essere in grado di rilevare l'arrivo di un nuovo
-            prodotto tramite il sonar, distanza D < DFREE/2, durante un tempo ragionevole (ad es. 3 sec) e comunicarlo al
-            cargoservice.
+                    <li>
+            The sensor put in front of the IOPort is a sonar used
+             to detect the presence of a product container, when it
+              measures a distance D, such that D < DFREE/2,
+               during a reasonable time (e.g. 3 secs).
           </li>
           <li>
-            Il sistema deve essere in grado di rilevare il malfunzionamento del
-            sonar, D>DFREE e comunicarlo al cargoservice.
+            interrupts any activity and turns on a led if
+             the sonar sensor measures a distance D > DFREE for at least 3 secs
+              (perhaps a sonar failure). The service continues its activities as
+               soon as the sonar measures a distance D <= DFREE.
           </li>
-          <li>
-            Il sistema deve essere in grado accendere un led fisico in caso di 
-            rilevamento di un malfunzionamento del sonar.
-          </li>
-          <li>
-            Il sistema deve essere in grado di riprendere il normale
-            funzionamento dopo la risoluzione del malfunzionamento del sonar, D<=DFREE.
-          </li>
+
         </ul>
         
 
@@ -89,11 +85,12 @@
           <h3>Come modellare Sensor e i suoi componenti?</h3>
             <div class="textbody">Dall'analisi dei requisiti emerge la necessità di gestire 
             almeno due componenti hardware: un sonar per il rilevamento dei prodotti e un led per la segnalazione di malfunzionamenti.
-            Si è gia deciso in precedenza che per l'implementazione del sistema si sarebbe utilizzata una scheda Raspberry Pi.
+            Per l'implementazione del sistema data la natura dei componenti
+            da gestire verrà utilizzata una scheda Raspberry Pi.
 
             <br/>
-            A questo punto ci si è posti il problema di come modellare il contesto sensor e i suoi componenti.
-            La scelta finale ricade su due opzioni principali:
+            Le possibilità per modellare il contesto sensor e i suoi componenti
+            può ricadere su due soluzioni principali:
             <ul>
               <li>Modellare sensor come un unico componente che si occupa di gestire sia il <strong>sonar</strong> che il <strong>led</strong> modellati come POJO;</li>
               <li>Modellare sensor come un contesto che a sua volta contiene due attori, uno <strong>sonar</strong> e uno <strong>led</strong>.</li>
@@ -105,20 +102,19 @@
         </div>
         <div class="textparagraph">
           <h3>Sonar</h3>
-          <div class="textbody">Parlando in dettaglio del componente sonar ci si è domandati se
-            fosse opportuno fare in modo che il sonar comunicasse direttamente con il cargoservice ogni 
+          <div class="textbody">Parlando in dettaglio del componente sonar sorge spontaneo domandarsi se
+            sia opportuno fare in modo che il sonar comunichi direttamente con il cargoservice ogni 
             volta che rileva un evento di interesse (rilevamento prodotto o malfunzionamento)
-            oppure se fosse meglio che il sonar comunicasse con cargoservice ogni distanza rilevata.
+            oppure se sia meglio che il sonar comunichi con cargoservice ogni distanza rilevata.
             Siccome il sistema cargoservice è stato modellato per reagire ad eventi specifici
-            piuttosto che a flussi continui di dati, si suggerisce che il sonar comunichi con cargoservice
+            piuttosto che a flussi continui di dati, è preferibile che il sonar comunichi con cargoservice
             solo quando rileva un evento di interesse.
             <br/>
-            siamo in grado di individuare subito almeno 2 interazioni principali con <strong>cargoservice</strong>:
+            è possibile individuare già ora almeno 2 interazioni principali con <strong>cargoservice</strong>:
             <ul>
-              <li>il sonar ha rilevato un prodotto (D < DFREE/2) e comunica l'evento a cargoservice;</li>
-              <li>il sonar rileva un malfunzionamento (D > DFREE) e comunica l'evento a cargoservice.</li>
+              <li>il sonar ha rilevato un prodotto (D < DFREE/2 per minimo 3 secondi) e comunica l'evento <i>doDeposit</i> a cargoservice;</li>
+              <li>il sonar rileva un malfunzionamento (D > DFREE per minimo 3 secondi) e comunica l'evento <i>sonaralert</i> a cargoservice.</li>
             </ul>
-            Si nota che per semplicità non sono stati inseriti stati di transizione tra gli stati principali, verranno esplicitati in fase di progettazione.
 
             Sorge spontaneo domandarsi come il componente software sonar possa relazionarsi con il componente hardware sonar.
             Fortunatamente il committente ha precedentemente fornito uno script Python che si occupa di interfacciarsi con l'hardware e restituire la distanza rilevata, 
@@ -173,15 +169,15 @@ while True:
             </h4>
             
               <div class="textbody">
-                Il componente software che rappresenta il sonar di fatto dovrà risolvere
+                Il componente software che modella il sonar di fatto dovrà risolvere
                   due problemi principali:
                   <ul>
                     <li>Interfacciarsi con lo script Python per ottenere le misurazioni della distanza dal sonar fisico;</li>
                     <li>Comunicare con cargoservice quando si verificano eventi di interesse.</li>
                   </ul>
-            pertanto in questa fase si suggerisce di modellare un componente chiamato <strong>measuresprocessor</strong> per la
-            realizzazione della fase di processing delle misurazioni ottenute dall'hardware e un componente <strong>sonarsimulator</strong>
-            per simulare il comportamento del sonar fisico, utile alla fase di testing.
+            Per separare le funzionalità si suggerisce di modellare un componente chiamato <strong>sonarmanager</strong> per la
+            realizzazione della fase di processing delle misurazioni e comunicazioni con cargoservice e un componente <strong>sonar</strong>
+            che modella il comportamento del sonar fisico e invia le misurazioni a sonarmanager.
           
         </div>
         </div>

@@ -35,7 +35,7 @@ Context ctx_sensor  ip  [host="localhost" port=8016]
 //ExternalQActor basicrobot context ctx_basicrobot
 //ExternalQActor cargoservice context ctx_cargo
 
-QActor sonarsimulator context ctx_sensor{
+QActor sonar context ctx_sensor{
 	State s0 initial{
 		delay 2000
 		println("$name: starting") color cyan
@@ -136,7 +136,7 @@ QActor sonarsimulator context ctx_sensor{
 }
 
 
-QActor measuresprocessor context ctx_sensor {
+QActor sonarmanager context ctx_sensor {
 	
 	[#
 		val DFREE = 30
@@ -165,7 +165,7 @@ QActor measuresprocessor context ctx_sensor {
 //		request productservice -m createProduct : product($JsonObj4)
 //		request productservice -m createProduct : product($JsonObj5)
 
-	 	subscribeTo sonarsimulator  for measurement
+	 	subscribeTo sonar  for measurement
 	} 
 	Goto listen_for_measurement
 	
