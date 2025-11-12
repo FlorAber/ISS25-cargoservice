@@ -41,7 +41,6 @@ class Sonarmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					action { //it:State
 						delay(3000) 
 						CommUtils.outcyan("$name : starting")
-						subscribeToLocalActor("sonar") 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -56,7 +55,7 @@ class Sonarmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t0",targetState="process",cond=whenEvent("measurement"))
+					 transition(edgeName="t0",targetState="process",cond=whenDispatch("measurement"))
 					transition(edgeName="t1",targetState="checkForDeposit",cond=whenEvent("waitingForDeposit"))
 					transition(edgeName="t2",targetState="stopWaitingDeposit",cond=whenEvent("stopWaitingForDeposit"))
 				}	 

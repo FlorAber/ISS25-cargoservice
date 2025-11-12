@@ -10,7 +10,7 @@ event( sonaralert, sonaralert(X) ).
 event( sonarok, sonarok(X) ).
 event( stopthesystem, stopthesystem(X) ).
 event( resumethesystem, resumethesystem(X) ).
-event( measurement, measurement(CM) ).
+dispatch( measurement, measurement(CM) ).
 request( loadrequest, loadrequest(PID) ).
 reply( loadaccepted, loadaccepted(X) ).  %%for loadrequest
 reply( loadrejected, loadrejected(X) ).  %%for loadrequest

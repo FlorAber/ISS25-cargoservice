@@ -196,6 +196,62 @@ while True:
             Si suggerisce la prima opzione in quanto consente di mantenere il led
             come un componente autonomo che non necessita di comunicare direttamente con gli altri componenti del sistema.
 
+
+            Per quanto riguarda l'interfacciamento con l'hardware, anche in questo caso
+            il committente ha fornito due script Python, uno per l'accensione:
+            <pre>
+              <code>
+#file ledPython25On.py
+# -------------------------------------------------------------
+#
+# -------------------------------------------------------------
+import RPi.GPIO as GPIO 
+import time
+
+'''
+----------------------------------
+CONFIGURATION
+----------------------------------
+'''
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(25,GPIO.OUT)
+
+'''
+----------------------------------
+main activity
+----------------------------------
+'''
+GPIO.output(25,GPIO.HIGH)
+              </code>
+            </pre>
+            E uno per lo spegnimento:
+            <pre>
+              <code>
+#file ledPython25Off.py
+# -------------------------------------------------------------
+#
+# -------------------------------------------------------------
+import RPi.GPIO as GPIO 
+import time
+
+'''
+----------------------------------
+CONFIGURATION
+----------------------------------
+'''
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(25,GPIO.OUT)
+
+'''
+----------------------------------
+main activity
+----------------------------------
+'''
+
+GPIO.output(25,GPIO.LOW)
+
+              </code>
+            </pre>
           </div>
         </div>
         
@@ -221,4 +277,17 @@ while True:
         sistema modellato, cioè del contesto <strong>sensor</strong>.
     </div>
     </div>
+
+    <h2>Project</h2>
+    <div class="remark">
+      Per seguire il single responsibility principle è stato deciso di affidare
+      a diversi attori la gestione delle distinte parti del sistema.
+
+      <div class="textparagraph">
+        <h3>comportamento del sonarmanager</h3>
+        <div class="textbody">
+        </div>
+      </div>
+    </div>
+
 </body> 
