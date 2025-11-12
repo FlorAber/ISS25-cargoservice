@@ -29,11 +29,18 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+			lateinit var reader : java.io.BufferedReader
+		    lateinit var p : Process	
+		    var D= 0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(2000) 
 						CommUtils.outcyan("$name: starting")
+						
+								p       = Runtime.getRuntime().exec("python sonar.py")
+								reader  = java.io.BufferedReader( java.io.InputStreamReader(p.getInputStream()) )
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -44,87 +51,27 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 				state("work") { //this:State
 					action { //it:State
 						delay(1000) 
-						forward("measurement", "measurement(30)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(0)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(40)" ,"sonarmanager" ) 
-						forward("measurement", "measurement(20)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(20)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(20)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(20)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						emit("waitingForDeposit", "waitingForDeposit(1)" ) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(31)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(31)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(31)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(31)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(31)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(20)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(20)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(20)" ,"sonarmanager" ) 
-						delay(1000) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-				}	 
-				state("work2") { //this:State
-					action { //it:State
 						
-									while(true) {
-										// 1/12 di probabilità di un guasto 
-										if ((0..11).random() == 0) {
-						forward("measurement", "measurement(100)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(100)" ,"sonarmanager" ) 
-						delay(1000) 
-						forward("measurement", "measurement(100)" ,"sonarmanager" ) 
-						delay(5000) 
-						
-								    	}
-								    	else {
-						forward("measurement", "measurement(10)" ,"sonarmanager" ) 
-						delay(1000) 
-							
+								
+								var data = reader.readLine()
+									
+									if( data != null ){
+										try{ 
+											val vd = data.toInt()
+											D = v
+										}catch(e: Exception){
+											CommUtils.outred("$name ERROR FROM READING SONAR DATA: $e")
 										}
 									}
+								
+						forward("measurement", "measurement($D)" ,"sonarmanager" ) 
+						delay(1000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
 			}
 		}

@@ -36,103 +36,47 @@ Context ctx_sensor  ip  [host="localhost" port=8016]
 //ExternalQActor cargoservice context ctx_cargo
 
 QActor sonar context ctx_sensor{
+	
+	[#
+	lateinit var reader : java.io.BufferedReader
+    lateinit var p : Process	
+    var D= 0
+		#
+	]
 	State s0 initial{
 		delay 2000
 		println("$name: starting") color cyan
+		[#
+		p       = Runtime.getRuntime().exec("python sonar.py")
+		reader  = java.io.BufferedReader( java.io.InputStreamReader(p.getInputStream()) )
+		#
+		]
 	}
 	Goto work
 	
 	State work{
-		delay 1000 // attendo che sonarlistener entri in attesa
-		
-		// misurazioni non consistenti
-		forward	sonarmanager -m measurement : measurement(30)
-	    delay 1000
-		forward sonarmanager -m measurement : measurement(10) 
-	    delay 1000
-		forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-		forward sonarmanager -m measurement : measurement(0)
-	    delay 1000
-		forward sonarmanager -m measurement : measurement(40)
-		
-		// assente per 4 secondi
-		forward sonarmanager -m measurement : measurement(20)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(20)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(20)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(20)
-	    delay 1000
-	    
-		// presente per 3 secondi
-		forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	    
-	    // di nuovo presente per 3 secondi
-	    forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	    		emit waitingForDeposit : waitingForDeposit(1)
-	    forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	   
-	     
-	    // guasto per 5 secondi
-	    forward sonarmanager -m measurement : measurement(31)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(31)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(31)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(31)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(31)
-	    delay 1000
-	    
-	    // di nuovo presente per 2 secondi, assente per 3
-	    forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(10)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(20)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(20)
-	    delay 1000
-	    forward sonarmanager -m measurement : measurement(20)
-	    delay 1000
-	   
-	}
-	
-	State work2{
+		delay 1000
 		[#
-			while(true) {
-				// 1/12 di probabilità di un guasto 
-				if ((0..11).random() == 0) {
-		 #]
-		 			forward sonarmanager -m measurement : measurement(100)
-		    		delay 1000
-		    		forward sonarmanager -m measurement : measurement(100)
-		    		delay 1000
-		    		forward sonarmanager -m measurement : measurement(100)
-		    		delay 5000 // guasto per 5 secondi
-		 [#
-		    	}
-		    	else {
-		#]
-					forward sonarmanager -m measurement : measurement(10)
-		    		delay 1000
-		[#	
+		
+		var data = reader.readLine()
+			
+			if( data != null ){
+				try{ 
+					val vd = data.toInt()
+					D = v
+				}catch(e: Exception){
+					CommUtils.outred("$name ERROR FROM READING SONAR DATA: $e")
 				}
 			}
-		#]
+		
+		#
+		]
+		forward sonarmanager -m measurement : measurement($D)
+	    delay 1000
+	   
 	}
+	Goto work
+	
 }
 
 
@@ -271,11 +215,20 @@ QActor led context ctx_sensor{
  		
  	State acceso{
  		println("$name acceso") color red
+ 		[#
+ 			p       = Runtime.getRuntime().exec("python ledPython25On.py")	
+ 		#
+ 		]
+ 		
  	}
  	Goto wait
  	
  	State spento{
  		println("$name spento") color green
+ 		[#
+ 			p       = Runtime.getRuntime().exec("python ledPython25Off.py")	
+ 		#
+ 		]
  	}
  	Goto wait
 }
