@@ -77,7 +77,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t14",targetState="movetoioport",cond=whenRequest("load"))
-					transition(edgeName="t15",targetState="systemStopped",cond=whenEvent("stopthesystem"))
+					interrupthandle(edgeName="t15",targetState="systemStopped",cond=whenEvent("stopthesystem"),interruptedStateTransitions)
 				}	 
 				state("movetoioport") { //this:State
 					action { //it:State
@@ -126,10 +126,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val Y = getCurSol("TY").toString();
 												val D = getCurSol("TDIR").toString();
 												
-												
-												
 												moving = true
-												destination = TARGETSLOT.toString()
+												destination = DEST
 											
 								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
@@ -197,6 +195,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 transition(edgeName="t25",targetState="robotStopped",cond=whenReply("moverobotdone"))
 					transition(edgeName="t26",targetState="robotStopped",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t27",targetState="resumeRobot",cond=whenEvent("resumethesystem"))
 				}	 
 				state("robotStopped") { //this:State
 					action { //it:State
@@ -206,13 +205,14 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t27",targetState="resumeRobot",cond=whenEvent("resumethesystem"))
+					 transition(edgeName="t28",targetState="resumeRobot",cond=whenEvent("resumethesystem"))
 				}	 
 				state("resumeRobot") { //this:State
 					action { //it:State
 						CommUtils.outred("$name : robot movement resumed")
 						if(  moving  
 						 ){val DEST = destination 
+						CommUtils.outblack("$DEST")
 						solve("getPoint($DEST,TX,TY,TDIR)","") //set resVar	
 						
 						
@@ -223,6 +223,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 										
 										
 										moving = true			
+						CommUtils.outblack("$X $Y $D")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
 						returnFromInterrupt(interruptedStateTransitions)

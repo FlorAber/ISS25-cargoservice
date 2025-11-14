@@ -1,56 +1,44 @@
 System sprint2_sensors_model
 
-
 Event doDeposit : doDeposit(X) 					 // user to cargoservice
 Event waitingForDeposit : waitingfordeposit(X)    // sent after load request accepted, used to trigger the sonar sensor
 Event stopWaitingForDeposit : stopWaitingForDeposit(X)
-// TEMPORANEA PER GESTIRE LA FINE DEL CARICAMENTO E AGGIORNARE LO STATO INTERNO DELL'HOLDMANAGER, SOSTITUIBILE CON ALTRO
-Event productloaded : productloaded(X) 
-Event alarm : alarm(ARG) 
 
 Event sonaralert : sonaralert(X)	 // inizia stato di alert	
 Event sonarok    : sonarok(X)		 // terminato stato di alert
 
-Event stopthesystem:stopthesystem(X) 		// Evento interno per fermare gli altri attori NON USATO DAL SONAR
-Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli altri attori NON USATO DAL SONAR
-
 Dispatch measurement	: measurement(CM) // evento di invio della misurazione rilevata
 
-
-Request loadrequest: loadrequest(PID)
-Reply loadaccepted : loadaccepted(X) for loadrequest // cargoservice to mock
-Reply loadrejected : loadrejected(X) for loadrequest // cargoservice to mock
-
-
-
-
-//Context ctx_cargo  ip  [host="127.0.0.1" port=8014]
-//
-//Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
-//Context ctxproductservice ip [ host="127.0.0.1" port=8111]
-
+Context ctx_cargo  ip  [host="172.20.10.10" port=8014]
 Context ctx_sensor  ip  [host="localhost" port=8016]
 
-//ExternalQActor productservice context ctxproductservice
-//ExternalQActor basicrobot context ctx_basicrobot
-//ExternalQActor cargoservice context ctx_cargo
+/*
+ * SONAR:
+ * 	vcc: vcc 5v
+ *  trig: 17
+ * 	echo: 27
+ * 	ground: gnd
+ * 
+ * LED:
+ * 	gnd : gnd
+ * 	vcc : 25
+ * 
+ */
 
 QActor sonar context ctx_sensor{
 	
 	[#
-	lateinit var reader : java.io.BufferedReader
-    lateinit var p : Process	
-    var D= 0
-		#
-	]
+		lateinit var reader : java.io.BufferedReader
+	    lateinit var p : Process	
+	    var D: Double = 0.0
+	#]
 	State s0 initial{
 		delay 2000
-		println("$name: starting") color cyan
+		println("$name :: starting") color cyan
 		[#
-		p       = Runtime.getRuntime().exec("python sonar.py")
-		reader  = java.io.BufferedReader( java.io.InputStreamReader(p.getInputStream()) )
-		#
-		]
+			p       = Runtime.getRuntime().exec("python sonar.py")
+			reader  = java.io.BufferedReader( java.io.InputStreamReader(p.getInputStream()) )
+		#]
 	}
 	Goto work
 	
@@ -62,23 +50,21 @@ QActor sonar context ctx_sensor{
 			
 			if( data != null ){
 				try{ 
-					val vd = data.toInt()
-					D = v
+			        val vd = data.toDouble()
+			        D = vd
 				}catch(e: Exception){
-					CommUtils.outred("$name ERROR FROM READING SONAR DATA: $e")
+					CommUtils.outred("$name : ERROR FROM READING SONAR DATA: $e")
 				}
 			}
 		
 		#
 		]
-		forward sonarmanager -m measurement : measurement($D)
-	    delay 1000
-	   
+//		println("$name: distance - $D") color yellow
+		forward sonarmanager -m measurement : measurement($D)	   
 	}
 	Goto work
 	
 }
-
 
 QActor sonarmanager context ctx_sensor {
 	
@@ -93,21 +79,7 @@ QActor sonarmanager context ctx_sensor {
 	
 	State s0 initial{
 		delay 3000
-		println("$name : starting") color cyan 
-//		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
-//		println("$name : loading productservice db") color cyan 
-//		[# 
-//			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
-//			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
-//			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
-//			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
-//			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
-//		#]
-//		request productservice -m createProduct : product($JsonObj1)
-//		request productservice -m createProduct : product($JsonObj2)
-//		request productservice -m createProduct : product($JsonObj3)
-//		request productservice -m createProduct : product($JsonObj4)
-//		request productservice -m createProduct : product($JsonObj5)
+		println("$name : : starting") color cyan 
 
 	} 
 	Goto listen_for_measurement
@@ -122,29 +94,30 @@ QActor sonarmanager context ctx_sensor {
 		whenEvent stopWaitingForDeposit -> stopWaitingDeposit
 		
 	State process{
-		[# var M = -1 #]
+		[# var M : Double = 0.0 #]
 		onMsg(measurement : measurement(X)){
 			[#
-				M = payloadArg(0).toInt()
+				M = payloadArg(0).toDouble()
 			#]
+//			println("$name :measure $M") color yellow
 		}
 		
 		if[# M < DFREE/2 #]{
-			println("$name container presente") color cyan
+			println("$name : container presente $counterDeposit") color yellow
 			[#
 				counterError = 0
 				counterDeposit += 1
 			#]
 			
 			if[# deposit && counterDeposit >= 3 && !doDepositSent #]{
-				println("$name invio deposito") color green
+				println("$name : invio deposito") color green
 				emit doDeposit : doDeposit(1)
 				[# doDepositSent = true #]
 			}
 		}
 		
 		if[# M >= DFREE/2 && M <= DFREE #]{
-			println("$name container assente") color cyan
+			//println("$name : container assente") color cyan
 			[#
 				counterError = 0
 				counterDeposit = 0
@@ -153,7 +126,7 @@ QActor sonarmanager context ctx_sensor {
 		}
 		
 		if[# M > DFREE #]{
-			println("$name possibile guasto") color red
+			if [# !guasto #] { println("$name : possibile guasto") color red }
 			[#
 				counterError += 1
 				counterDeposit = 0
@@ -162,14 +135,14 @@ QActor sonarmanager context ctx_sensor {
 		}
 		
 		if[# counterError >= 3 && !guasto #]{
-			println("$name GUASTO") color red
+			println("$name : GUASTO") color red
 			[# 
 				guasto = true 
 			#]
 			emit sonaralert : sonaralert(1)
 		} else {
 			if [# guasto && counterError < 3 #] {
-				println("$name GUASTO RIENTRATO") color yellow
+				println("$name : GUASTO RIENTRATO") color yellow
 				[# guasto = false #]
 				emit sonarok : sonarok(1)
 			}
@@ -179,34 +152,38 @@ QActor sonarmanager context ctx_sensor {
 	
 	State checkForDeposit{
 		[#deposit = true #]
-		println("$name checking for deposit") color cyan
+		println("$name : waiting for deposit") color cyan
 		
 		if[# counterDeposit >= 3 #]{
-			println("$name invio deposito") color green
+			println("$name : invio deposito") color green
 			[# doDepositSent = true #]
 			emit doDeposit : doDeposit(1)
 			
 		} 
 		else {
-			println("$name deposit NOT confirmed: needing other measurements") color cyan
+			println("$name : deposit NOT confirmed: needing other measurements") color cyan
 		}
 	}
 	Goto listen_for_measurement
 	
 	State stopWaitingDeposit{
+		println("$name : stop waiting for deposit") color cyan
 		[# deposit = false#]
 	}
 	Goto listen_for_measurement
 }
 
 QActor led context ctx_sensor{
+	
+	[# lateinit var p : Process #]
+	
 	State s0 initial{
-		println("$name starting") color cyan
+		println("$name : starting") color cyan
  	}
  	Goto wait
  	
  	State wait{
- 		println("$name waiting for interrupts") color cyan
+ 		println("$name : waiting for interrupts") color cyan
  	}
  	
  	Transition t
@@ -214,7 +191,7 @@ QActor led context ctx_sensor{
  		whenEvent sonarok -> spento
  		
  	State acceso{
- 		println("$name acceso") color red
+ 		println("$name : acceso") color red
  		[#
  			p       = Runtime.getRuntime().exec("python ledPython25On.py")	
  		#
@@ -224,7 +201,7 @@ QActor led context ctx_sensor{
  	Goto wait
  	
  	State spento{
- 		println("$name spento") color green
+ 		println("$name : spento") color green
  		[#
  			p       = Runtime.getRuntime().exec("python ledPython25Off.py")	
  		#
@@ -232,3 +209,13 @@ QActor led context ctx_sensor{
  	}
  	Goto wait
 }
+
+//QActor mockcore context ctx_sensor {
+//	State s0 initial {
+//		delay 20000
+//		emit waitingForDeposit : waitingForDeposit(0)
+//		
+//		delay 10000
+//		emit stopWaitingForDeposit : stopWaitingForDeposit(0)
+//	}
+//}

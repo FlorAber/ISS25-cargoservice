@@ -40,7 +40,7 @@ class Sonarmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("s0") { //this:State
 					action { //it:State
 						delay(3000) 
-						CommUtils.outcyan("$name : starting")
+						CommUtils.outcyan("$name : : starting")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -61,46 +61,47 @@ class Sonarmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("process") { //this:State
 					action { //it:State
-						 var M = -1  
+						 var M : Double = 0.0  
 						if( checkMsgContent( Term.createTerm("measurement(CM)"), Term.createTerm("measurement(X)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												M = payloadArg(0).toInt()
+												M = payloadArg(0).toDouble()
 						}
 						if(  M < DFREE/2  
-						 ){CommUtils.outcyan("$name container presente")
+						 ){CommUtils.outyellow("$name : container presente $counterDeposit")
 						
 										counterError = 0
 										counterDeposit += 1
 						if(  deposit && counterDeposit >= 3 && !doDepositSent  
-						 ){CommUtils.outgreen("$name invio deposito")
+						 ){CommUtils.outgreen("$name : invio deposito")
 						emit("doDeposit", "doDeposit(1)" ) 
 						 doDepositSent = true  
 						}
 						}
 						if(  M >= DFREE/2 && M <= DFREE  
-						 ){CommUtils.outcyan("$name container assente")
-						
+						 ){
 										counterError = 0
 										counterDeposit = 0
 										doDepositSent = false
 						}
 						if(  M > DFREE  
-						 ){CommUtils.outred("$name possibile guasto")
+						 ){if(  !guasto  
+						 ){CommUtils.outred("$name : possibile guasto")
+						}
 						
 										counterError += 1
 										counterDeposit = 0
 										doDepositSent = false
 						}
 						if(  counterError >= 3 && !guasto  
-						 ){CommUtils.outred("$name GUASTO")
+						 ){CommUtils.outred("$name : GUASTO")
 						 
 										guasto = true 
 						emit("sonaralert", "sonaralert(1)" ) 
 						}
 						else
 						 {if(  guasto && counterError < 3  
-						  ){CommUtils.outyellow("$name GUASTO RIENTRATO")
+						  ){CommUtils.outyellow("$name : GUASTO RIENTRATO")
 						  guasto = false  
 						 emit("sonarok", "sonarok(1)" ) 
 						 }
@@ -115,14 +116,14 @@ class Sonarmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("checkForDeposit") { //this:State
 					action { //it:State
 						deposit = true  
-						CommUtils.outcyan("$name checking for deposit")
+						CommUtils.outcyan("$name : waiting for deposit")
 						if(  counterDeposit >= 3  
-						 ){CommUtils.outgreen("$name invio deposito")
+						 ){CommUtils.outgreen("$name : invio deposito")
 						 doDepositSent = true  
 						emit("doDeposit", "doDeposit(1)" ) 
 						}
 						else
-						 {CommUtils.outcyan("$name deposit NOT confirmed: needing other measurements")
+						 {CommUtils.outcyan("$name : deposit NOT confirmed: needing other measurements")
 						 }
 						//genTimer( actor, state )
 					}
@@ -133,6 +134,7 @@ class Sonarmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("stopWaitingDeposit") { //this:State
 					action { //it:State
+						CommUtils.outcyan("$name : stop waiting for deposit")
 						 deposit = false 
 						//genTimer( actor, state )
 					}

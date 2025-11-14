@@ -29,10 +29,11 @@ class Led ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdy
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		 lateinit var p : Process  
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						CommUtils.outcyan("$name starting")
+						CommUtils.outcyan("$name : starting")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -42,7 +43,7 @@ class Led ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdy
 				}	 
 				state("wait") { //this:State
 					action { //it:State
-						CommUtils.outcyan("$name waiting for interrupts")
+						CommUtils.outcyan("$name : waiting for interrupts")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -53,7 +54,7 @@ class Led ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdy
 				}	 
 				state("acceso") { //this:State
 					action { //it:State
-						CommUtils.outred("$name acceso")
+						CommUtils.outred("$name : acceso")
 						
 						 			p       = Runtime.getRuntime().exec("python ledPython25On.py")	
 						//genTimer( actor, state )
@@ -65,7 +66,7 @@ class Led ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdy
 				}	 
 				state("spento") { //this:State
 					action { //it:State
-						CommUtils.outgreen("$name spento")
+						CommUtils.outgreen("$name : spento")
 						
 						 			p       = Runtime.getRuntime().exec("python ledPython25Off.py")	
 						//genTimer( actor, state )

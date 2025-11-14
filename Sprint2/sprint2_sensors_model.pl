@@ -4,17 +4,11 @@
 event( doDeposit, doDeposit(X) ).
 event( waitingForDeposit, waitingfordeposit(X) ).
 event( stopWaitingForDeposit, stopWaitingForDeposit(X) ).
-event( productloaded, productloaded(X) ).
-event( alarm, alarm(ARG) ).
 event( sonaralert, sonaralert(X) ).
 event( sonarok, sonarok(X) ).
-event( stopthesystem, stopthesystem(X) ).
-event( resumethesystem, resumethesystem(X) ).
 dispatch( measurement, measurement(CM) ).
-request( loadrequest, loadrequest(PID) ).
-reply( loadaccepted, loadaccepted(X) ).  %%for loadrequest
-reply( loadrejected, loadrejected(X) ).  %%for loadrequest
 %====================================================================================
+context(ctx_cargo, "172.20.10.10",  "TCP", "8014").
 context(ctx_sensor, "localhost",  "TCP", "8016").
  qactor( sonar, ctx_sensor, "it.unibo.sonar.Sonar").
  static(sonar).

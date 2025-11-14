@@ -30,17 +30,17 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-			lateinit var reader : java.io.BufferedReader
-		    lateinit var p : Process	
-		    var D= 0
+				lateinit var reader : java.io.BufferedReader
+			    lateinit var p : Process	
+			    var D: Double = 0.0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(2000) 
-						CommUtils.outcyan("$name: starting")
+						CommUtils.outcyan("$name :: starting")
 						
-								p       = Runtime.getRuntime().exec("python sonar.py")
-								reader  = java.io.BufferedReader( java.io.InputStreamReader(p.getInputStream()) )
+									p       = Runtime.getRuntime().exec("python sonar.py")
+									reader  = java.io.BufferedReader( java.io.InputStreamReader(p.getInputStream()) )
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -57,15 +57,14 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 									
 									if( data != null ){
 										try{ 
-											val vd = data.toInt()
-											D = v
+									        val vd = data.toDouble()
+									        D = vd
 										}catch(e: Exception){
-											CommUtils.outred("$name ERROR FROM READING SONAR DATA: $e")
+											CommUtils.outred("$name : ERROR FROM READING SONAR DATA: $e")
 										}
 									}
 								
 						forward("measurement", "measurement($D)" ,"sonarmanager" ) 
-						delay(1000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

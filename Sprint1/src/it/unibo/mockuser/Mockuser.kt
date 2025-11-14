@@ -57,25 +57,18 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t31",targetState="deposit",cond=whenReply("loadaccepted"))
-					transition(edgeName="t32",targetState="loadFail",cond=whenReply("loadrejected"))
+					 transition(edgeName="t32",targetState="deposit",cond=whenReply("loadaccepted"))
+					transition(edgeName="t33",targetState="loadFail",cond=whenReply("loadrejected"))
 				}	 
 				state("deposit") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name : PID found, proceeding to do Deposit")
-						emit("doDeposit", "doDeposit(1)" ) 
-						if(  COUNTLOADS == 2 || COUNTLOADS == 4  
-						 ){delay(3000) 
-						emit("sonaralert", "sonaralert(0)" ) 
-						delay(3000) 
-						emit("sonarok", "sonarok(0)" ) 
-						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="load_test", cond=doswitch() )
+					 transition(edgeName="t34",targetState="end",cond=whenEvent("productloaded"))
 				}	 
 				state("loadFail") { //this:State
 					action { //it:State

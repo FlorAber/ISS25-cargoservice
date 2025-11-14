@@ -64,7 +64,8 @@ Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli
 // ------------------------------------------------------------------------
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
-Context ctx_test   ip  [host="127.0.0.1" port=8050]
+//Context ctx_test   ip  [host="127.0.0.1" port=8050]
+Context ctx_sensor  ip  [host="172.20.10.13" port=8016]
 
 Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
 Context ctxproductservice ip [ host="127.0.0.1" port=8111]
@@ -159,7 +160,7 @@ QActor cargoservice context ctx_cargo {
 	
 	// Attende segnale di deposito dal sonar
 	State waitForDeposit {
-		println ("$name : waiting for sonar deposit signal") color green
+//		println ("$name : waiting for sonar deposit signal") color green
 		emit waitingForDeposit : waitingForDeposit
 	}
 	Transition t
@@ -194,7 +195,7 @@ QActor cargoservice context ctx_cargo {
 		whenEvent sonarok -> resumeOperations
 
 	State resumeOperations {
-		println ("$name : sonar exited from alert state") color red
+		println ("$name : sonar exited from alert state") color green
 		emit resumethesystem : resumethesystem(0)
 		returnFromInterrupt
 	}
@@ -238,7 +239,7 @@ QActor cargorobot context ctx_cargo {
 	}
 	Transition t
 		whenRequest load -> movetoioport
-		whenEvent stopthesystem -> systemStopped
+		whenInterruptEvent stopthesystem -> systemStopped
 		
 	State movetoioport {
 		delay 2000
@@ -288,10 +289,8 @@ QActor cargorobot context ctx_cargo {
 				val Y = getCurSol("TY").toString();
 				val D = getCurSol("TDIR").toString();
 				
-				
-				
 				moving = true
-				destination = TARGETSLOT.toString()
+				destination = DEST
 			
 			#]
 			
@@ -351,6 +350,7 @@ QActor cargorobot context ctx_cargo {
 	Transition t
 		whenReply moverobotdone   -> robotStopped  // risposta ad alarm in caso di interruzione alla fine del movimento
    		whenReply moverobotfailed -> robotStopped  // risposta ad alarm in caso di interruzione durante il movimento
+   		whenEvent resumethesystem -> resumeRobot
 	
 	State robotStopped {	
 		println("$name : robot movement stopped") color red
@@ -363,6 +363,7 @@ QActor cargorobot context ctx_cargo {
 		if [# moving #] {
 			
 			[#val DEST = destination#]
+			println("$DEST")
 			solve (getPoint($DEST,TX,TY,TDIR))
 				[#
 
@@ -374,6 +375,8 @@ QActor cargorobot context ctx_cargo {
 				
 				moving = true			
 			#]
+			
+						println("$X $Y $D")
 			
 			request basicrobot -m moverobot:moverobot($X,$Y)
 //			delay 500
@@ -557,7 +560,7 @@ QActor holdmanager context ctx_cargo {
 	Goto wait
 }
 
-QActor mockuser context ctx_test {
+QActor mockuser context ctx_cargo {
 	
 	[#
 		var ERROR = false;
@@ -600,20 +603,20 @@ QActor mockuser context ctx_test {
 		
 	State deposit {
 		println("$name : PID found, proceeding to do Deposit") color cyan
-		emit doDeposit : doDeposit(1)
+//		emit doDeposit : doDeposit(1)
 		
-		if [# COUNTLOADS == 2 || COUNTLOADS == 4 #] {
-			delay 3000
-			emit sonaralert : sonaralert(0)
-			
-			delay 3000
-			emit sonarok : sonarok(0)
-		}
+//		if [# COUNTLOADS == 2 || COUNTLOADS == 4 #] {
+//			delay 3000
+//			emit sonaralert : sonaralert(0)
+//			
+//			delay 3000
+//			emit sonarok : sonarok(0)
+//		}
 
 	}
-	Goto load_test 			// Da usare per provare ad inviare tante load in cascata
-//	Transition t
-//		whenEvent productloaded -> end //controllo su evento in caso di robot che termina il suo lavoro -> end
+//	Goto load_test 			// Da usare per provare ad inviare tante load in cascata
+	Transition t
+		whenEvent productloaded -> end //controllo su evento in caso di robot che termina il suo lavoro -> end
 	
 	State loadFail{
 		[# ERROR = true #]
