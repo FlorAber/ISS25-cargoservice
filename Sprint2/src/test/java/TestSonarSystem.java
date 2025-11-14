@@ -33,9 +33,10 @@ public class TestSonarSystem {
         private boolean ledOn = false;
         private boolean alertReceived = false;
         private boolean okReceived = false;
+        private boolean doDepositReceived = false;
         private CountDownLatch alertLatch;
         private CountDownLatch okLatch;
-        
+        private CountDownLatch doDepositLatch;
         public EventObserver() {
             reset();
         }
@@ -44,8 +45,10 @@ public class TestSonarSystem {
             ledOn = false;
             alertReceived = false;
             okReceived = false;
+            doDepositReceived = false;
             alertLatch = new CountDownLatch(1);
             okLatch = new CountDownLatch(1);
+            doDepositLatch = new CountDownLatch(1);
         }
         
         public void onSonarAlert() {
@@ -62,6 +65,12 @@ public class TestSonarSystem {
             System.out.println("[OBSERVER] Evento SONAROK ricevuto - LED SPENTO");
         }
         
+        public void onDoDeposit() {
+        	doDepositReceived = true;
+        	doDepositLatch.countDown();
+            System.out.println("[OBSERVER] Evento DODEPOSIT ricevuto");
+        }
+        
         public boolean isLedOn() {
             return ledOn;
         }
@@ -74,12 +83,20 @@ public class TestSonarSystem {
             return okReceived;
         }
         
+        public boolean hasReceivedDoDeposit() {
+        	return doDepositReceived;
+        }
+        
         public boolean waitForAlert(long timeoutSeconds) throws InterruptedException {
             return alertLatch.await(timeoutSeconds, TimeUnit.SECONDS);
         }
         
         public boolean waitForOk(long timeoutSeconds) throws InterruptedException {
             return okLatch.await(timeoutSeconds, TimeUnit.SECONDS);
+        }
+        
+        public boolean waitForDoDeposit(long timeoutSeconds) throws InterruptedException {
+        	return doDepositLatch.await(timeoutSeconds, TimeUnit.SECONDS);
         }
     }
     
@@ -113,6 +130,8 @@ public class TestSonarSystem {
                             observer.onSonarAlert();
                         } else if ("sonarok".equals(msgId)) {
                             observer.onSonarOk();
+                        } else if ("doDeposit".equals(msgId)) {
+                        	observer.onDoDeposit();
                         }
                     }
                     
@@ -211,11 +230,11 @@ public class TestSonarSystem {
     }
     
     /**
-     * TEST 2: Verifica transizioni LED con Observer
+     * TEST 2: Verifica ricezione doDeposit
      */
     @Test
     public void testLedTransitionsWithObserver() throws Exception {
-        System.out.println("\n===== TEST 2 (Observer): Transizioni LED =====");
+        System.out.println("\n===== TEST 2 (Observer): VERIFICA doDeposit =====");
         
         observer.reset();
         
@@ -227,26 +246,14 @@ public class TestSonarSystem {
         assertFalse("LED inizialmente spento", observer.isLedOn());
         System.out.println("✓ LED iniziale: SPENTO");
         
-        // Genera errore
-        System.out.println("\nGenerazione errore...");
-        sendMeasurements(new int[]{50, 50, 50});
+        // Genera pacco presente
+        System.out.println("\nGenerazione pacco presente...");
+        sendMeasurements(new int[]{20, 20, 20});
         observer.waitForAlert(5);
         
-        // Verifica LED acceso
-        assertTrue("LED deve essere acceso", observer.isLedOn());
-        assertTrue("Alert ricevuto", observer.hasReceivedAlert());
-        System.out.println("✓ LED durante errore: ACCESO");
-        
-        // Rientro
-        System.out.println("\nRientro errore...");
-        observer.reset();
-        sendMeasurements(new int[]{20});
-        observer.waitForOk(5);
-        
-        // Verifica LED spento
-        assertFalse("LED deve essere spento", observer.isLedOn());
-        assertTrue("Ok ricevuto", observer.hasReceivedOk());
-        System.out.println("✓ LED dopo rientro: SPENTO");
+        // doDeposit check
+        boolean doDepositReceive = observer.waitForDoDeposit(3);
+        assertTrue("doDeposit ricevuto", observer.hasReceivedDoDeposit());
         
         System.out.println("\n===== TEST 2 PASSED ✓ =====\n");
     }

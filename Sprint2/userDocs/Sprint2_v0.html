@@ -102,10 +102,15 @@
         </div>
         <div class="textparagraph">
           <h3>Sonar</h3>
-          <div class="textbody">Parlando in dettaglio del componente sonar sorge spontaneo domandarsi se
-            sia opportuno fare in modo che il sonar comunichi direttamente con il cargoservice ogni 
-            volta che rileva un evento di interesse (rilevamento prodotto o malfunzionamento)
-            oppure se sia meglio che il sonar comunichi con cargoservice ogni distanza rilevata.
+          <div class="textbody">Parlando in dettaglio del componente sonar sorge spontaneo domandarsi se:
+            <ul>
+              <li>sia opportuno fare in modo che il sonar comunichi direttamente con il cargoservice ogni 
+                volta che rileva un evento di interesse (rilevamento prodotto o malfunzionamento);
+              </li>
+              <li>
+                sia meglio che il sonar comunichi con cargoservice ogni distanza rilevata;
+              </li>
+            </ul>
             Siccome il sistema cargoservice è stato modellato per reagire ad eventi specifici
             piuttosto che a flussi continui di dati, è preferibile che il sonar comunichi con cargoservice
             solo quando rileva un evento di interesse. Inoltre le comunicazioni dal sonar a cargoservice
@@ -269,7 +274,54 @@ GPIO.output(25,GPIO.LOW)
       <div class="textbody">
         Lo scopo della fase di test è quello di verificare il corretto funzionamento del
         sistema modellato, cioè del contesto <strong>sensor</strong>.
-    </div>
+
+        <div class="textbody">
+          <table class="test-plan-table">
+            <thead>
+              <tr>
+                <th>Test</th>
+                <th>Attori</th>
+                <th>Descrizione</th>
+                <th>Modello</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Verifica errore</td>
+                <td>led; sonar;</td>
+                <td>
+                    Il sonar riceve per 3 secondi misurazioni maggiori di DFREE, il sistema va in errore e il led si accende. 
+                    Alla ricezione della prima misurazione minore di DFREE il sistema rientra dal guasto e il led si spegne.
+                </td>
+                <td>TestSonarSystem.java</td>
+              </tr>
+              <tr>
+                <td>Verifica invio doDeposit</td>
+                <td>led; sonar;</td>
+                <td>
+                    Led inizialmente spento, il sonar per 3 secondi riceve misurazioni maggiori di DFREE/2 e minori di DFREE. Il sistema emette l'evento doDeposit.
+                </td>
+                <td>TestSonarSystem.java</td>
+              </tr>
+                <td>Verifica nessun errore con 2 misurazioni</td>
+                <td>led; sonar;</td>
+                <td>
+                    Il sonar riceve per 2 secondi misurazioni maggiori di DFREE, il sistema non va in guasto e il led rimane spento.
+                </td>
+                <td>TestSonarSystem.java</td>
+              </tr>
+                <td>Verifica robustezza a cicli multipli</td>
+                <td>led; sonar;</td>
+                <td>
+                    Si itera la sequenza guasto e rientro dal guasto più volte consecutivamente, andando a verificare che il led
+                    si accenda e spenga correttamente.
+                </td>
+                <td>TestSonarSystem.java</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <h2>Project</h2>
