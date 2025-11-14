@@ -164,22 +164,8 @@ while True:
               </code>
             </pre>
 
-            <h4>
-              Il ciclo del componente software sonar 
-            </h4>
             
-              <div class="textbody">
-                Il componente software che modella il sonar di fatto dovrà risolvere
-                  due problemi principali:
-                  <ul>
-                    <li>Interfacciarsi con lo script Python per ottenere le misurazioni della distanza dal sonar fisico;</li>
-                    <li>Comunicare con cargoservice quando si verificano eventi di interesse.</li>
-                  </ul>
-            Per separare le funzionalità si suggerisce di modellare un componente chiamato <strong>sonarmanager</strong> per la
-            realizzazione della fase di processing delle misurazioni e comunicazioni con cargoservice e un componente <strong>sonar</strong>
-            che modella il comportamento del sonar fisico e invia le misurazioni a sonarmanager.
-          
-        </div>
+              
         </div>
         </div>
 
@@ -284,10 +270,248 @@ GPIO.output(25,GPIO.LOW)
       a diversi attori la gestione delle distinte parti del sistema.
 
       <div class="textparagraph">
-        <h3>comportamento del sonarmanager</h3>
+        <h3>Il ciclo del componente software sonar </h3>
         <div class="textbody">
+
+              Il componente software che modella il sonar di fatto dovrà risolvere
+                  due problemi principali:
+                  <ul>
+                    <li>Interfacciarsi con lo script Python per ottenere le misurazioni della distanza dal sonar fisico;</li>
+                    <li>Comunicare con cargoservice quando si verificano eventi di interesse.</li>
+                  </ul>
+            Per separare le funzionalità si suggerisce di modellare un componente chiamato <strong>sonarmanager</strong> per la
+            realizzazione della fase di processing delle misurazioni e comunicazioni con cargoservice e un componente <strong>sonar</strong>
+            che modella il comportamento del sonar fisico e invia le misurazioni a sonarmanager.
+          
+          <h4>comportamento di sonarmanager</h4>
+          <strong>sonarmanager</strong> è incaricato di esaminare i messaggi ricevuti da sonar tramite dispatch
+          <i>measurement</i> e di scatenare i seguenti eventi in base alle misurazioni
+          registrate per 3 secondi di fila:
+          <ul>
+            <li>se D < DFREE/2 scatenerà l'evento <i>doDeposit</i>;</li>
+            <li>se D > DFREE scatenerà l'evento <i>sonaralert</i>.</li>
+            <li>se D < DFREE in seguito a un evento di tipo <i>sonaralert</i>,
+              allora scatenerà l'evento <i>sonarok</i>.</li>
+          </ul>
+
+          <pre>
+          <code>
+            //Qactor sonarmanager :
+State process{
+	[# var M = -1 #]
+	onMsg(measurement : measurement(X)){
+		[#
+			M = payloadArg(0).toInt()
+		#]
+	}
+	
+	if[# M < DFREE/2 #]{
+		println("$name container presente") color cyan
+		[#
+			counterError = 0
+			counterDeposit += 1
+		#]
+		
+		if[# deposit && counterDeposit >= 3 && !doDepositSent #]{
+			println("$name invio deposito") color green
+			emit doDeposit : doDeposit(1)
+			[# doDepositSent = true #]
+		}
+	}
+	
+	if[# M >= DFREE/2 && M <= DFREE #]{
+		println("$name container assente") color cyan
+		[#
+			counterError = 0
+			counterDeposit = 0
+			doDepositSent = false
+		#]
+	}
+	
+	if[# M > DFREE #]{
+		println("$name possibile guasto") color red
+		[#
+			counterError += 1
+			counterDeposit = 0
+			doDepositSent = false
+		#]
+	}
+	
+	if[# counterError >= 3 && !guasto #]{
+		println("$name GUASTO") color red
+		[# 
+			guasto = true 
+		#]
+		emit sonaralert : sonaralert(1)
+	} else {
+		if [# guasto && counterError < 3 #] {
+			println("$name GUASTO RIENTRATO") color yellow
+			[# guasto = false #]
+			emit sonarok : sonarok(1)
+		}
+	}
+}
+Goto listen_for_measurement
+State listen_for_measurement {
+	//waiting
+}
+Transition t
+	whenMsg measurement -> process
+	whenEvent waitingForDeposit -> checkForDeposit
+	whenEvent stopWaitingForDeposit -> stopWaitingDeposit
+	
+            </code>
+          </pre>
+          <h4>comportamento di sonar</h4>
+          <strong>sonar</strong> si occupa di eseguire lo script Python per ottenere le misurazioni
+          della distanza dal sonar fisico in cm e inviarle a sonarmanager.
+          <pre>
+            <code>
+QActor sonar context ctx_sensor{
+	
+	[#
+	lateinit var reader : java.io.BufferedReader
+    lateinit var p : Process	
+    var D= 0
+	#
+	]
+	State s0 initial{
+		delay 2000
+		println("$name: starting") color cyan
+		[#
+		p       = Runtime.getRuntime().exec("python sonar.py")
+		reader  = java.io.BufferedReader( java.io.InputStreamReader(p.getInputStream()) )
+		#
+		]
+	}
+	Goto work
+	
+	State work{
+		delay 1000
+		[#
+		
+		var data = reader.readLine()
+			
+			if( data != null ){
+				try{ 
+					val v = data.toInt()
+					D = v
+				}catch(e: Exception){
+					CommUtils.outred("$name ERROR FROM READING SONAR DATA: $e")
+				}
+			}
+		
+		#
+		]
+		forward sonarmanager -m measurement : measurement($D)
+	    delay 1000
+	   
+	}
+	Goto work
+	
+}
+            </code>
+          </pre>
+          <h4>comportamento di led</h4>
+
+          <strong>led</strong> si occupa di eseguire gli script Python per accendere e spegnere il led
+          basandosi sugli eventi che cattura.
+          nello specifico:
+          <ul>
+            <li>all'evento <i>sonaralert</i> esegue lo script ledPython25On.py;</li>
+            <li>all'evento <i>sonarok</i> esegue lo script ledPython25Off.py.</li>
+          </ul>
+
+          <pre>
+            <code>QActor led context ctx_sensor{
+	[#
+    lateinit var p : Process	
+		#
+	]
+	State s0 initial{
+		println("$name starting") color cyan
+ 	}
+ 	Goto wait
+ 	
+ 	State wait{
+ 		println("$name waiting for interrupts") color cyan
+ 	}
+ 	
+ 	Transition t
+ 		whenEvent sonaralert -> acceso
+ 		whenEvent sonarok -> spento
+ 		
+ 	State acceso{
+ 		println("$name acceso") color red
+ 		[#
+ 			p       = Runtime.getRuntime().exec("python ledPython25On.py")	
+ 		#
+ 		]
+ 		
+ 	}
+ 	Goto wait
+ 	
+ 	State spento{
+ 		println("$name spento") color green
+ 		[#
+ 			p       = Runtime.getRuntime().exec("python ledPython25Off.py")	
+ 		#
+ 		]
+ 	}
+ 	Goto wait
+}
+            </code>
+          </pre>
         </div>
       </div>
     </div>
+    <h2>System Design</h2>
+
+      <div class="medium-12 text-center remark">
+        <img
+          src="../sprint2_sensors_modelarch.png"
+          class="text-center"
+          alt="map"
+          width="75%"
+        />
+
+      </div>
+      <footer class="footer">
+        <div class="grid-container fluid">
+          <div class="grid-x grid-margin-x align-middle">
+            <div class="small-12 medium-3 text-center">
+              <a
+                class="button change"
+                href="../../Sprint0/userDocs/sprint0_v3.html"
+              >
+                &larr; Previous Sprint
+              </a>
+            </div>
+
+            <div class="small-12 medium-4 text-center">
+              Fasano Andrea : andrea.fasano3@studio.unibo.it <br />
+              <!-- 0001189592 -->
+              Florian Alberto : alberto.florian@studio.unibo.it <br />
+              <!-- 0001189572 -->
+              Sampaoli Giacomo : giacomo.sampaoli@studio.unibo.it
+              <!-- 0001176431 -->
+            </div>
+
+            <div class="small-12 medium-2 align-middle text-center">
+              <a
+                href="https://github.com/FlorAber/ISS25-cargoservice"
+                class="button primary"
+                target="_blank"
+              >
+                GitHub Repository
+              </a>
+            </div>
+
+            <div class="small-12 medium-3 text-right">
+              <a class="button change disabled"> Next Sprint &rarr; </a>
+            </div>
+          </div>
+        </div>
+      </footer>
 
 </body> 
