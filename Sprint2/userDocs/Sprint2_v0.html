@@ -32,16 +32,12 @@
       <div class="remark">
         <div class="textbody grid-x grid-margin-x align-middle">
           <div class="medium-8">
-            Nello Sprint precedente sono state analizzate le problematiche e progettato il sistema relativo al Core Business
-            del sistema cargoservice. L'output finale è stato una modellazione di alto livello del sistema e una
-            prima implementazione funzionante del core business (figura a destra).
-             <br />
+            Nello Sprint precedente sono state analizzate le problematiche ed è stato progettato il Core Business del del sistema cargoservice. 
+            L'output finale è stato una modellazione di alto livello del sistema e una prima implementazione funzionante (figura a destra).
+            <br />
             <br />
             L'obiettivo dello Sprint 2 è di analizzare le problematiche relative 
-            al componente Sensor, sorte in fase di analisi dei requisiti
-            e realizzarne
-            un'implementazione funzionante integrandola con il corebusiness del sistema cargoservice, 
-            da fornire al committente.
+            al componente Sensor e realizzarne un'implementazione funzionante, integrandola con il corebusiness del sistema.
             D'ora in avanti ci riferiremo al corebusiness del sistema chiamandolo
             semplicemente <strong>cargoservice</strong>.
           </div>
@@ -55,86 +51,75 @@
         </div>
         
     </div>
+
     <h2>Requirements</h2>
+    <div class="remark">
+      I requisiti che intendiamo soddisfare in questo sprint sono i
+      seguenti:
+      <ul>
+        <li>
+          Il sensore, posto di fronte alla IOPort è un sonar utilizzato per rilevare la presenza di un product container, quando misura una distanza D tale che D < DFREE/2 per un tempo ragionevole (es. 3 secondi) 
+        </li>
+        <li>
+          Quando il sonar misura una distanza D > DFREE per almeno 3 secondi il sistema interrompe le prorpie attività e si accende un led. Il servizio riparte appena il sonar misura una distanza D <= DREE
+        </li>
+      </ul>
+    </div>
 
-      <div class="remark">
-        I requisiti che intendiamo soddisfare in questo sprint sono i
-        seguenti:
-        <ul>
-                    <li>
-            The sensor put in front of the IOPort is a sonar used
-             to detect the presence of a product container, when it
-              measures a distance D, such that D < DFREE/2,
-               during a reasonable time (e.g. 3 secs).
-          </li>
-          <li>
-            interrupts any activity and turns on a led if
-             the sonar sensor measures a distance D > DFREE for at least 3 secs
-              (perhaps a sonar failure). The service continues its activities as
-               soon as the sonar measures a distance D <= DFREE.
-          </li>
+    <h2>Problem analysis</h2>
+    <div class="remark">
+      <div class="textparagraph">
+        <h3>Come modellare Sensor e i suoi componenti?</h3>
+          <div class="textbody">
+            Dall'analisi dei requisiti emerge la necessità di gestire almeno due componenti hardware: un sonar per il rilevamento dei prodotti e un led per la segnalazione fisica dei malfunzionamenti.
+            Per l'implementazione del sistema, vista la natura dei componenti da gestire, verrà utilizzata una scheda RaspberryPi.
 
-        </ul>
-        
-
+            <br/>
+            Le possibili soluzioni di modellazione del contesto sensor e dei suoi componenti sono:
+            <ul>
+              <li>Modellare sensor come un unico componente che si occupa di gestire sia il <strong>sonar</strong> che il <strong>led</strong> modellati come POJO</li>
+              <li>Modellare sensor come un contesto che a sua volta contiene due attori, uno <strong>sonar</strong> e uno <strong>led</strong></li>
+            </ul>
+            Si suggerisce la seconda opzione in quanto consente di separare le responsabilità dei due componenti hardware e permette a led e sonar di intercettare e gestire in modo autonomo le comunicazioni con <strong>cargoservice</strong>.
+          </div>
       </div>
-      <h2>Problem analysis</h2>
+      <div class="textparagraph">
+        <h3>Sonar</h3>
+        <div class="textbody">Parlando in dettaglio del componente sonar sorge spontaneo domandarsi se:
+          <ul>
+            <li>sia opportuno fare in modo che il sonar comunichi direttamente con il cargoservice ogni 
+              volta che si verifica un evento di interesse (rilevamento prodotto o malfunzionamento)
+            </li>
+            <li>
+              sia meglio che il sonar comunichi con cargoservice ogni distanza rilevata
+            </li>
+          </ul>
+          Siccome il sistema cargoservice è stato modellato per reagire ad eventi specifici
+          piuttosto che a flussi continui di dati, è preferibile che il sonar comunichi con cargoservice
+          solo quando rileva un evento di interesse. Inoltre le comunicazioni dal sonar a cargoservice
+          dipendono dagli eventi già modellati nel sistema cargoservice, nello specifico:
+          <ul>
+            <li>l'evento <i>waitingForDeposit</i> segnala che una richiesta di caricamento è stata accettata da cargoservice e il sonar 
+              avvia la rilevazione dei prodotti </li>
+            <li>l'evento <i>stopWaitingForDeposit</i> segnala al sonar che il caricamento è terminato e non c'è nessuna
+              richiesta di caricamento in sospeso, arrestando la rilevazione</li>
+          </ul> 
+          <br/>
 
-      <div class="remark">
-        <div class="textparagraph">
-          <h3>Come modellare Sensor e i suoi componenti?</h3>
-            <div class="textbody">Dall'analisi dei requisiti emerge la necessità di gestire 
-            almeno due componenti hardware: un sonar per il rilevamento dei prodotti e un led per la segnalazione di malfunzionamenti.
-            Per l'implementazione del sistema data la natura dei componenti
-            da gestire verrà utilizzata una scheda Raspberry Pi.
+          inoltre all'interno del sistema precedentemente modellato sono già stati definiti gli eventi che il sonar può sfruttare per interagire con <strong>cargoservice</strong>:
+          <ul>
+            <li>il sonar ha rilevato un prodotto (D < DFREE/2 per minimo 3 secondi); scatena l'evento <i>doDeposit</i></li>
+            <li>il sonar rileva un malfunzionamento (D > DFREE per minimo 3 secondi); scatena l'evento <i>sonaralert</i></li>
+            <li>il sonar esce dallo stato di malfunzionamento (almeno una misurazione D < DFREE); scatena l'evento <i>sonarok</i></li>
+          </ul>
 
-            <br/>
-            Le possibilità per modellare il contesto sensor e i suoi componenti
-            può ricadere su due soluzioni principali:
-            <ul>
-              <li>Modellare sensor come un unico componente che si occupa di gestire sia il <strong>sonar</strong> che il <strong>led</strong> modellati come POJO;</li>
-              <li>Modellare sensor come un contesto che a sua volta contiene due attori, uno <strong>sonar</strong> e uno <strong>led</strong>.</li>
-            </ul>
-            Si suggerisce la seconda opzione in quanto consente di separare le responsabilità dei due componenti hardware
-            e permette a led e sonar di intercettare e gestire in modo autonomo le comunicazioni con <strong>cargoservice</strong>.
-                
-            </div>
-        </div>
-        <div class="textparagraph">
-          <h3>Sonar</h3>
-          <div class="textbody">Parlando in dettaglio del componente sonar sorge spontaneo domandarsi se:
-            <ul>
-              <li>sia opportuno fare in modo che il sonar comunichi direttamente con il cargoservice ogni 
-                volta che rileva un evento di interesse (rilevamento prodotto o malfunzionamento);
-              </li>
-              <li>
-                sia meglio che il sonar comunichi con cargoservice ogni distanza rilevata;
-              </li>
-            </ul>
-            Siccome il sistema cargoservice è stato modellato per reagire ad eventi specifici
-            piuttosto che a flussi continui di dati, è preferibile che il sonar comunichi con cargoservice
-            solo quando rileva un evento di interesse. Inoltre le comunicazioni dal sonar a cargoservice
-            dipendono dagli eventi già modellati nel sistema cargoservice, nello specifico:
-            <ul>
-              <li>l'evento <i>waitingForDeposit</i> segnala che la richiesta di caricamento è stata accettata da cargoservice e il sonar 
-                avvia la rilevazione dei prodotti;</li>
-              <li>l'evento <i>stopWaitingForDeposit</i> segnala al sonar che il caricamento è terminato e non c'è nessuna
-                richiesta di caricamento in sospeso, arrestando la rilevazione;</li>
-            </ul> 
-            <br/>
-            è possibile individuare già ora almeno altre 2 interazioni principali con <strong>cargoservice</strong>:
-            <ul>
-              <li>il sonar ha rilevato un prodotto (D < DFREE/2 per minimo 3 secondi) e comunica l'evento <i>doDeposit</i> a cargoservice;</li>
-              <li>il sonar rileva un malfunzionamento (D > DFREE per minimo 3 secondi) e comunica l'evento <i>sonaralert</i> a cargoservice.</li>
-            </ul>
+          <h4> Come sfruttare il sonar fisico? </h4>
+          Occorre domandarsi come il componente software sonar possa relazionarsi con il componente hardware sonar.
+          Fortunatamente il committente ha precedentemente fornito uno script Python che permette di interfacciarsi con l'hardware 
+          del RaspberryPi sfruttando la libreria GPIO e si occupa di recuperare le distanze lette dal sonar, 
+          ottenendo una misurazione della distanza <strong>D</strong> a intervalli della durata di un secondo.
 
-            Sorge spontaneo domandarsi come il componente software sonar possa relazionarsi con il componente hardware sonar.
-            Fortunatamente il committente ha precedentemente fornito uno script Python che si occupa di interfacciarsi con l'hardware 
-            Raspberrypi mediante la libreria GPIO e restituire la distanza rilevata, 
-            ottenendo una misurazione al secondo della distanza <strong>D</strong>.
-
-            <pre>
-              <code># File: sonar.py
+          <pre><code># File: sonar.py
 import RPi.GPIO as GPIO
 import time
 import sys
@@ -152,65 +137,54 @@ print ('Waiting a few seconds for the sensor to settle')
 time.sleep(2)
 
 while True:
-    GPIO.output(TRIG, True)    #invia impulso TRIG
-    time.sleep(0.00001)
-    GPIO.output(TRIG, False)
+  GPIO.output(TRIG, True)    #invia impulso TRIG
+  time.sleep(0.00001)
+  GPIO.output(TRIG, False)
 
-    pulse_start = time.time()
-    #attendi che ECHO parta e memorizza tempo
-    while GPIO.input(ECHO)==0:
-        pulse_start = time.time()
-    # register the last timestamp at which the receiver detects the signal.
-    while GPIO.input(ECHO)==1:
-        pulse_end = time.time()
-    pulse_duration = pulse_end - pulse_start
+  pulse_start = time.time()
+  #attendi che ECHO parta e memorizza tempo
+  while GPIO.input(ECHO)==0:
+      pulse_start = time.time()
+  # register the last timestamp at which the receiver detects the signal.
+  while GPIO.input(ECHO)==1:
+      pulse_end = time.time()
+  pulse_duration = pulse_end - pulse_start
 
-    # velocità del suono ~= 340m/s 
-    # distanza = v*t 
-    # il tempo ottenuto misura un roundtrip -> distanza = v*t/2
-    distance = pulse_duration * 17165
-    distance = round(distance, 1)
-    print ('Distance:', distance,'cm')
-    sys.stdout.flush()
-    time.sleep(1)
-
-              </code>
-            </pre>
-
-            
-              
+  # velocità del suono ~= 340m/s 
+  # distanza = v*t 
+  # il tempo ottenuto misura un roundtrip -> distanza = v*t/2
+  distance = pulse_duration * 17165
+  distance = round(distance, 1)
+  print ('Distance:', distance,'cm')
+  sys.stdout.flush()
+  time.sleep(1)</code></pre>
         </div>
-        </div>
+      </div>
 
-        <div class="textparagraph">
-          <h3>Led</h3>
-          <div class="textbody">Il led come da requisiti ha il compito di accendersi e spegnersi 
-            in base allo stato di funzionamento del sonar.
-            Questa interazione puo avvenire in tre modi:
-            <ul>  
-              <li>Il led intercetta gli eventi di interesse inviati dal sonar a cargoservice e si accende/spegne di conseguenza;</li>
-              <li>Il cargoservice invia un messaggio al led per accendersi/spegnersi in base allo stato del sonar.</li>
-              <li>Il sonar comunica con messaggi diretti al led i propri cambi di stato.</li>
-            </ul>
-            Si suggerisce la prima opzione in quanto consente di mantenere il led
-            come un componente autonomo che non necessita di comunicare direttamente con gli altri componenti del sistema.
+      <div class="textparagraph">
+        <h3>Led</h3>
+        <div class="textbody">Il led come da requisiti ha il compito di accendersi e spegnersi 
+          in base allo stato di funzionamento del sonar.
+          La rilevazione dello stato del sonar può avvenire in tre modi:
+          <ul>  
+            <li>Il led intercetta gli eventi di interesse inviati dal sonar a cargoservice e si accende/spegne di conseguenza</li>
+            <li>Il cargoservice invia un messaggio al led per accendersi/spegnersi in base allo stato del sonar</li>
+            <li>Il sonar comunica con messaggi diretti al led i propri cambi di stato</li>
+          </ul>
+          Si suggerisce la prima opzione in quanto consente di modellare il led come un componente autonomo che non necessita di comunicazione diretta con gli altri componenti del sistema, inoltre sfruttare 
+          eventi già presenti nel sistema permette di ridurre il traffico di rete generato.
 
-
-            Per quanto riguarda l'interfacciamento con l'hardware, anche in questo caso
-            il committente ha fornito due script Python, uno per l'accensione:
-            <pre>
-              <code>
-#file ledPython25On.py
-# -------------------------------------------------------------
-#
-# -------------------------------------------------------------
+          <h4> Come sfruttare il led fisico? </h4>
+          Per quanto riguarda l'interfacciamento con l'hardware, anche in questo caso
+          il committente ha fornito degli utili script Python, uno per l'accensione:
+          <pre><code>#file ledPython25On.py
 import RPi.GPIO as GPIO 
 import time
 
 '''
 ----------------------------------
 CONFIGURATION
-----------------------------------
+
 '''
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(25,GPIO.OUT)
@@ -221,12 +195,9 @@ main activity
 ----------------------------------
 '''
 GPIO.output(25,GPIO.HIGH)
-              </code>
-            </pre>
-            E uno per lo spegnimento:
-            <pre>
-              <code>
-#file ledPython25Off.py
+</code></pre>
+        E uno per lo spegnimento:
+<pre><code>#file ledPython25Off.py
 # -------------------------------------------------------------
 #
 # -------------------------------------------------------------
@@ -247,29 +218,22 @@ main activity
 ----------------------------------
 '''
 
-GPIO.output(25,GPIO.LOW)
-
-              </code>
-            </pre>
-          </div>
+GPIO.output(25,GPIO.LOW)</code></pre>
         </div>
-        
-        
-        
-    </div>
-    <h2>Logical Architecture</h2>
-
-      <div class="medium-12 text-center remark">
-        <img
-          src="./resources/sprint2_logicalArch.png"
-          class="text-center"
-          alt="map"
-          width="75%"
-        />
-
       </div>
+    </div>
 
-      <h2>Test plans</h2>
+    <h2>Logical Architecture</h2>
+    <div class="medium-12 text-center remark">
+      <img
+        src="./resources/sprint2_logicalArch.png"
+        class="text-center"
+        alt="map"
+        width="75%"
+      />
+    </div>
+
+    <h2>Test plans</h2>
     <div class="remark">
       <div class="textbody">
         Lo scopo della fase di test è quello di verificare il corretto funzionamento del
@@ -330,33 +294,28 @@ GPIO.output(25,GPIO.LOW)
       a diversi attori la gestione delle distinte parti del sistema.
 
       <div class="textparagraph">
-        <h3>Il ciclo del componente software sonar </h3>
+        <h3>Gestione del sonar</h3>
         <div class="textbody">
-
               Il componente software che modella il sonar di fatto dovrà risolvere
                   due problemi principali:
                   <ul>
                     <li>Interfacciarsi con lo script Python per ottenere le misurazioni della distanza dal sonar fisico;</li>
                     <li>Comunicare con cargoservice quando si verificano eventi di interesse.</li>
                   </ul>
-            Per separare le funzionalità si suggerisce di modellare un componente chiamato <strong>sonarmanager</strong> per la
-            realizzazione della fase di processing delle misurazioni e comunicazioni con cargoservice e un componente <strong>sonar</strong>
-            che modella il comportamento del sonar fisico e invia le misurazioni a sonarmanager.
+            Per separare le funzionalità è stato deciso di modellare un componente chiamato <strong>sonarmanager</strong> per la
+            processare le misurazioni e comunicare con il cargoservice.
+            Il componente <strong>sonar</strong> si occuperà invece di eseguire lo script Python e inviare le misurazioni a <strong>sonarmanager</strong>.
           
           <h4>comportamento di sonarmanager</h4>
-          <strong>sonarmanager</strong> è incaricato di esaminare i messaggi ricevuti da sonar tramite dispatch
-          <i>measurement</i> e di scatenare i seguenti eventi in base alle misurazioni
-          registrate per 3 secondi di fila:
+          <strong>sonarmanager</strong> è incaricato di esaminare i messaggi ricevuti da <strong>sonar</strong> tramite la dispatch
+          <i>measurement</i> e di scatenare i seguenti eventi in base alle misurazioni:
           <ul>
-            <li>se D < DFREE/2 scatenerà l'evento <i>doDeposit</i>;</li>
-            <li>se D > DFREE scatenerà l'evento <i>sonaralert</i>.</li>
-            <li>se D < DFREE in seguito a un evento di tipo <i>sonaralert</i>,
-              allora scatenerà l'evento <i>sonarok</i>.</li>
+            <li>se D < DFREE/2 per 3 secondi, scatenerà l'evento <i>doDeposit</i>;</li>
+            <li>se D > DFREE per 3 secondi, scatenerà l'evento <i>sonaralert</i>.</li>
+            <li>se D < DFREE in seguito ad un malfunzionamento, scatenerà l'evento <i>sonarok</i>.</li>
           </ul>
 
-          <pre>
-          <code>
-            //Qactor sonarmanager :
+          <pre><code>//Qactor sonarmanager :
 State process{
 	[# var M = -1 #]
 	onMsg(measurement : measurement(X)){
@@ -419,16 +378,12 @@ Transition t
 	whenMsg measurement -> process
 	whenEvent waitingForDeposit -> checkForDeposit
 	whenEvent stopWaitingForDeposit -> stopWaitingDeposit
-	
-            </code>
-          </pre>
+</code></pre>
+
           <h4>comportamento di sonar</h4>
           <strong>sonar</strong> si occupa di eseguire lo script Python per ottenere le misurazioni
           della distanza dal sonar fisico in cm e inviarle a sonarmanager.
-          <pre>
-            <code>
-QActor sonar context ctx_sensor{
-	
+          <pre><code>QActor sonar context ctx_sensor{
 	[#
 	lateinit var reader : java.io.BufferedReader
     lateinit var p : Process	
@@ -469,21 +424,18 @@ QActor sonar context ctx_sensor{
 	}
 	Goto work
 	
-}
-            </code>
-          </pre>
+}</code></pre>
           <h4>comportamento di led</h4>
 
           <strong>led</strong> si occupa di eseguire gli script Python per accendere e spegnere il led
-          basandosi sugli eventi che cattura.
+          basandosi sugli eventi scatenati da <strong>sonarmanager</strong>.
           nello specifico:
           <ul>
             <li>all'evento <i>sonaralert</i> esegue lo script ledPython25On.py;</li>
             <li>all'evento <i>sonarok</i> esegue lo script ledPython25Off.py.</li>
           </ul>
 
-          <pre>
-            <code>QActor led context ctx_sensor{
+          <pre><code>QActor led context ctx_sensor{
 	[#
     lateinit var p : Process	
 		#
@@ -519,9 +471,7 @@ QActor sonar context ctx_sensor{
  		]
  	}
  	Goto wait
-}
-            </code>
-          </pre>
+}</code></pre>
         </div>
       </div>
     </div>
@@ -542,7 +492,7 @@ QActor sonar context ctx_sensor{
             <div class="small-12 medium-3 text-center">
               <a
                 class="button change"
-                href="../../Sprint0/userDocs/sprint0_v3.html"
+                href="../../Sprint1/userDocs/sprint1_v3.html"
               >
                 &larr; Previous Sprint
               </a>
