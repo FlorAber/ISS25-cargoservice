@@ -108,16 +108,24 @@
             oppure se sia meglio che il sonar comunichi con cargoservice ogni distanza rilevata.
             Siccome il sistema cargoservice è stato modellato per reagire ad eventi specifici
             piuttosto che a flussi continui di dati, è preferibile che il sonar comunichi con cargoservice
-            solo quando rileva un evento di interesse.
+            solo quando rileva un evento di interesse. Inoltre le comunicazioni dal sonar a cargoservice
+            dipendono dagli eventi già modellati nel sistema cargoservice, nello specifico:
+            <ul>
+              <li>l'evento <i>waitingForDeposit</i> segnala che la richiesta di caricamento è stata accettata da cargoservice e il sonar 
+                avvia la rilevazione dei prodotti;</li>
+              <li>l'evento <i>stopWaitingForDeposit</i> segnala al sonar che il caricamento è terminato e non c'è nessuna
+                richiesta di caricamento in sospeso, arrestando la rilevazione;</li>
+            </ul> 
             <br/>
-            è possibile individuare già ora almeno 2 interazioni principali con <strong>cargoservice</strong>:
+            è possibile individuare già ora almeno altre 2 interazioni principali con <strong>cargoservice</strong>:
             <ul>
               <li>il sonar ha rilevato un prodotto (D < DFREE/2 per minimo 3 secondi) e comunica l'evento <i>doDeposit</i> a cargoservice;</li>
               <li>il sonar rileva un malfunzionamento (D > DFREE per minimo 3 secondi) e comunica l'evento <i>sonaralert</i> a cargoservice.</li>
             </ul>
 
             Sorge spontaneo domandarsi come il componente software sonar possa relazionarsi con il componente hardware sonar.
-            Fortunatamente il committente ha precedentemente fornito uno script Python che si occupa di interfacciarsi con l'hardware e restituire la distanza rilevata, 
+            Fortunatamente il committente ha precedentemente fornito uno script Python che si occupa di interfacciarsi con l'hardware 
+            Raspberrypi mediante la libreria GPIO e restituire la distanza rilevata, 
             ottenendo una misurazione al secondo della distanza <strong>D</strong>.
 
             <pre>
@@ -248,7 +256,7 @@ GPIO.output(25,GPIO.LOW)
 
       <div class="medium-12 text-center remark">
         <img
-          src="../sprint2_sensors_modelarch.png"
+          src="./resources/sprint2_logicalArch.png"
           class="text-center"
           alt="map"
           width="75%"
