@@ -486,6 +486,31 @@ Transition t
         />
 
       </div>
+
+
+      <h2>Considerazioni finali e Deployment</h2>
+      <div class="remark">
+        Per l'esecuzione del sistema è necessario avviare preliminarmente i servizi
+        definiti nel file: <code>yamls/docker-compose-unified.yaml</code>.<br/>
+        Il sistema, ad esclusione della GUI prevista per il prossimo Sprint, è operativo
+        ed è composto da due moduli principali:
+        <ol>
+          <li> Il core business è stato implementato nel progetto gradle contenuto all'interno della directory <code>Sprint1</code> e può essere eseguito lanciando il comando <code>gradle run</code> all'interno della directory</li>
+          <li> Il componente sensors è stato implementato nel progetto gradle contenuto all'interno della directory <code>Sprint2</code> e può essere lanciato caricando sul RaspberryPi il contenuto della directory <code>Sprint2/build/libs/</code> ed eseguendo l'archivio <code>sprint2_sensors_model-1.0.jar</code> tramite il comando: <code>java -jar sprint2_sensors_model-1.0.jar</code>
+            <br/>
+            Per il corretto funzionamento del modulo dedicato alla gestione dei sensori è necessario collegare i dispositivi ai seguenti pin della scheda:
+            <ul>
+              <li>LED (polo positivo): <strong>pin 25</strong></li>
+              <li>Sonar – trigger: <strong>pin 17</strong></li>
+              <li>Sonar – echo: <strong>pin 27</strong></li>
+              <li>
+                Gli altri collegamenti possono essere effettuati liberamente, in particolare: l'alimentazione del sonar può essere collegata ad un qualsiasi pin di alimentazione a 5V; i collegamenti a terra di sonar e led possono essere fatti su un qualsiasi pin Ground
+              </li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+
       <footer class="footer">
         <div class="grid-container fluid">
           <div class="grid-x grid-margin-x align-middle">
