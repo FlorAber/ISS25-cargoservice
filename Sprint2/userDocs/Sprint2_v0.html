@@ -257,7 +257,7 @@ GPIO.output(25,GPIO.LOW)</code></pre>
                     Il sonar riceve per 3 secondi misurazioni maggiori di DFREE, il sistema va in errore e il led si accende. 
                     Alla ricezione della prima misurazione minore di DFREE il sistema rientra dal guasto e il led si spegne.
                 </td>
-                <td>TestSonarSystem.java</td>
+                <td><a href="../src/test/java/TestSonarSystem.java">TestSonarSystem.java</a></td>
               </tr>
               <tr>
                 <td>Verifica invio doDeposit</td>
@@ -265,14 +265,14 @@ GPIO.output(25,GPIO.LOW)</code></pre>
                 <td>
                     Led inizialmente spento, il sonar per 3 secondi riceve misurazioni maggiori di DFREE/2 e minori di DFREE. Il sistema emette l'evento doDeposit.
                 </td>
-                <td>TestSonarSystem.java</td>
+                <td><a href="../src/test/java/TestSonarSystem.java">TestSonarSystem.java</a></td>
               </tr>
                 <td>Verifica nessun errore con 2 misurazioni</td>
                 <td>led; sonar;</td>
                 <td>
                     Il sonar riceve per 2 secondi misurazioni maggiori di DFREE, il sistema non va in guasto e il led rimane spento.
                 </td>
-                <td>TestSonarSystem.java</td>
+                <td><a href="../src/test/java/TestSonarSystem.java">TestSonarSystem.java</a></td>
               </tr>
                 <td>Verifica robustezza a cicli multipli</td>
                 <td>led; sonar;</td>
@@ -280,7 +280,7 @@ GPIO.output(25,GPIO.LOW)</code></pre>
                     Si itera la sequenza guasto e rientro dal guasto più volte consecutivamente, andando a verificare che il led
                     si accenda e spenga correttamente.
                 </td>
-                <td>TestSonarSystem.java</td>
+                <td><a href="../src/test/java/TestSonarSystem.java">TestSonarSystem.java</a></td>
               </tr>
             </tbody>
           </table>
