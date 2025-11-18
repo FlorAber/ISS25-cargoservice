@@ -188,7 +188,12 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 										
 										val state = HoldState(pids, names, weights, MAXLOAD)
 										
+										val json = Json { prettyPrint = true }
+										val JSONSTATE = json.encodeToString(state)
+										
 										saveState(state)				
+						CommUtils.outblue("$name : emitting event - $JSONSTATE")
+						emit("holdupdated", "holdupdated($JSONSTATE)" ) 
 						CommUtils.outblue("$name : updated hold state - $state")
 						}
 						else

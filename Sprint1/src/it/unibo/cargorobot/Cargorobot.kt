@@ -100,6 +100,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												
 								CommUtils.outyellow("$name : moving robot to slot IOPORT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+								delay(500) 
+								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
@@ -131,6 +133,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 											
 								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+								delay(500) 
+								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
@@ -161,6 +165,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 											
 								CommUtils.outyellow("$name : moving robot to slot HOME at Position ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+								delay(500) 
+								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}

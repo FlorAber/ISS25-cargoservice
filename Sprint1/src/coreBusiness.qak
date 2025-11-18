@@ -23,8 +23,10 @@ Reply productrejected : productrejected(MSG)  for controlproduct	// hold manager
 Event doDeposit : doDeposit(X) 					 // user to cargoservice
 Event waitingForDeposit : waitingfordeposit(X)    // sent after load request accepted, used to trigger the sonar sensor
 Event stopWaitingForDeposit : stopWaitingForDeposit(X)
-// TEMPORANEA PER GESTIRE LA FINE DEL CARICAMENTO E AGGIORNARE LO STATO INTERNO DELL'HOLDMANAGER, SOSTITUIBILE CON ALTRO
+
+//Gestione fine caricamento ed aggiornamento stato hold
 Event productloaded : productloaded(X) 
+Event holdupdated : holdupdated(JSONSTATE)
 
 //cargoservice to cargorobot
 Request load : load(SLOT)
@@ -264,8 +266,8 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot IOPORT at Positions ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-//			delay 500
-//			forward basicrobot -m setdirection:dir($D)
+			delay 500
+			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t 
@@ -296,8 +298,8 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-//			delay 500
-//			forward basicrobot -m setdirection:dir($D)
+			delay 500
+			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t
@@ -325,8 +327,8 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot HOME at Position ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-//			delay 500
-//			forward basicrobot -m setdirection:dir($D)
+			delay 500
+			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t
@@ -550,8 +552,16 @@ QActor holdmanager context ctx_cargo {
 				
 				val state = HoldState(pids, names, weights, MAXLOAD)
 				
+				val json = Json { prettyPrint = true }
+				val JSONSTATE = json.encodeToString(state)
+				
 				saveState(state)				
 			#]
+			
+			println("$name : emitting event - $JSONSTATE") color blue 	
+			//Emit evento per aggiornamento webgui
+			emit holdupdated : holdupdated($JSONSTATE)
+			
 			println("$name : updated hold state - $state") color blue 
 		} else {
 			println("$name : hold state not changed") color blue 
@@ -603,7 +613,13 @@ QActor mockuser context ctx_cargo {
 		
 	State deposit {
 		println("$name : PID found, proceeding to do Deposit") color cyan
-//		emit doDeposit : doDeposit(1)
+		delay 3000
+		emit doDeposit : doDeposit(1)
+		
+//		delay 3000 
+//		emit sonaralert : sonaralert(0)
+//		delay 3000 
+//		emit sonarok : sonarok(0)
 		
 //		if [# COUNTLOADS == 2 || COUNTLOADS == 4 #] {
 //			delay 3000
@@ -622,9 +638,8 @@ QActor mockuser context ctx_cargo {
 		[# ERROR = true #]
 		onMsg (loadrejected : loadrejected(ERRORPAYLOAD)) {
 			[# val ERRORPAYLOAD = payloadArg(0)#]
-			println("$ERRORPAYLOAD") color red
+			println("$name : $ERRORPAYLOAD") color red
 		}
-		println("PID not found") color red
 	}
 	
 	State end {

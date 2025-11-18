@@ -63,6 +63,8 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 				state("deposit") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name : PID found, proceeding to do Deposit")
+						delay(3000) 
+						emit("doDeposit", "doDeposit(1)" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -76,9 +78,8 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 						if( checkMsgContent( Term.createTerm("loadrejected(X)"), Term.createTerm("loadrejected(ERRORPAYLOAD)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 val ERRORPAYLOAD = payloadArg(0) 
-								CommUtils.outred("$ERRORPAYLOAD")
+								CommUtils.outred("$name : $ERRORPAYLOAD")
 						}
-						CommUtils.outred("PID not found")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

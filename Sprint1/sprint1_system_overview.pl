@@ -14,6 +14,7 @@ event( doDeposit, doDeposit(X) ).
 event( waitingForDeposit, waitingfordeposit(X) ).
 event( stopWaitingForDeposit, stopWaitingForDeposit(X) ).
 event( productloaded, productloaded(X) ).
+event( holdupdated, holdupdated(JSONSTATE) ).
 request( load, load(SLOT) ).
 reply( loadended, loadended(0) ).  %%for load
 reply( loadfailed, productRejecteded(MSG) ).  %%for load
