@@ -28,6 +28,9 @@ Event stopWaitingForDeposit : stopWaitingForDeposit(X)
 Event productloaded : productloaded(X) 
 Event holdupdated : holdupdated(JSONSTATE)
 
+Request getholdstate : getholdstate(X)
+Reply holdstate : holdstate(JSONSTATE)
+
 //cargoservice to cargorobot
 Request load : load(SLOT)
 
@@ -70,6 +73,7 @@ Context ctx_cargo  ip  [host="localhost" port=8014]
 //Context ctx_sensor  ip  [host="172.20.10.13" port=8016]
 
 Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
+Context ctx_webgui ip [host="127.0.0.1" port=8025]
 Context ctxproductservice ip [ host="127.0.0.1" port=8111]
 
 ExternalQActor productservice context ctxproductservice
@@ -447,7 +451,6 @@ QActor holdmanager context ctx_cargo {
     	var waitingProduct: JSONObject? = null	// Oggetto JSON che rappresenta il prodotto in attesa di essere caricato, terminato il robot viene registrato nello stato
 	#]
 	
-	
 	State start initial {
 		delay 750  
 		println("$name : starting") color blue 
@@ -476,7 +479,21 @@ QActor holdmanager context ctx_cargo {
 	}
 	Transition t 
 		whenRequest controlproduct -> handleControlRequest
+		whenRequest getholdstate -> handleStateRequest
 		
+	State handleStateRequest {
+		onMsg( getholdstate : getholdstate(X) ) {
+			println("$name : received state request") color blue 
+			[#
+				val state = HoldState(pids, names, weights, MAXLOAD)
+				val json = Json { prettyPrint = false }
+				val JSONSTATE = "'${json.encodeToString(state)}'"
+			#]
+			replyTo getholdstate with holdstate : holdstate($JSONSTATE)
+		}
+	}
+	Goto wait
+	
 	// Invia richiesta al productservice
 	State handleControlRequest {
 		onMsg( controlproduct : controlproduct(PID) ) {
@@ -552,17 +569,15 @@ QActor holdmanager context ctx_cargo {
 				
 				val state = HoldState(pids, names, weights, MAXLOAD)
 				
-				val json = Json { prettyPrint = true }
-				val JSONSTATE = json.encodeToString(state)
+				val json = Json { prettyPrint = false }
+				val JSONSTATE = "'${json.encodeToString(state)}'"
 				
 				saveState(state)				
 			#]
-			
-			println("$name : emitting event - $JSONSTATE") color blue 	
-			//Emit evento per aggiornamento webgui
+	
 			emit holdupdated : holdupdated($JSONSTATE)
 			
-			println("$name : updated hold state - $state") color blue 
+			println("$name : updated hold state") color blue 
 		} else {
 			println("$name : hold state not changed") color blue 
 		}

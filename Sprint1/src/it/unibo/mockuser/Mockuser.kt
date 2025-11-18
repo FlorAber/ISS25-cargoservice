@@ -57,8 +57,8 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t32",targetState="deposit",cond=whenReply("loadaccepted"))
-					transition(edgeName="t33",targetState="loadFail",cond=whenReply("loadrejected"))
+					 transition(edgeName="t33",targetState="deposit",cond=whenReply("loadaccepted"))
+					transition(edgeName="t34",targetState="loadFail",cond=whenReply("loadrejected"))
 				}	 
 				state("deposit") { //this:State
 					action { //it:State
@@ -70,7 +70,7 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t34",targetState="end",cond=whenEvent("productloaded"))
+					 transition(edgeName="t35",targetState="end",cond=whenEvent("productloaded"))
 				}	 
 				state("loadFail") { //this:State
 					action { //it:State

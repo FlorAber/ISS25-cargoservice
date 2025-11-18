@@ -34,29 +34,44 @@ class Webguiobserver ( name: String, scope: CoroutineScope, isconfined: Boolean=
 				state("s0") { //this:State
 					action { //it:State
 						delay(2000) 
-						CommUtils.outyellow("$name | START")
+						CommUtils.outblue("$name : starting")
+						request("getholdstate", "getholdstate(0)" ,"holdmanager" )  
+						CommUtils.outblue("$name : requested initial hold state")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t0",targetState="handleholdupdate",cond=whenEvent("holdupdated"))
-					transition(edgeName="t1",targetState="handleholdupdate",cond=whenEvent("productloaded"))
+					 transition(edgeName="t0",targetState="handleholdupdate",cond=whenReply("holdstate"))
+				}	 
+				state("waiting") { //this:State
+					action { //it:State
+						CommUtils.outblue("$name : waiting for hold updates")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t1",targetState="handleholdupdate",cond=whenEvent("holdupdated"))
 				}	 
 				state("handleholdupdate") { //this:State
 					action { //it:State
-						CommUtils.outblack("$name : updating")
 						if( checkMsgContent( Term.createTerm("holdupdated(JSONSTATE)"), Term.createTerm("holdupdated(JSONSTATE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-									            val holdstate = payloadArg(0)
-								CommUtils.outyellow("$name : hold updated - $holdstate")
+								 val holdstate = payloadArg(0)  
+								CommUtils.outblue("$name : hold updated - $holdstate")
+						}
+						if( checkMsgContent( Term.createTerm("holdstate(JSONSTATE)"), Term.createTerm("holdstate(JSONSTATE)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 val holdstate = payloadArg(0)  
+								CommUtils.outblue("$name : hold state retrieved - $holdstate")
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="waiting", cond=doswitch() )
 				}	 
 			}
 		}

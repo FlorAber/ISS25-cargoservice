@@ -106,6 +106,25 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t29",targetState="handleControlRequest",cond=whenRequest("controlproduct"))
+					transition(edgeName="t30",targetState="handleStateRequest",cond=whenRequest("getholdstate"))
+				}	 
+				state("handleStateRequest") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("getholdstate(X)"), Term.createTerm("getholdstate(X)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								CommUtils.outblue("$name : received state request")
+								
+												val state = HoldState(pids, names, weights, MAXLOAD)
+												val json = Json { prettyPrint = false }
+												val JSONSTATE = "'${json.encodeToString(state)}'"
+								answer("getholdstate", "holdstate", "holdstate($JSONSTATE)"   )  
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
 				}	 
 				state("handleControlRequest") { //this:State
 					action { //it:State
@@ -120,7 +139,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t30",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
+					 transition(edgeName="t31",targetState="checkProductAnswer",cond=whenReply("getProductAnswer"))
 				}	 
 				state("checkProductAnswer") { //this:State
 					action { //it:State
@@ -169,7 +188,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t31",targetState="updateHoldState",cond=whenEvent("productloaded"))
+					 transition(edgeName="t32",targetState="updateHoldState",cond=whenEvent("productloaded"))
 				}	 
 				state("updateHoldState") { //this:State
 					action { //it:State
@@ -188,13 +207,12 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 										
 										val state = HoldState(pids, names, weights, MAXLOAD)
 										
-										val json = Json { prettyPrint = true }
-										val JSONSTATE = json.encodeToString(state)
+										val json = Json { prettyPrint = false }
+										val JSONSTATE = "'${json.encodeToString(state)}'"
 										
 										saveState(state)				
-						CommUtils.outblue("$name : emitting event - $JSONSTATE")
 						emit("holdupdated", "holdupdated($JSONSTATE)" ) 
-						CommUtils.outblue("$name : updated hold state - $state")
+						CommUtils.outblue("$name : updated hold state")
 						}
 						else
 						 {CommUtils.outblue("$name : hold state not changed")
