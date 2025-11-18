@@ -20,7 +20,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
 
-    <title>ISS25 - Sprint 2</title>
+    <title>ISS25 - Sprint 3</title>
   </head>
 
   <body>
@@ -53,10 +53,33 @@
 
     <h2>Requirements</h2>
     <div class="remark">
-      
+    Il sistema deve soddisfare il seguente requisito:
+    <ul>
+      <li>Deve fornire un'interfaccia grafica web dinamica che consenta agli utenti di visualizzare in tempo reale
+         lo stato della hold.</li>
+    </ul>
+    </div>
+    
+
+    <h2>Problem analysis</h2>
+    <div class="remark">
+    Per soddisfare il requisito sopra elencato, è necessario affrontare le seguenti problematiche:
+    
+      <div class="textparagraph">
+        <h3>Come modellare GUI e i suoi componenti?</h3>
+          <div class="textbody">
+            Da requisiti la GUI deve essere accessibile via web, pertanto si è deciso di implementarla come applicazione web-based.
+            Questo consente di rendere la GUI accessibile da qualsiasi dispositivo con un browser web, senza la necessità di installare software aggiuntivo.
+            <br />
+            Per rispettare il principio di separazione delle responsabilità, la webgui verrà eseguita su un contesto 
+            separato rispetto ai componenti già modellati nei precedenti sprint (Sensor, CargoService).
+            Pertanto si suggerisce di modellare la GUI come un attore 
+          </div>
+      </div>
 
     </div>
-    <h2>Problem analysis</h2>
+    
+
     </div>
 
     <h2>Logical Architecture</h2>
