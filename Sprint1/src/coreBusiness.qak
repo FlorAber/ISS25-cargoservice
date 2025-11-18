@@ -65,7 +65,7 @@ Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
 //Context ctx_test   ip  [host="127.0.0.1" port=8050]
-Context ctx_sensor  ip  [host="172.20.10.13" port=8016]
+//Context ctx_sensor  ip  [host="172.20.10.13" port=8016]
 
 Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
 Context ctxproductservice ip [ host="127.0.0.1" port=8111]
