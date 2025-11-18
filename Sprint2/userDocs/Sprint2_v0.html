@@ -282,6 +282,15 @@ GPIO.output(25,GPIO.LOW)</code></pre>
                 </td>
                 <td><a href="../src/test/java/TestSonarSystem.java">TestSonarSystem.java</a></td>
               </tr>
+              </tr>
+                <td>Verifica integrazione con core business</td>
+                <td>sonar; cargomanager</td>
+                <td>
+                    Si inviano misurazioni errate per 3 secondi al sonar e si osserva se il cargomanager scatena l'evento stopthesystem, 
+                    poi si invia una misurazione corretta al sonar e si osserva sul cargomanager se scatena l'evento resumethesystem.
+                </td>
+                <td><a href="../src/test/java/TestInteractions.java">TestSonarSystem.java</a></td>
+              </tr>
             </tbody>
           </table>
         </div>
