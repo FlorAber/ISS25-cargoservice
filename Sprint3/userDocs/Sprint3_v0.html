@@ -16,9 +16,14 @@
     <!-- <link rel="stylesheet" type="text/css" href="../../resources/_styles/style.css" /> -->
     <link rel="stylesheet" type="text/css" href="./css/style.css" />
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>hljs.highlightAll();</script>
+    <script>
+      hljs.highlightAll();
+    </script>
 
     <title>ISS25 - Sprint 3</title>
   </head>
@@ -32,13 +37,16 @@
       <div class="remark">
         <div class="textbody grid-x grid-margin-x align-middle">
           <div class="medium-8">
-            Nello Sprint precedente sono state analizzate le problematiche ed è stato progettato il contesto operativo del componente Sensor 
-            L'output finale è stato una modellazione di alto livello del sistema e una prima implementazione funzionante (figura a destra).
+            Nello Sprint precedente sono state analizzate le problematiche ed è
+            stato progettato il contesto operativo del componente Sensor
+            L'output finale è stato una modellazione di alto livello del sistema
+            e una prima implementazione funzionante (figura a destra).
             <br />
             <br />
-            L'obiettivo dello Sprint 3 è di analizzare le problematiche relative allo sviluppo
-            di un'interfaccia grafica per l'utente finale (GUI) e realizzarne un'implementazione funzionante, 
-            integrandola con i componenti del sistema già modellati neglle fasi precedenti.
+            L'obiettivo dello Sprint 3 è di analizzare le problematiche relative
+            allo sviluppo di un'interfaccia grafica per l'utente finale (GUI) e
+            realizzarne un'implementazione funzionante, integrandola con i
+            componenti del sistema già modellati neglle fasi precedenti.
           </div>
           <div class="medium-4">
             <img
@@ -48,56 +56,76 @@
             />
           </div>
         </div>
-        
-    </div>
+      </div>
 
-    <h2>Requirements</h2>
-    <div class="remark">
-    Il sistema deve soddisfare il seguente requisito:
-    <ul>
-      <li>Deve fornire un'interfaccia grafica web dinamica che consenta agli utenti di visualizzare in tempo reale
-         lo stato della hold.</li>
-    </ul>
-    </div>
-    
+      <h2>Requirements</h2>
+      <div class="remark">
+        Il sistema deve soddisfare il seguente requisito:
+        <ul>
+          <li>
+            Deve fornire un'interfaccia grafica web dinamica che consenta agli
+            utenti di visualizzare in tempo reale lo stato della hold.
+          </li>
+        </ul>
+      </div>
 
-    <h2>Problem analysis</h2>
-    <div class="remark">
-    Per soddisfare il requisito sopra elencato, è necessario affrontare le seguenti problematiche:
-    
-      <div class="textparagraph">
-        <h3>Come modellare GUI e i suoi componenti?</h3>
+      <h2>Problem analysis</h2>
+      <div class="remark">
+        <!-- Per soddisfare il requisito sopra elencato, è necessario affrontare le seguenti problematiche: -->
+
+        <div class="textparagraph">
+          <h3>Come modellare GUI?</h3>
           <div class="textbody">
-            Da requisiti la GUI deve essere accessibile via web, pertanto si è deciso di implementarla come applicazione web-based.
-            Questo consente di rendere la GUI accessibile da qualsiasi dispositivo con un browser web, senza la necessità di installare software aggiuntivo.
-            <br />
-            Per rispettare il principio di separazione delle responsabilità, la webgui verrà eseguita su un contesto 
-            separato rispetto ai componenti già modellati nei precedenti sprint (Sensor, CargoService).
-            Pertanto si suggerisce di modellare la GUI come un attore 
+            Da requisiti la GUI deve essere accessibile via web, pertanto occorre implementarla come applicazione web-based. Questo consente di rendere la GUI accessibile
+            da qualsiasi dispositivo dotato di un browser web, senza la necessità di installare software aggiuntivo.
+            <br></br>
+            A questo scopo si suggerisce di utilizzare un framework di sviluppo come SpringBoot, il quale permette di sviluppare applicazioni web e miscroservizi in Java che riescano ad interfacciarsi agevolmente con i sistemi precedentemente implementati.
+          </div>
+        </div>
+        <div class="textparagraph">
+          <h3>Come estrarre le informazioni sullo stato della hold?</h3>
+          <div class="textbody">
+            L'attore <strong>holdmanager</strong> mette a disposizione diversi
+            metodi per estrarre informazioni sulla hold. In particolare accetta
+            richieste <i>getholdstate</i> alle quali risponde con una stringa
+            JSON corrispondente allo stato attuale della hold e, in aggiunta a
+            questo, al termine del caricamento di un prodotto, emette un evento
+            <i>holdupdated</i> con il quale comunica il nuovo stato della hold.
+            Per questo si suggerisce di realizzare un nuovo attore
+            <strong>holdobserver</strong> che si occupi di sfruttare le
+            richieste e gli eventi appena descritti per mantenere nel proprio
+            stato interno una copia aggiornata dello stato della hold.
+          </div>
+        </div>
+        <div class="textparagraph">
+          <h3>Come visualizzare lo stato della hold in una GUI?</h3>
+          <div class="textbody">
+            Le informazioni utili riguardanti la hold sono:
+            <ul>
+              <li> Che slot sono occupati e le informazioni riguardanti i prodotti che contengono (PID, Nome, Peso)</li>
+              <li> Peso totale della hold e peso massimo che può assumere</li>
+            </ul>
+            Queste informazioni devono essere rappresentate in modo chiaro e possono essere interamente estrapolate dalla stringa JSON fornita dall'attore <strong>holdmanager</strong>
+            <br/><br/>
+            Per estrarre le informazioni dall'attore <strong>holdobserver</strong> si consiglia di utilizzare ...
           </div>
       </div>
 
-    </div>
-    
+      <h2>Logical Architecture</h2>
+      <div class="medium-12 text-center remark">
+        <img
+          src="./resources/sprint2_logicalArch.png"
+          class="text-center"
+          alt="map"
+          width="75%"
+        />
+      </div>
 
-    </div>
+      <h2>Test plans</h2>
 
-    <h2>Logical Architecture</h2>
-    <div class="medium-12 text-center remark">
-      <img
-        src="./resources/sprint2_logicalArch.png"
-        class="text-center"
-        alt="map"
-        width="75%"
-      />
-    </div>
+      <h2>Project</h2>
 
-    <h2>Test plans</h2>
-    
-
-    <h2>Project</h2>
-    
-    <h2>System Design</h2>
+      <h2>System Design</h2>
 
       <div class="medium-12 text-center remark">
         <img
@@ -106,12 +134,9 @@
           alt="map"
           width="75%"
         />
-
       </div>
 
-
       <h2>Considerazioni finali e Deployment</h2>
-      
 
       <footer class="footer">
         <div class="grid-container fluid">
@@ -150,5 +175,6 @@
           </div>
         </div>
       </footer>
-
-</body> 
+    </div>
+  </body>
+</html>

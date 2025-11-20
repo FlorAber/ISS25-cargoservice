@@ -26,9 +26,9 @@ with Diagram('sprint3Arch', show=False, outformat='png', graph_attr=graphattr) a
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_webgui', graph_attr=nodeattr):
-          webguiobserver=Custom('webguiobserver','./qakicons/symActorWithobjSmall.png')
+          holdobserver=Custom('holdobserver','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_cargo', graph_attr=nodeattr):
           holdmanager=Custom('holdmanager(ext)','./qakicons/externalQActor.png')
-     sys >> Edge( label='holdupdated', **evattr, decorate='true', fontcolor='darkgreen') >> webguiobserver
-     webguiobserver >> Edge(color='magenta', style='solid', decorate='true', label='<getholdstate &nbsp; >',  fontcolor='magenta') >> holdmanager
+     sys >> Edge( label='holdupdated', **evattr, decorate='true', fontcolor='darkgreen') >> holdobserver
+     holdobserver >> Edge(color='magenta', style='solid', decorate='true', label='<getholdstate &nbsp; >',  fontcolor='magenta') >> holdmanager
 diag

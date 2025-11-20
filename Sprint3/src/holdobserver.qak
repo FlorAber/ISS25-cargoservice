@@ -13,8 +13,9 @@ Context ctx_cargo		 ip [host="127.0.0.1" port=8014]
 
 ExternalQActor holdmanager context ctx_cargo
 
-QActor webguiobserver context ctx_webgui {
-	[# var CurrentState = {} #]
+QActor holdobserver context ctx_webgui {
+	
+	[# var currentHoldState = {} #]
 	
 	State s0 initial {
 		delay 2000
@@ -33,12 +34,17 @@ QActor webguiobserver context ctx_webgui {
 		
 	State handleholdupdate {
 		onMsg (holdupdated : holdupdated(JSONSTATE)) {
-			[# val holdstate = payloadArg(0) #]
+			[# 
+				val holdstate = payloadArg(0) 
+				currentHoldState = holdstate
+			#]
 	        println("$name : hold updated - $holdstate") color blue
 		}
-		
 		onMsg (holdstate : holdstate(JSONSTATE)) {
-			[# val holdstate = payloadArg(0) #]
+			[# 
+				val holdstate = payloadArg(0) 
+				currentHoldState = holdstate
+			#]
 	        println("$name : hold state retrieved - $holdstate") color blue
 		}
 	}
