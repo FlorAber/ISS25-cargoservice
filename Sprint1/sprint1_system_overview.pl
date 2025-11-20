@@ -16,6 +16,7 @@ event( stopWaitingForDeposit, stopWaitingForDeposit(X) ).
 event( productloaded, productloaded(X) ).
 event( holdupdated, holdupdated(JSONSTATE) ).
 request( getholdstate, getholdstate(X) ).
+reply( holdstate, holdstate(JSONSTATE) ).  %%for getholdstate
 request( load, load(SLOT) ).
 reply( loadended, loadended(0) ).  %%for load
 reply( loadfailed, productRejecteded(MSG) ).  %%for load
@@ -37,7 +38,6 @@ event( resumethesystem, resumethesystem(X) ).
 %====================================================================================
 context(ctx_cargo, "localhost",  "TCP", "8014").
 context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
-context(ctx_webgui, "127.0.0.1",  "TCP", "8025").
 context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  qactor( productservice, ctxproductservice, "external").
   qactor( basicrobot, ctx_basicrobot, "external").
