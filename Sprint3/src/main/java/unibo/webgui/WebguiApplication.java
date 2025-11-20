@@ -8,7 +8,6 @@ public class WebguiApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(WebguiApplication.class, args);
-		
 	}
 
 }

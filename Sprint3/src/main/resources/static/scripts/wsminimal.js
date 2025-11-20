@@ -11,11 +11,13 @@ function sendMessage(message) {
 }
 
 function connect() {
+  var protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
   var host = document.location.host;
-  var pathname = "/"; //document.location.pathname;
-  var addr = "ws://" + host + pathname + "accessgui";
-  //alert("connect addr=" + addr   );
+  var pathname = "/holdupdates";
 
+  var addr = protocol + host + pathname;
+
+  console.log(addr);
   // Assicura che sia aperta un unica connessione
   if (socket !== undefined && socket.readyState !== WebSocket.CLOSED) {
     alert("WARNING: Connessione WebSocket già stabilita");
@@ -23,19 +25,20 @@ function connect() {
   socket = new WebSocket(addr);
 
   socket.onopen = function (event) {
-    //console.log("Connected to " + addr);
-    setMessageToWindow(infoDisplay, "socket | Connected to " + addr);
+    console.log("Connected to " + addr);
   };
 
   //Sulla WS scrive WSHandler
   socket.onmessage = function (event) {
     msg = event.data;
-    //alert(`Got Message: ${msg}`);
-    console.log("ws-status:" + msg);
-    if (msg.includes("plan"))
-      addMessageToWindow(planexecDisplay, msg); //in ioutils
-    //else if( msg.includes("RobotPos") ) setMessageToWindow(robotDisplay,msg);
-    //setMessageToWindow(robotDisplay,msg); //""+`${event.data}`*/
-    else addToMessageArea(msg);
+    alert(`Got Message: ${msg}`);
+    //console.log("ws-status:" + msg);
+    // if (msg.includes("plan"))
+    //   addMessageToWindow(planexecDisplay, msg); //in ioutils
+    // //else if( msg.includes("RobotPos") ) setMessageToWindow(robotDisplay,msg);
+    // //setMessageToWindow(robotDisplay,msg); //""+`${event.data}`*/
+    // else addToMessageArea(msg);
   };
 } //connect
+
+connect();

@@ -1,6 +1,7 @@
 package unibo.webgui.utils;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,25 +21,36 @@ public class HoldResponseParser {
 		else if(message.startsWith("{")) {
 			jsonString = message;
 		}
-		else {
-			// TODO: messaggio spurio di coap, c'è da capire come gestirlo
-		}
 		
-		// costruisco un oggetto con slot e peso
+		//Costruzione oggetti a partire da stringa JSON
 		System.out.println(jsonString);
-		JSONObject original = new JSONObject(jsonString);
-		int currentLoad = original.getInt("currentLoad");
-		JSONObject slotsObject = original.getJSONObject("slots");
-	
-		List<String> slotStatusList = new ArrayList<>();
-		for (int i = 1; i <= 4; i++) {
-			String slotKey = "slot" + i;
-			String status = slotsObject.getString(slotKey);
-			slotStatusList.add(status.equals("occupied") ? "pieno" : "libero");
+		JSONObject holdstate = new JSONObject(jsonString);
+		
+		int maxload = holdstate.getInt("MAXLOAD");
+		JSONArray pidsJSON = holdstate.getJSONArray("pids");
+		JSONArray namesJSON = holdstate.getJSONArray("names");
+		JSONArray weightsJSON = holdstate.getJSONArray("weights");
+
+		List<Integer> pids = new ArrayList<>();
+		List<String> names = new ArrayList<>();
+		List<Integer> weights = new ArrayList<>();
+
+		for (int i = 0; i < pidsJSON.length(); i++) {
+		    pids.add(pidsJSON.getInt(i));
+		}
+
+		for (int i = 0; i < namesJSON.length(); i++) {
+		    names.add(namesJSON.getString(i));
+		}
+
+		for (int i = 0; i < weightsJSON.length(); i++) {
+		    weights.add(weightsJSON.getInt(i));
 		}
 		
-		payload.put("shipLoad", currentLoad);
-		payload.put("slots", slotStatusList);
+		payload.put("maxload", maxload);
+		payload.put("pids", pids);
+		payload.put("names", names);
+		payload.put("weights", weights);
             
 		return payload;
     }

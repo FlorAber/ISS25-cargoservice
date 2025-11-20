@@ -100,51 +100,6 @@ function stopRobot() {
   }
 }
 
-// WebSocket connection
-function connectWebSocket() {
-  // Replace with your WebSocket URL
-  const wsUrl = "ws://localhost:8080"; // Modify this with your actual WebSocket server
-
-  try {
-    ws = new WebSocket(wsUrl);
-
-    ws.onopen = function () {
-      console.log("WebSocket connected");
-      const statusEl = document.getElementById("connectionStatus");
-      statusEl.textContent = "✅ Connesso al server";
-      statusEl.className = "connection-status connected";
-    };
-
-    ws.onmessage = function (event) {
-      try {
-        const data = JSON.parse(event.data);
-        updateUI(data);
-      } catch (e) {
-        console.error("Error parsing JSON:", e);
-      }
-    };
-
-    ws.onerror = function (error) {
-      console.error("WebSocket error:", error);
-      const statusEl = document.getElementById("connectionStatus");
-      statusEl.textContent = "❌ Errore di connessione";
-      statusEl.className = "connection-status disconnected";
-    };
-
-    ws.onclose = function () {
-      console.log("WebSocket disconnected");
-      const statusEl = document.getElementById("connectionStatus");
-      statusEl.textContent = "⚠️ Disconnesso - Tentativo di riconnessione...";
-      statusEl.className = "connection-status disconnected";
-
-      // Try to reconnect after 3 seconds
-      setTimeout(connectWebSocket, 3000);
-    };
-  } catch (e) {
-    console.error("Failed to create WebSocket:", e);
-  }
-}
-
 // Send request button
 document
   .getElementById("sendRequestBtn")
@@ -174,21 +129,18 @@ document
 // Initialize
 createSlots();
 
-// Try to connect to WebSocket
-connectWebSocket();
+// // Export functions for external control
+// window.startRobotMovement = startRobot;
+// window.stopRobotMovement = stopRobot;
 
-// Export functions for external control
-window.startRobotMovement = startRobot;
-window.stopRobotMovement = stopRobot;
+// document.addEventListener("DOMContentLoaded", function () {
+//   // ... tutto il codice ...
 
-document.addEventListener("DOMContentLoaded", function () {
-  // ... tutto il codice ...
-
-  // Avvia il robot in demo dopo 2 secondi
-  setTimeout(function () {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      console.log("Starting robot animation");
-      startRobot(); // Avvia l'animazione
-    }
-  }, 2000);
-});
+//   // Avvia il robot in demo dopo 2 secondi
+//   setTimeout(function () {
+//     if (!ws || ws.readyState !== WebSocket.OPEN) {
+//       console.log("Starting robot animation");
+//       startRobot(); // Avvia l'animazione
+//     }
+//   }, 2000);
+// });

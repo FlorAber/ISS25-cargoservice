@@ -71,6 +71,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 		    	val MAXLOAD = 100						// Carico massimo della hold
 		    	
 		    	var waitingProduct: JSONObject? = null	// Oggetto JSON che rappresenta il prodotto in attesa di essere caricato, terminato il robot viene registrato nello stato
+			
 		return { //this:ActionBasciFsm
 				state("start") { //this:State
 					action { //it:State
@@ -83,7 +84,13 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 										pids = loaded.pids
 										names = loaded.names
 										weights = loaded.weights
+										val state = HoldState(pids, names, weights, MAXLOAD)
+										val json = Json { prettyPrint = false }
+										val JSONSTATE = "'${json.encodeToString(state)}'"
 										
+										
+						updateResourceRep( JSONSTATE  
+						)
 						}
 						else
 						 {CommUtils.outblue("$name : state file not found, initializing")
@@ -211,6 +218,8 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 										val JSONSTATE = "'${json.encodeToString(state)}'"
 										
 										saveState(state)				
+						updateResourceRep( JSONSTATE  
+						)
 						emit("holdupdated", "holdupdated($JSONSTATE)" ) 
 						CommUtils.outblue("$name : updated hold state")
 						}

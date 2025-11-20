@@ -14,10 +14,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
         this.handler = handler;
     }
     
-
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(handler, "/status-updates")
+        registry.addHandler(handler, "/holdupdates")
                 .setAllowedOrigins("*");
     }
 }
