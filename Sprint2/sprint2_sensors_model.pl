@@ -8,7 +8,7 @@ event( sonaralert, sonaralert(X) ).
 event( sonarok, sonarok(X) ).
 dispatch( measurement, measurement(CM) ).
 %====================================================================================
-context(ctx_cargo, "192.168.202.158",  "TCP", "8014").
+context(ctx_cargo, "172.20.10.10",  "TCP", "8014").
 context(ctx_sensor, "localhost",  "TCP", "8016").
  qactor( sonar, ctx_sensor, "it.unibo.sonar.Sonar").
  static(sonar).

@@ -234,7 +234,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						CommUtils.outred("$name : robot movement resumed")
 						if(  moving  
 						 ){val DEST = destination 
-						CommUtils.outblack("$DEST")
 						solve("getPoint($DEST,TX,TY,TDIR)","") //set resVar	
 						
 						
@@ -246,7 +245,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 							var robotmoving = "{status:true}"   
 						updateResourceRep( robotmoving  
 						)
+						CommUtils.outred("$name : destination $DEST ($X,$Y,$D) ")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+						delay(500) 
+						forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						returnFromInterrupt(interruptedStateTransitions)
 						//genTimer( actor, state )

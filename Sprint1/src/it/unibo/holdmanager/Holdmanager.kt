@@ -33,6 +33,9 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
+				
+				var rejectedproduct = false;
+				
 				// Used to serialize local variables and memorize them in the JSON file
 				@Serializable
 				data class HoldState(
@@ -158,7 +161,8 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("product(JSONSTRING)"), Term.createTerm("product(JsonString)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								 				
+								 		
+												rejectedproduct = false		
 												val parser = JSONParser()
 												val jsonString = payloadArg(0).toString()
 												val jsonObj = parser.parse(jsonString) as JSONObject
@@ -166,7 +170,6 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 												val pid = (jsonObj["productId"] as Long).toInt()
 												val weight = (jsonObj["weight"] as Long).toInt()
 								
-												var rejected = false
 												var ERMSG = ""	
 												var SLOT = 0		
 												
@@ -174,19 +177,19 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 													if ( MAXLOAD >= (weights.sumOf {it} + weight)) {				// Capienza stiva sufficiente
 														SLOT = pids.indexOfFirst { it == 0 }
 														if(SLOT < 0) {											    // Nessuno slot libero
-															rejected = true
+															rejectedproduct = true
 															ERMSG = "Tutti_gli_slot_sono_gia_occupati"
 														}
 													} else {
-														rejected = true
+														rejectedproduct = true
 														ERMSG = "Capienza_stiva_non_sufficiente"
 													}
 												} else {
-													rejected = true
+													rejectedproduct = true
 													ERMSG = "Prodotto_non_registrato"
 												}
 												
-								if(  rejected  
+								if(  rejectedproduct  
 								 ){CommUtils.outblue("$name : product rejected")
 								answer("controlproduct", "productrejected", "productrejected($ERMSG)"   )  
 								}
@@ -196,6 +199,19 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 								 answer("controlproduct", "productaccepted", "productaccepted($SLOT)"   )  
 								 }
 						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="waitloading", cond=doswitchGuarded({ !rejectedproduct  
+					}) )
+					transition( edgeName="goto",targetState="wait", cond=doswitchGuarded({! ( !rejectedproduct  
+					) }) )
+				}	 
+				state("waitloading") { //this:State
+					action { //it:State
+						CommUtils.outblue("$name : waiting for loading")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

@@ -70,10 +70,11 @@ Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
 //Context ctx_test   ip  [host="127.0.0.1" port=8050]
-Context ctx_sensor  ip  [host="192.168.202.118" port=8016]
+//Context ctx_sensor  ip  [host="192.168.202.118" port=8016] //ciac
+Context ctx_sensor  ip  [host="172.20.10.13" port=8016]		 //flor
+
 
 Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
-//Context ctx_webgui ip [host="127.0.0.1" port=8025]
 Context ctxproductservice ip [ host="127.0.0.1" port=8111]
 
 ExternalQActor productservice context ctxproductservice
@@ -391,7 +392,6 @@ QActor cargorobot context ctx_cargo {
 		if [# moving #] {
 			
 			[#val DEST = destination#]
-			println("$DEST")
 			solve (getPoint($DEST,TX,TY,TDIR))
 				[#
 
@@ -405,11 +405,11 @@ QActor cargorobot context ctx_cargo {
 			[#	var robotmoving = "{status:true}"  #]
 			updateResource [# robotmoving #]
 			
+			println("$name : destination $DEST ($X,$Y,$D) ") color red
 			request basicrobot -m moverobot:moverobot($X,$Y)
-//			delay 500
-//			forward basicrobot -m setdirection:dir($D)
+			delay 500
+			forward basicrobot -m setdirection:dir($D)
 		}
-
 		returnFromInterrupt
 	}
 	
@@ -432,6 +432,9 @@ QActor holdmanager context ctx_cargo {
 	import "java.io.File"
 	
 	[#
+		
+		var rejectedproduct = false;
+		
 		// Used to serialize local variables and memorize them in the JSON file
 		@Serializable
 		data class HoldState(
@@ -541,7 +544,8 @@ QActor holdmanager context ctx_cargo {
 	// Controlla la risposta del productservice e se positiva controlla se il prodotto può essere inserito nella hold
 	State checkProductAnswer {
 		onMsg ( getProductAnswer : product(JsonString) ) {
-			[# 				
+			[# 		
+				rejectedproduct = false		
 				val parser = JSONParser()
 				val jsonString = payloadArg(0).toString()
 				val jsonObj = parser.parse(jsonString) as JSONObject
@@ -549,7 +553,6 @@ QActor holdmanager context ctx_cargo {
 				val pid = (jsonObj["productId"] as Long).toInt()
 				val weight = (jsonObj["weight"] as Long).toInt()
 
-				var rejected = false
 				var ERMSG = ""	
 				var SLOT = 0		
 				
@@ -557,21 +560,21 @@ QActor holdmanager context ctx_cargo {
 					if ( MAXLOAD >= (weights.sumOf {it} + weight)) {				// Capienza stiva sufficiente
 						SLOT = pids.indexOfFirst { it == 0 }
 						if(SLOT < 0) {											    // Nessuno slot libero
-							rejected = true
+							rejectedproduct = true
 							ERMSG = "Tutti_gli_slot_sono_gia_occupati"
 						}
 					} else {
-						rejected = true
+						rejectedproduct = true
 						ERMSG = "Capienza_stiva_non_sufficiente"
 					}
 				} else {
-					rejected = true
+					rejectedproduct = true
 					ERMSG = "Prodotto_non_registrato"
 				}
 				
 			#]
 			
-			if [# rejected #] {
+			if [# rejectedproduct #] {
 				println("$name : product rejected") color blue
 				replyTo controlproduct with productrejected : productrejected($ERMSG)
 			} else {
@@ -582,9 +585,13 @@ QActor holdmanager context ctx_cargo {
 			
 		}
 	} 
+	Goto waitloading if [# !rejectedproduct #] else wait 
+	
+	State waitloading {
+		println("$name : waiting for loading") color blue 
+	}
 	Transition t
 		whenEvent productloaded -> updateHoldState
-	
 	// Aggiorna lo stato interno della stiva ed il contenuto del file JSON
 	State updateHoldState {
 		[# val waitingProd = waitingProduct #]

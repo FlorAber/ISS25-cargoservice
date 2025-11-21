@@ -35,7 +35,7 @@ public class HoldStateService {
     @GetMapping("/holdstate")
     public String getHoldState() {
         try {
-            IApplMessage request = CommUtils.buildRequest("webgui", "getholdstate", "getholdstate(X)", "hold");
+            IApplMessage request = CommUtils.buildRequest("webgui", "getholdstate", "getholdstate(X)", "holdmanager");
             IApplMessage response = conn.request(request);
             CommUtils.outblue("hold-state query response:" + response.msgContent());
             
@@ -57,28 +57,28 @@ public class HoldStateService {
         }
     }
     
-    @GetMapping("/robotstate")
-    public String getRobotState() {
-        try {
-            IApplMessage request = CommUtils.buildRequest("webgui", "getrobotstate", "getrobotstate(X)", "cargorobot");
-            IApplMessage response = conn.request(request);
-            CommUtils.outblue("robot-state query response:" + response.msgContent());
-            
-            String jsonString = response.msgContent().substring(
-                    "'robotstate(".length(), 
-                    response.msgContent().length() - 2
-                );
-            
-            JSONObject payload = HoldResponseParser.parseRobotState(jsonString);
-            if (payload != null) {
-                wsHandler.sendToAll(payload.toString());
-                return payload.toString();
-            } else {
-                return "{\"error\":\"payload nullo\"}";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "{\"error\":\"" + e.getMessage() + "\"}";
-        }
-    }
+//    @GetMapping("/robotstate")
+//    public String getRobotState() {
+//        try {
+//            IApplMessage request = CommUtils.buildRequest("webgui", "getrobotstate", "getrobotstate(X)", "cargorobot");
+//            IApplMessage response = conn.request(request);
+//            CommUtils.outblue("robot-state query response:" + response.msgContent());
+//            
+//            String jsonString = response.msgContent().substring(
+//                    "'robotstate(".length(), 
+//                    response.msgContent().length() - 2
+//                );
+//            
+//            JSONObject payload = HoldResponseParser.parseRobotState(jsonString);
+//            if (payload != null) {
+//                wsHandler.sendToAll(payload.toString());
+//                return payload.toString();
+//            } else {
+//                return "{\"error\":\"payload nullo\"}";
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return "{\"error\":\"" + e.getMessage() + "\"}";
+//        }
+//    }
 }

@@ -133,3 +133,21 @@ document
 
 // Initialize
 createSlots();
+
+function fetchInitalState() {
+  fetch(`/holdstate`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Errore HTTP: " + response.status);
+      }
+      return response.text();
+    })
+    .then((data) => {
+      updateUI(JSON.parse(data));
+    })
+    .catch((error) => {
+      infoBox.innerHTML = `<span class="error">Errore: ${error.message}</span>`;
+    });
+}
+
+fetchInitalState();
