@@ -67,11 +67,11 @@ public class HoldResponseParser {
 		}
 		
 		//Costruzione oggetti a partire da stringa JSON
-		System.out.println(jsonString);
-		JSONObject robotstate = new JSONObject(jsonString);
+		if(jsonString != null) {
+			JSONObject robotstate = new JSONObject(jsonString);	
+			payload.put("status", robotstate.getBoolean("status"));
+		}
 		
-		payload.put("status", robotstate.getBoolean("status"));
-            
 		return payload;
     }
 }

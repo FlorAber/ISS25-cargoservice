@@ -37,6 +37,7 @@ event( stopthesystem, stopthesystem(X) ).
 event( resumethesystem, resumethesystem(X) ).
 %====================================================================================
 context(ctx_cargo, "localhost",  "TCP", "8014").
+context(ctx_sensor, "192.168.202.118",  "TCP", "8016").
 context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
 context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  qactor( productservice, ctxproductservice, "external").

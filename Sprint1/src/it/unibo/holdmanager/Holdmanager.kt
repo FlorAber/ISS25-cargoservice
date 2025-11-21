@@ -94,7 +94,13 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 						}
 						else
 						 {CommUtils.outblue("$name : state file not found, initializing")
-						  resetState()  
+						  
+						 				resetState() 
+						 			    val state = HoldState(pids, names, weights, MAXLOAD)
+						 				val json = Json { prettyPrint = false }
+						 				val JSONSTATE = "'${json.encodeToString(state)}'"
+						 updateResourceRep( JSONSTATE  
+						 )
 						 }
 						forward("databaseready", "databaseready(0)" ,"cargoservice" ) 
 						//genTimer( actor, state )
