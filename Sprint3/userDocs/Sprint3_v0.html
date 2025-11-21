@@ -79,28 +79,33 @@
             Da requisiti la GUI deve essere accessibile via web, pertanto occorre implementarla come applicazione web-based. Questo consente di rendere la GUI accessibile
             da qualsiasi dispositivo dotato di un browser web, senza la necessità di installare software aggiuntivo.
             <br></br>
-            A questo scopo si suggerisce di utilizzare un framework di sviluppo come SpringBoot, il quale permette di sviluppare applicazioni web e miscroservizi in Java che riescano ad interfacciarsi agevolmente con i sistemi precedentemente implementati.
+            A questo scopo si suggerisce di utilizzare un framework di sviluppo come SpringBoot, 
+            il quale permette di sviluppare applicazioni web in Java
+            in grado di interfacciarsi agevolmente con i sistemi precedentemente implementati.
+            Si suggerisce pertanto di modellare la GUI non come attore a stati finiti ma come un'entità separata in grado di comunicare con cargoservice.
           </div>
         </div>
         <div class="textparagraph">
           <h3>Come estrarre le informazioni sullo stato della hold?</h3>
           <div class="textbody">
-            L'attore <strong>holdmanager</strong> mette a disposizione diversi
-            metodi per estrarre informazioni sulla hold. In particolare accetta
-            richieste <i>getholdstate</i> alle quali risponde con una stringa
-            JSON corrispondente allo stato attuale della hold e, in aggiunta a
-            questo, al termine del caricamento di un prodotto, emette un evento
-            <i>holdupdated</i> con il quale comunica il nuovo stato della hold.
-            Per questo si suggerisce di realizzare un nuovo attore
-            <strong>holdobserver</strong> che si occupi di sfruttare le
-            richieste e gli eventi appena descritti per mantenere nel proprio
-            stato interno una copia aggiornata dello stato della hold.
+            L'attore <strong>holdmanager</strong>, in esecuzione nel contesto <i>ctx_cargo</i>, contesto del corebusiness del sistema
+            aggiorna costantemente lo stato della hold in seguito al caricamento prodotti.
+            Per consentire alla GUI di visualizzare lo stato della hold, si possono esaminare molteplici modalità alternative, come ad esempio:
+            <ul>
+              <li>Implementare un'interfaccia RESTful nell'attore <strong>holdmanager</strong> per consentire alla GUI di effettuare richieste HTTP e ottenere lo stato della hold in formato JSON.</li>
+              <li>Utilizzare un sistema di messaggistica (ad esempio MQTT o WebSocket) per inviare aggiornamenti in tempo reale dalla holdmanager alla GUI ogni volta che lo stato della hold cambia.</li>
+              <li>Implementare un meccanismo di polling nella GUI che richieda periodicamente lo stato della hold all'attore holdmanager.</li>
+              <li>Prevedere l' aggiornamento di una risorsa CoAP da parte di <strong>holdmanager</strong> e recuperarne lo stato ad ogni cambiamento.</li>
+            </ul>
+            Si suggerisce di adottare l'ultima soluzione, in quanto coerente con le tecnologie già adottate nel sistema e con i paradigmi di comunicazione utilizzati,
+            inoltre in fase di progettazione dell'attore qak <strong>holdmanager</strong> è già stato previsto l'aggiornamento di una risorsa CoAP, che contiene la
+            descrizione dello stato della hold in formato JSON.
           </div>
         </div>
         <div class="textparagraph">
           <h3>Come visualizzare lo stato della hold in una GUI?</h3>
           <div class="textbody">
-            Le informazioni utili riguardanti la hold sono:
+            Le informazioni import riguardanti la hold che devono essere visualizzate sono:
             <ul>
               <li> Che slot sono occupati e le informazioni riguardanti i prodotti che contengono (PID, Nome, Peso)</li>
               <li> Peso totale della hold e peso massimo che può assumere</li>
@@ -110,12 +115,13 @@
             Per realizzare la GUI ed implementare le logiche necessarie all'estrazione dello stato della hold dal core business, si suggerisce di realizzare un progetto SpringBoot 
             Per estrarre le informazioni dall'attore <strong>holdobserver</strong> si consiglia di realizzare un progetto 
           </div>
+          </div>
       </div>
 
       <h2>Logical Architecture</h2>
       <div class="medium-12 text-center remark">
         <img
-          src="./resources/sprint2_logicalArch.png"
+          src="./resources/sprint3_logicalArch.png"
           class="text-center"
           alt="map"
           width="75%"
