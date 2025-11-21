@@ -41,10 +41,35 @@ public class HoldStateService {
             
             String jsonString = response.msgContent().substring(
                     "'holdstate(".length(), 
-                    response.msgContent().length() - 2 // Rimuovi il wrapper "'hold_update(" e il suffisso ")'"
+                    response.msgContent().length() - 2
                 );
             
             JSONObject payload = HoldResponseParser.parseHoldState(jsonString);
+            if (payload != null) {
+                wsHandler.sendToAll(payload.toString());
+                return payload.toString();
+            } else {
+                return "{\"error\":\"payload nullo\"}";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "{\"error\":\"" + e.getMessage() + "\"}";
+        }
+    }
+    
+    @GetMapping("/robotstate")
+    public String getRobotState() {
+        try {
+            IApplMessage request = CommUtils.buildRequest("webgui", "getrobotstate", "getrobotstate(X)", "cargorobot");
+            IApplMessage response = conn.request(request);
+            CommUtils.outblue("robot-state query response:" + response.msgContent());
+            
+            String jsonString = response.msgContent().substring(
+                    "'robotstate(".length(), 
+                    response.msgContent().length() - 2
+                );
+            
+            JSONObject payload = HoldResponseParser.parseRobotState(jsonString);
             if (payload != null) {
                 wsHandler.sendToAll(payload.toString());
                 return payload.toString();

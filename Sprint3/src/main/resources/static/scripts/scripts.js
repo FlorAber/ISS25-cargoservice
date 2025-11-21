@@ -1,11 +1,22 @@
-let ws = null;
 let robotMoving = false;
 let robotPosition = 30;
 let robotDirection = 1;
 let animationFrame = null;
 
-// Create slots
-function createSlots() {
+export function disconnectWebSocket() {
+  document.getElementById("connectionStatus").textContent = "⚠️ Disconnesso";
+  document.getElementById("connectionStatus").className =
+    "connection-status disconnected";
+}
+
+export function connectWebSocket() {
+  document.getElementById("connectionStatus").textContent = "✅ Connesso";
+  document.getElementById("connectionStatus").className =
+    "connection-status connected";
+}
+
+//Create slots
+function createSlots(jsonobj) {
   const container = document.getElementById("slotsContainer");
   container.innerHTML = "";
 
@@ -24,15 +35,15 @@ function createSlots() {
 }
 
 // Update UI with WebSocket data
-function updateUI(data) {
+export function updateUI(jsonobj) {
   let totalWeight = 0;
   let occupiedSlots = 0;
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < jsonobj.pids.length; i++) {
     const slotElement = document.getElementById(`slot${i + 1}`);
-    const pid = data.pids[i];
-    const name = data.names[i];
-    const weight = data.weights[i];
+    const pid = jsonobj.pids[i];
+    const name = jsonobj.names[i];
+    const weight = jsonobj.weights[i];
 
     // Update slot data
     document.getElementById(`pid${i + 1}`).textContent = pid || "-";
@@ -51,17 +62,7 @@ function updateUI(data) {
 
   // Update weight info
   document.getElementById("currentWeight").textContent = totalWeight;
-  document.getElementById("maxWeight").textContent = data.MAXLOAD || 0;
-
-  // Update status indicator
-  const statusIndicator = document.getElementById("statusIndicator");
-  if (occupiedSlots === 4) {
-    statusIndicator.textContent = "Sfondo Giallo - Magazzino Pieno";
-    statusIndicator.className = "status-indicator full";
-  } else {
-    statusIndicator.textContent = "Sfondo Verde - Magazzino Libero";
-    statusIndicator.className = "status-indicator empty";
-  }
+  document.getElementById("maxWeight").textContent = jsonobj.maxload || 0;
 }
 
 // Robot animation
@@ -86,61 +87,49 @@ function moveRobot() {
   animationFrame = requestAnimationFrame(moveRobot);
 }
 
-function startRobot() {
+export function startRobot() {
   if (!robotMoving) {
     robotMoving = true;
     moveRobot();
   }
 }
 
-function stopRobot() {
+export function stopRobot() {
   robotMoving = false;
   if (animationFrame) {
     cancelAnimationFrame(animationFrame);
   }
 }
 
-// Send request button
+//Send load requests
 document
   .getElementById("sendRequestBtn")
-  .addEventListener("click", function () {
-    const idenValue = document.getElementById("idenInput").value;
+  .addEventListener("click", function (e) {
+    e.preventDefault();
 
-    if (!idenValue || idenValue === "") {
-      alert("Inserisci un numero identificativo!");
+    const pid = document.getElementById("pidfield").value.trim();
+    const infoBox = document.getElementById("infobox");
+
+    if (!pid) {
+      document.getElementById("infobox").innerHTML =
+        "<span class='error'>Inserire PID</span>";
       return;
     }
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      // Send the identification number via WebSocket
-      const request = {
-        action: "request",
-        iden: parseInt(idenValue),
-        timestamp: Date.now(),
-      };
-      ws.send(JSON.stringify(request));
-      console.log("Richiesta inviata:", request);
-      alert("Richiesta inviata con ID: " + idenValue);
-    } else {
-      alert("WebSocket non connesso!");
-    }
+    fetch(`/loadrequest?pid=${encodeURIComponent(pid)}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Errore HTTP: " + response.status);
+        }
+        return response.text();
+      })
+      .then((data) => {
+        infoBox.innerHTML = data;
+      })
+      .catch((error) => {
+        infoBox.innerHTML = `<span class="error">Errore: ${error.message}</span>`;
+      });
   });
 
 // Initialize
 createSlots();
-
-// // Export functions for external control
-// window.startRobotMovement = startRobot;
-// window.stopRobotMovement = stopRobot;
-
-// document.addEventListener("DOMContentLoaded", function () {
-//   // ... tutto il codice ...
-
-//   // Avvia il robot in demo dopo 2 secondi
-//   setTimeout(function () {
-//     if (!ws || ws.readyState !== WebSocket.OPEN) {
-//       console.log("Starting robot animation");
-//       startRobot(); // Avvia l'animazione
-//     }
-//   }, 2000);
-// });

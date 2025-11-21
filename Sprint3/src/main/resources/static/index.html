@@ -7,14 +7,12 @@
     <link rel="stylesheet" href="./css/style.css" />
   </head>
   <body>
-    <div class="connection-status disconnected" id="connectionStatus">
-      ⚠️ Disconnesso - In attesa di connessione WebSocket
-    </div>
-
     <div class="container">
-      <div class="slots-container" id="slotsContainer">
-        <!-- Slots will be generated here -->
+      <div class="connection-status disconnected" id="connectionStatus">
+        ⚠️ Disconnesso
       </div>
+
+      <div class="slots-container" id="slotsContainer"></div>
 
       <div class="weight-info">
         <strong
@@ -38,7 +36,7 @@
           >
           <input
             type="number"
-            id="idenInput"
+            id="pidfield"
             style="
               width: 150px;
               padding: 8px;
@@ -52,10 +50,11 @@
         <button class="send-request-btn" id="sendRequestBtn">
           INVIA RICHIESTA
         </button>
+        <div class="infobox" id="infobox">Ciao</div>
       </div>
     </div>
 
-    <script src="./scripts/scripts.js"></script>
-    <script src="./scripts/wsminimal.js"></script>
+    <script type="module" src="./scripts/scripts.js"></script>
+    <script type="module" src="./scripts/wsminimal.js"></script>
   </body>
 </html>

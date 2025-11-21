@@ -81,6 +81,11 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("movetoioport") { //this:State
 					action { //it:State
+						  
+									moving = true;
+									var robotmoving = "{status:true}"; 
+						updateResourceRep( robotmoving  
+						)
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("load(SLOT)"), Term.createTerm("load(SLOT)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -96,7 +101,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												
 												
 												destination=DEST
-												moving = true
 												
 								CommUtils.outyellow("$name : moving robot to slot IOPORT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
@@ -114,6 +118,11 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("movetoslot") { //this:State
 					action { //it:State
+						  
+									moving = true;
+									var robotmoving = "{status:true}"; 
+						updateResourceRep( robotmoving  
+						)
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -128,7 +137,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val Y = getCurSol("TY").toString();
 												val D = getCurSol("TDIR").toString();
 												
-												moving = true
 												destination = DEST
 											
 								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
@@ -147,6 +155,11 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("movetohome") { //this:State
 					action { //it:State
+						  
+									moving = true;
+									var robotmoving = "{status:true}"; 
+						updateResourceRep( robotmoving  
+						)
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -158,9 +171,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												val Y = getCurSol("TY").toString();
 												val D = getCurSol("TDIR").toString();
 												
-												
-												
-												moving = true
 												destination = DEST
 											
 								CommUtils.outyellow("$name : moving robot to slot HOME at Position ($X,$Y)")
@@ -182,6 +192,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						 
 									moving = false
 									TARGETSLOT = -1 
+									var robotmoving = "{status:false}" 
+						updateResourceRep( robotmoving  
+						)
 						emit("productloaded", "productloaded($TARGETSLOT)" ) 
 						//genTimer( actor, state )
 					}
@@ -194,6 +207,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						CommUtils.outred("$name : system forced to stop ")
 						emit("alarm", "alarm(blokkabilly)" ) 
+							var robotmoving = "{status:false}"   
+						updateResourceRep( robotmoving  
+						)
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -225,11 +241,11 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 										val X = getCurSol("TX").toString();
 										val Y = getCurSol("TY").toString();
 										val D = getCurSol("TDIR").toString();
-										
-										
-										
+									
 										moving = true			
-						CommUtils.outblack("$X $Y $D")
+							var robotmoving = "{status:true}"   
+						updateResourceRep( robotmoving  
+						)
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
 						returnFromInterrupt(interruptedStateTransitions)

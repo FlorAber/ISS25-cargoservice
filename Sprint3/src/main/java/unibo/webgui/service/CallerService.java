@@ -33,7 +33,7 @@ public class CallerService {
         }
     }
 
-    @GetMapping("/caller")
+    @GetMapping("/loadrequest")
     public String callCargoservice(@RequestParam("pid") String pid) {
         try {
         	CommUtils.outblue("send request to cargoservice");

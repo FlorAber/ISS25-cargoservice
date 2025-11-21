@@ -7,7 +7,6 @@ import java.util.List;
 
 public class HoldResponseParser {
 	
-
     // Parsa una stringa JSON completa e restituisce un oggetto JSON 
 	// nel formato leggibile dalla webgui.
     public static JSONObject parseHoldState(String message) {
@@ -51,6 +50,27 @@ public class HoldResponseParser {
 		payload.put("pids", pids);
 		payload.put("names", names);
 		payload.put("weights", weights);
+            
+		return payload;
+    }
+    
+    public static JSONObject parseRobotState(String message) {
+    	String jsonString = null;
+		JSONObject payload = new JSONObject();
+		
+        // tolgo eventuali apici
+		if (message.startsWith("'") && message.endsWith("'")) {
+			jsonString = message.substring(1, message.length()-1);
+		} 
+		else if(message.startsWith("{")) {
+			jsonString = message;
+		}
+		
+		//Costruzione oggetti a partire da stringa JSON
+		System.out.println(jsonString);
+		JSONObject robotstate = new JSONObject(jsonString);
+		
+		payload.put("status", robotstate.getBoolean("status"));
             
 		return payload;
     }

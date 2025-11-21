@@ -47,5 +47,3 @@ context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  static(cargorobot).
   qactor( holdmanager, ctx_cargo, "it.unibo.holdmanager.Holdmanager").
  static(holdmanager).
-  qactor( mockuser, ctx_cargo, "it.unibo.mockuser.Mockuser").
- static(mockuser).
