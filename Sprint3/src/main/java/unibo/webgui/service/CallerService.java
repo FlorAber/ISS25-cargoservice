@@ -25,8 +25,6 @@ public class CallerService {
 
     public CallerService() {
         try {
-        	// usa questo da dentro i container
-//        	conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "arch3", "8000");
             conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
         } catch (Exception e) {
             System.err.println("Errore nella connessione TCP iniziale: " + e.getMessage());
@@ -45,7 +43,7 @@ public class CallerService {
         try {
         	CommUtils.outblue("send request to cargoservice");
     	 	IApplMessage getreq = CommUtils.buildRequest ("webgui", "loadrequest","loadrequest("+pid+")", "cargoservice");
-            IApplMessage answer = conn.request(getreq);  //raises exception
+            IApplMessage answer = conn.request(getreq);
             CommUtils.outgreen("response" + answer);
             return answer.msgContent();
         } catch (Exception e) {

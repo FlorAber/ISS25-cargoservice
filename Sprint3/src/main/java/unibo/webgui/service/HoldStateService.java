@@ -24,8 +24,6 @@ public class HoldStateService {
 
     public HoldStateService() {
         try {
-        	// usa questo da dentro i container
-//        	conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "arch3", "8000");
             conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
         } catch (Exception e) {
             System.err.println("Errore nella connessione TCP iniziale: " + e.getMessage());
@@ -57,28 +55,4 @@ public class HoldStateService {
         }
     }
     
-//    @GetMapping("/robotstate")
-//    public String getRobotState() {
-//        try {
-//            IApplMessage request = CommUtils.buildRequest("webgui", "getrobotstate", "getrobotstate(X)", "cargorobot");
-//            IApplMessage response = conn.request(request);
-//            CommUtils.outblue("robot-state query response:" + response.msgContent());
-//            
-//            String jsonString = response.msgContent().substring(
-//                    "'robotstate(".length(), 
-//                    response.msgContent().length() - 2
-//                );
-//            
-//            JSONObject payload = HoldResponseParser.parseRobotState(jsonString);
-//            if (payload != null) {
-//                wsHandler.sendToAll(payload.toString());
-//                return payload.toString();
-//            } else {
-//                return "{\"error\":\"payload nullo\"}";
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return "{\"error\":\"" + e.getMessage() + "\"}";
-//        }
-//    }
 }
