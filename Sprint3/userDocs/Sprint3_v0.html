@@ -131,7 +131,32 @@
       <h2>Test plans</h2>
 
       <h2>Project</h2>
+      <div class="remark">
+          Per lo sviluppo del progetto della web gui è stato scelto di adottare
+          il framework SpringBoot, un framework Java per lo sviluppo di applicazioni web
+          che dunque si integra bene con le tecnologie utilizzate nel sistema e le librerie
+          fornite dal committente.
+          <br>
+          Le classi principali del progetto sono:
+          <ul>
+            <li>CoapToWS: Client CoAP e gestione degli aggiornamenti.</li>
+            <li>WSHandler: Gestione WebSocket.</li>
+            <li>HoldStateService: Accesso TCP e interrogazione su richiesta dello stato.</li>
+          <div class="textparagraph">
+            <h3>comportamento CoapToWS</h3>
+            <div class="textbody">
+              La classe CoapToWS implementa un osservatore CoAP che si iscrive alla risorsa <i>holdstate</i>
+              esposta dall'attore <strong>holdmanager</strong>. Ogni volta che la risorsa viene aggiornata
+              l'osservatore riceve l'aggiornamento, estrae il payload della risposta e grazie ad una classe 
+              ausiliaria <strong>HoldResponseParser</strong> estrae le informazioni rilevanti dallo stato della hold quali 
+              pid, nome e peso dei prodotti caricati.
+              (lo stato della hold in formato JSON) e inoltrandolo a tutti i client WebSocket
+              connessi tramite la classe WSHandler.
+          </div>
+          </div>
 
+      </div>
+      
       <h2>System Design</h2>
 
       <div class="medium-12 text-center remark">
