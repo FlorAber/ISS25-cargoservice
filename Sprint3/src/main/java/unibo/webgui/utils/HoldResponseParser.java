@@ -7,8 +7,6 @@ import java.util.List;
 
 public class HoldResponseParser {
 	
-    // Parsa una stringa JSON completa e restituisce un oggetto JSON 
-	// nel formato leggibile dalla webgui.
     public static JSONObject parseHoldState(String message) {
         String jsonString = null;
 		JSONObject payload = new JSONObject();

@@ -35,70 +35,25 @@ class Mockuser ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						delay(3000) 
+						delay(100) 
 						CommUtils.outcyan("$name : starting")
+						CommUtils.outcyan("$name : loading productservice db")
+						 
+									val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
+									val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
+									val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
+									val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
+									val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
+						request("createProduct", "product($JsonObj1)" ,"productservice" )  
+						request("createProduct", "product($JsonObj2)" ,"productservice" )  
+						request("createProduct", "product($JsonObj3)" ,"productservice" )  
+						request("createProduct", "product($JsonObj4)" ,"productservice" )  
+						request("createProduct", "product($JsonObj5)" ,"productservice" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="load_test", cond=doswitch() )
-				}	 
-				state("load_test") { //this:State
-					action { //it:State
-						 COUNTLOADS++  
-						delay(5000) 
-						if(  COUNTLOADS < 5  
-						 ){CommUtils.outcyan("$name : richiesta! ")
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t33",targetState="deposit",cond=whenReply("loadaccepted"))
-					transition(edgeName="t34",targetState="loadFail",cond=whenReply("loadrejected"))
-				}	 
-				state("deposit") { //this:State
-					action { //it:State
-						CommUtils.outcyan("$name : PID found, proceeding to do Deposit")
-						delay(3000) 
-						emit("doDeposit", "doDeposit(1)" ) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t35",targetState="end",cond=whenEvent("productloaded"))
-				}	 
-				state("loadFail") { //this:State
-					action { //it:State
-						 ERROR = true  
-						if( checkMsgContent( Term.createTerm("loadrejected(X)"), Term.createTerm("loadrejected(ERRORPAYLOAD)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								 val ERRORPAYLOAD = payloadArg(0) 
-								CommUtils.outred("$name : $ERRORPAYLOAD")
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-				}	 
-				state("end") { //this:State
-					action { //it:State
-						if(  ERROR == true  
-						 ){CommUtils.outcyan("$name : Failed")
-						}
-						else
-						 {CommUtils.outcyan("$name : Success")
-						 }
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="load_test", cond=doswitch() )
 				}	 
 			}
 		}

@@ -48,6 +48,10 @@ javafx {
 }
 */
 
+bootBuildImage {
+    builder = "paketobuildpacks/builder-jammy-base"
+}
+
 dependencies {
     // Align versions of all Kotlin components
     implementation platform('org.jetbrains.kotlin:kotlin-bom')
@@ -166,6 +170,15 @@ application {
     }
     manifest {
         attributes 'Main-Class': "$mainClassName"
+    }
+}
+
+bootJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    // Includiamo anche i file prolog e json nel jar per sicurezza
+    from('./') {
+      include '*.pl'
+      include '*.json'
     }
 }
 

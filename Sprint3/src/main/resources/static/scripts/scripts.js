@@ -151,3 +151,56 @@ function fetchInitalState() {
 }
 
 fetchInitalState();
+
+// Funzioni di simulazione eventi sonar con esportazione
+function simulateSonarDetection() {
+  fetch(`/sonardetection`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Errore HTTP: " + response.status);
+      }
+      return response.text();
+    })
+    .then((data) => {
+      // updateUI(JSON.parse(data));
+    })
+    .catch((error) => {
+      infoBox.innerHTML = `<span class="error">Errore: ${error.message}</span>`;
+    });
+}
+
+function simulateSonarError() {
+  fetch(`/sonarerror`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Errore HTTP: " + response.status);
+      }
+      return response.text();
+    })
+    .then((data) => {
+      // updateUI(JSON.parse(data));
+    })
+    .catch((error) => {
+      infoBox.innerHTML = `<span class="error">Errore: ${error.message}</span>`;
+    });
+}
+
+function simulateSonarOk() {
+  fetch(`/sonarok`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Errore HTTP: " + response.status);
+      }
+      return response.text();
+    })
+    .then((data) => {
+      // updateUI(JSON.parse(data));
+    })
+    .catch((error) => {
+      infoBox.innerHTML = `<span class="error">Errore: ${error.message}</span>`;
+    });
+}
+
+window.simulateSonarDetection = simulateSonarDetection;
+window.simulateSonarError = simulateSonarError;
+window.simulateSonarOk = simulateSonarOk;

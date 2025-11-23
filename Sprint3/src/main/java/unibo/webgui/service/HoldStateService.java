@@ -24,7 +24,10 @@ public class HoldStateService {
 
     public HoldStateService() {
         try {
-            conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
+        	//Local development
+//            conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
+            //Docker image
+        	conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "sprint1_core", "8014");
         } catch (Exception e) {
             System.err.println("Errore nella connessione TCP iniziale: " + e.getMessage());
         }
@@ -55,4 +58,33 @@ public class HoldStateService {
         }
     }
     
+    @GetMapping("/sonardetection")
+    public void sonardetection() {
+        try {
+            IApplMessage request = CommUtils.buildEvent("webgui", "doDeposit", "X");
+            conn.forward(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @GetMapping("/sonarerror")
+    public void sonarerror() {
+        try {
+            IApplMessage request = CommUtils.buildEvent("webgui", "sonaralert", "X");
+            conn.forward(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @GetMapping("/sonarok")
+    public void sonarok() {
+        try {
+            IApplMessage request = CommUtils.buildEvent("webgui", "sonarok", "X");
+            conn.forward(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

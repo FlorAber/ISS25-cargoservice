@@ -104,8 +104,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 												
 								CommUtils.outyellow("$name : moving robot to slot IOPORT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-								delay(500) 
-								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
@@ -141,8 +139,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 											
 								CommUtils.outyellow("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-								delay(500) 
-								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
@@ -175,8 +171,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 											
 								CommUtils.outyellow("$name : moving robot to slot HOME at Position ($X,$Y)")
 								request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-								delay(500) 
-								forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						//genTimer( actor, state )
 					}
@@ -245,10 +239,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 							var robotmoving = "{status:true}"   
 						updateResourceRep( robotmoving  
 						)
-						CommUtils.outred("$name : destination $DEST ($X,$Y,$D) ")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-						delay(500) 
-						forward("setdirection", "dir($D)" ,"basicrobot" ) 
 						}
 						returnFromInterrupt(interruptedStateTransitions)
 						//genTimer( actor, state )
@@ -264,13 +255,14 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 								 	
 												val PLANDONE = payloadArg(0) 
 												val PLANTODO = payloadArg(1)
-								CommUtils.outyellow("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)")
+								CommUtils.outred("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)")
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="wait", cond=doswitch() )
 				}	 
 			}
 		}

@@ -1,0 +1,31 @@
+# Initialization:
+# run the command: docker load -i *.tar 
+# this loads every tar image contained in this directory, mandatory for the system to work
+
+services:
+  sprint1_core:
+    image: sprint1_core:1.0       
+    container_name: sprint1_core
+    environment:
+      - SERVICE_IP=sprint1_core
+    ports:
+      - "8014:8014/tcp"   #tcp for loading requests
+      - "8014:8014/udp"   #udp for coap observation  
+    networks:
+      - cargoservice-network
+    restart: unless-stopped
+
+  webgui:
+    image: webgui:latest      
+    container_name: webgui
+    environment:
+      - SERVICE_IP=webgui
+    ports:
+      - "8080:8080/tcp"   
+    networks:
+      - cargoservice-network
+    restart: unless-stopped
+
+networks:
+  cargoservice-network:
+    external: true

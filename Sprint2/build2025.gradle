@@ -45,6 +45,10 @@ javafx {
 }
 */
 
+bootBuildImage {
+    builder = "paketobuildpacks/builder-jammy-base"
+}
+
 dependencies {
     // Align versions of all Kotlin components
     implementation platform('org.jetbrains.kotlin:kotlin-bom')
@@ -172,9 +176,9 @@ task dovesiamo {
 
 distributions {
     main {
-        distributionBaseName = 'sprint2_sensors_model'
+        distributionBaseName = 'sprint2_sensor'
         contents { 
-             from './sprint2_sensors_model.pl'
+             from './sprint2_sensor.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
         }

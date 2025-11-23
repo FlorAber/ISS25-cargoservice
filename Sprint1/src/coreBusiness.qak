@@ -1,4 +1,4 @@
-System sprint1_system_overview
+System sprint1_core
 
 // MESSAGGI DI AVVIO DEL SISTEMA IL cargoservice PARTE DOPO AVERLI RICEVUTI ENTRAMBI INVIANDOSI UN allRady
 Dispatch robotready : robotready(0)
@@ -7,7 +7,7 @@ Dispatch databaseready : databaseready(0)
 Dispatch allready : allReady(0)
 
 // MOCK
-//Request createProduct : product(JSonString) // mock to productservice - DA USARE PER CARICARE PRODOTTI NEL DB, SOLO PRIMO AVVIO
+Request createProduct : product(JSonString) // mock to productservice - DA USARE PER CARICARE PRODOTTI NEL DB, SOLO PRIMO AVVIO
 
 // Load request, starting point of the whole scenary
 Request loadrequest: loadrequest(PID)				 // mock to cargoservice
@@ -69,13 +69,15 @@ Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli
 // ------------------------------------------------------------------------
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
-//Context ctx_test   ip  [host="127.0.0.1" port=8050]
-//Context ctx_sensor  ip  [host="192.168.202.118" port=8016] //ciac
-Context ctx_sensor  ip  [host="172.20.10.13" port=8016]		 //flor
-
-
 Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
 Context ctxproductservice ip [ host="127.0.0.1" port=8111]
+//Context ctx_sensor  ip  [host="192.168.202.118" port=8016] //ciac
+//Context ctx_sensor  ip  [host="172.20.10.13" port=8016]    //flor
+
+//Contexts for docker images
+//Context ctx_sensor ip [host="sprint2_sensor" port=8016]
+//Context ctx_basicrobot  ip  [host="basicrobot24" port=8020]
+//Context ctxproductservice ip [ host="cargoserviceqak" port=8111]
 
 ExternalQActor productservice context ctxproductservice
 ExternalQActor basicrobot context ctx_basicrobot
@@ -277,8 +279,8 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot IOPORT at Positions ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			delay 500
-			forward basicrobot -m setdirection:dir($D)
+//			delay 500
+//			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t 
@@ -315,8 +317,8 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot $TARGETSLOT at Positions ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			delay 500
-			forward basicrobot -m setdirection:dir($D)
+//			delay 500
+//			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t
@@ -348,8 +350,8 @@ QActor cargorobot context ctx_cargo {
 			
 			println("$name : moving robot to slot HOME at Position ($X,$Y)") color yellow
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			delay 500
-			forward basicrobot -m setdirection:dir($D)
+//			delay 500
+//			forward basicrobot -m setdirection:dir($D)
 		}
 	}
 	Transition t
@@ -405,10 +407,9 @@ QActor cargorobot context ctx_cargo {
 			[#	var robotmoving = "{status:true}"  #]
 			updateResource [# robotmoving #]
 			
-			println("$name : destination $DEST ($X,$Y,$D) ") color red
 			request basicrobot -m moverobot:moverobot($X,$Y)
-			delay 500
-			forward basicrobot -m setdirection:dir($D)
+//			delay 500
+//			forward basicrobot -m setdirection:dir($D)
 		}
 		returnFromInterrupt
 	}
@@ -419,9 +420,10 @@ QActor cargorobot context ctx_cargo {
 				val PLANDONE = payloadArg(0) 
 				val PLANTODO = payloadArg(1)
 			#]
-			println("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)") color yellow
+			println("$name : robot movement ended with failure - done($PLANDONE) todo($PLANTODO)") color red
 		}
 	}
+	Goto wait
 	
 }
 
@@ -627,33 +629,33 @@ QActor holdmanager context ctx_cargo {
 	Goto wait
 }
 //
-//QActor mockuser context ctx_cargo {
-//	
-//	[#
-//		var ERROR = false;
-//		var COUNTLOADS = 0
-//	#]
-//	
-//	State s0 initial{
-//		delay 3000
-//		println("$name : starting") color cyan 
-////		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
-////		println("$name : loading productservice db") color cyan 
-////		[# 
-////			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
-////			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
-////			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
-////			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
-////			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
-////		#]
-////		request productservice -m createProduct : product($JsonObj1)
-////		request productservice -m createProduct : product($JsonObj2)
-////		request productservice -m createProduct : product($JsonObj3)
-////		request productservice -m createProduct : product($JsonObj4)
-////		request productservice -m createProduct : product($JsonObj5)
-//
-//	} 
-//	Goto load_test
+QActor mockuser context ctx_cargo {
+	
+	[#
+		var ERROR = false;
+		var COUNTLOADS = 0
+	#]
+	
+	State s0 initial{
+		delay 100
+		println("$name : starting") color cyan 
+		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
+		println("$name : loading productservice db") color cyan 
+		[# 
+			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
+			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
+			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
+			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
+			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
+		#]
+		request productservice -m createProduct : product($JsonObj1)
+		request productservice -m createProduct : product($JsonObj2)
+		request productservice -m createProduct : product($JsonObj3)
+		request productservice -m createProduct : product($JsonObj4)
+		request productservice -m createProduct : product($JsonObj5)
+
+	} 
+}
 //	
 //	State load_test{
 //		

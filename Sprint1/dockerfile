@@ -1,0 +1,19 @@
+# Usiamo un'immagine JRE standard (compatibile con M1/M2/M3)
+FROM eclipse-temurin:17-jre-jammy
+
+WORKDIR /app
+
+# 1. Copiamo il JAR creato con bootJar (assicurati di aver fatto il passo 1!)
+# Il nome del file dipende dal nome progetto e versione in gradle
+COPY build/libs/*.jar app.jar
+
+# 2. Copiamo i file essenziali (.pl e .json) nella root di lavoro
+# Questo serve perché il tuo codice Prolog spesso li cerca nella "current directory"
+COPY *.pl .
+COPY *.json .
+
+# 3. Esponiamo la porta (se usi Spring/Tomcat di solito è la 8080)
+EXPOSE 8014
+
+# 4. Avvio
+ENTRYPOINT ["java", "-jar", "app.jar"]

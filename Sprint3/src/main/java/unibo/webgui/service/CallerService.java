@@ -25,17 +25,15 @@ public class CallerService {
 
     public CallerService() {
         try {
-            conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
+        	//Local development
+//            conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
+            //Docker image
+        	conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "sprint1_core", "8014");
+            CommUtils.outgreen("Connessione TCP creata correttamente");
         } catch (Exception e) {
             System.err.println("Errore nella connessione TCP iniziale: " + e.getMessage());
         }
-        try {
-            conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
-            CommUtils.outgreen("Connessione TCP creata correttamente");
-        } catch (Exception e) {
-            e.printStackTrace(); 
-            conn = null;
-        }
+        
     }
 
     @GetMapping("/loadrequest")

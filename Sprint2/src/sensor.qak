@@ -1,4 +1,4 @@
-System sprint2_sensors_model
+System sprint2_sensor
 
 Event doDeposit : doDeposit(X) 					 // user to cargoservice
 Event waitingForDeposit : waitingfordeposit(X)    // sent after load request accepted, used to trigger the sonar sensor

@@ -1,5 +1,5 @@
 %====================================================================================
-% sprint1_system_overview description   
+% sprint1 description   
 %====================================================================================
 dispatch( robotready, robotready(0) ).
 dispatch( databaseready, databaseready(0) ).

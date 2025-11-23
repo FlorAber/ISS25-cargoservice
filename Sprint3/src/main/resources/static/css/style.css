@@ -137,6 +137,18 @@ body {
   background: #1d4ed8;
 }
 
+.simulate-btn {
+  background: #d2e3ff;
+  color: rgb(91, 91, 91);
+  border: 1px solid black;
+  cursor: pointer;
+  padding: 8px 20px;
+}
+
+.simulate-btn:hover {
+  background: #8191aa;
+}
+
 .connection-status {
   display: flex;
   gap: 30px;
