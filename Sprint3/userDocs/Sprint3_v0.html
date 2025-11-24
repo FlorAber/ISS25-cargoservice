@@ -127,6 +127,17 @@
       </div>
 
       <h2>Test plans</h2>
+      <div class="remark">
+        Il piano di test si concentra sulla validazione end-to-end dell'integrazione tra REST API, 
+        WebSocket e backend CoAP. Il test principale testCompleteLoadRequestFlow() simula l'intero 
+        ciclo di vita di una richiesta di carico: richiesta dello stato iniziale via /holdstate, 
+        invio di una load request per un nuovo pacco, simulazione dell'aggiornamento CoAP dal backend, 
+        e verifica che gli aggiornamenti siano propagati correttamente via WebSocket a tutti i client connessi. 
+        Il test utilizza JUnit 5, Spring Boot Test con server embedded su porta randomica, e attori mock per simulare 
+        le risposte del backend senza dipendenze esterne. Un WebSocket client dedicato raccoglie i messaggi in 
+        una coda asincrona per verificare che gli aggiornamenti in tempo reale siano coerenti con lo stato 
+        ottenuto tramite REST API, garantendo l'integrità dell'intera catena di comunicazione.
+      </div>
 
       <h2>Project</h2>
       <div class="remark">
