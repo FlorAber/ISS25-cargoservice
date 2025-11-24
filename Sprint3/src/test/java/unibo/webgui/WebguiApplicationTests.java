@@ -61,20 +61,20 @@ class WebguiApplicationTest {
                     new TextWebSocketHandler() {
                         @Override
                         public void afterConnectionEstablished(WebSocketSession session) {
-                            System.out.println("✓ WebSocket connesso");
+                            System.out.println("WebSocket connesso");
                             sessionFuture.complete(session);
                         }
 
                         @Override
                         protected void handleTextMessage(WebSocketSession session, TextMessage message) {
                             String payload = message.getPayload();
-                            System.out.println("📨 WebSocket ricevuto: " + payload);
+                            System.out.println("WebSocket ricevuto: " + payload);
                             receivedMessages.add(payload);
                         }
 
                         @Override
                         public void handleTransportError(WebSocketSession session, Throwable exception) {
-                            System.err.println("❌ Errore WebSocket: " + exception.getMessage());
+                            System.err.println("Errore WebSocket: " + exception.getMessage());
                             sessionFuture.completeExceptionally(exception);
                         }
                     },
