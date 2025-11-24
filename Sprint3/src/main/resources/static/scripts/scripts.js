@@ -151,6 +151,7 @@ function fetchInitalState() {
 }
 
 fetchInitalState();
+//const interval = setInterval(fetchInitalState, 2000);
 
 // Funzioni di simulazione eventi sonar con esportazione
 function simulateSonarDetection() {

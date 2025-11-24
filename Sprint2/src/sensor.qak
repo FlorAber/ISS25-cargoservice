@@ -1,6 +1,6 @@
 System sprint2_sensor
 
-Event doDeposit : doDeposit(X) 					 // user to cargoservice
+Event doDeposit : doDeposit(X) 					  // user to cargoservice
 Event waitingForDeposit : waitingfordeposit(X)    // sent after load request accepted, used to trigger the sonar sensor
 Event stopWaitingForDeposit : stopWaitingForDeposit(X)
 
@@ -10,7 +10,8 @@ Event sonarok    : sonarok(X)		 // terminato stato di alert
 Dispatch measurement	: measurement(CM) // evento di invio della misurazione rilevata
 
 //Context ctx_cargo  ip  [host="192.168.202.158" port=8014]
-Context ctx_cargo  ip  [host="172.20.10.10" port=8014]
+Context ctx_cargo  ip  [host="172.20.10.10" port=8014] 
+//Context ctx_cargo ip  [host="sprint1_core" port=8014]
 Context ctx_sensor  ip  [host="localhost" port=8016]
 
 /*

@@ -178,9 +178,8 @@ distributions {
     main {
         distributionBaseName = 'sprint2_sensors_model'
         contents { 
-             from './sprint2_sensors_model.pl'
-             from './sysRules.pl'
-             from './facadeConfig.json'
+             from './*.pl'
+			 from './resources/*.py'
         }
     }
 } 

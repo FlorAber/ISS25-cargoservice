@@ -1,6 +1,7 @@
 %====================================================================================
 % sprint1_core description   
 %====================================================================================
+mqttBroker("mosquitto", "1883", "coreevents").
 dispatch( robotready, robotready(0) ).
 dispatch( databaseready, databaseready(0) ).
 dispatch( allready, allReady(0) ).
@@ -30,6 +31,7 @@ reply( moverobotfailed, moverobotfailed(PLANDONE,PLANTODO) ).  %%for moverobot
 dispatch( setdirection, dir(D) ).
 dispatch( setrobotstate, setpos(X,Y,D) ).
 event( alarm, alarm(ARG) ).
+event( robotstate, robotstate(JSONSTATE) ).
 request( getProduct, product(ID) ).
 reply( getProductAnswer, product(JSONSTRING) ).  %%for getProduct
 event( sonaralert, sonaralert(X) ).
@@ -38,8 +40,9 @@ event( stopthesystem, stopthesystem(X) ).
 event( resumethesystem, resumethesystem(X) ).
 %====================================================================================
 context(ctx_cargo, "localhost",  "TCP", "8014").
-context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
-context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
+context(ctx_sensor, "172.20.10.13",  "TCP", "8016").
+context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
+context(ctxproductservice, "cargoserviceqak",  "TCP", "8111").
  qactor( productservice, ctxproductservice, "external").
   qactor( basicrobot, ctx_basicrobot, "external").
   qactor( cargoservice, ctx_cargo, "it.unibo.cargoservice.Cargoservice").
@@ -48,5 +51,3 @@ context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  static(cargorobot).
   qactor( holdmanager, ctx_cargo, "it.unibo.holdmanager.Holdmanager").
  static(holdmanager).
-  qactor( mockuser, ctx_cargo, "it.unibo.mockuser.Mockuser").
- static(mockuser).

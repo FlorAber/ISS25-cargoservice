@@ -27,6 +27,7 @@ services:
     container_name: mosquitto
     environment:
       - MQTT_ALLOW_ANONYMOUS=true
+      - SERVICE_IP=mosquitto
     ports:
       - 1883:1883
       - 9001:9001

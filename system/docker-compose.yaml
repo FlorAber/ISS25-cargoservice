@@ -25,6 +25,7 @@ services:
     networks:
       - cargoservice-network
     restart: unless-stopped
+    depends_on: [sprint1_core]
 
 networks:
   cargoservice-network:

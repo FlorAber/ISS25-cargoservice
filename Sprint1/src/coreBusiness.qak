@@ -1,5 +1,11 @@
 System sprint1_core
 
+//Local development
+//mqttBroker "127.0.0.1" : 1883 eventTopic "coreevents"
+
+//Docker images
+mqttBroker "mosquitto" : 1883 eventTopic "coreevents"
+
 // MESSAGGI DI AVVIO DEL SISTEMA IL cargoservice PARTE DOPO AVERLI RICEVUTI ENTRAMBI INVIANDOSI UN allRady
 Dispatch robotready : robotready(0)
 Dispatch databaseready : databaseready(0)
@@ -51,6 +57,8 @@ Dispatch setrobotstate: setpos(X,Y,D)
 
 Event alarm : alarm(ARG) 
 
+Event robotstate : robotstate(JSONSTATE)
+
 //Dispatch disengage    : disengage(ARG)
  
 //holdmanager to productservice
@@ -69,15 +77,15 @@ Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli
 // ------------------------------------------------------------------------
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
-Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
-Context ctxproductservice ip [ host="127.0.0.1" port=8111]
+//Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
+//Context ctxproductservice ip [ host="127.0.0.1" port=8111]
 //Context ctx_sensor  ip  [host="192.168.202.118" port=8016] //ciac
-//Context ctx_sensor  ip  [host="172.20.10.13" port=8016]    //flor
+Context ctx_sensor  ip  [host="172.20.10.13" port=8016]      //flor
 
 //Contexts for docker images
 //Context ctx_sensor ip [host="sprint2_sensor" port=8016]
-//Context ctx_basicrobot  ip  [host="basicrobot24" port=8020]
-//Context ctxproductservice ip [ host="cargoserviceqak" port=8111]
+Context ctx_basicrobot  ip  [host="basicrobot24" port=8020]
+Context ctxproductservice ip [ host="cargoserviceqak" port=8111]
 
 ExternalQActor productservice context ctxproductservice
 ExternalQActor basicrobot context ctx_basicrobot
@@ -254,9 +262,11 @@ QActor cargorobot context ctx_cargo {
 		
 		[#  
 			moving = true;
-			var robotmoving = "{status:true}"; 
+			var ROBOTMOVING = "{status:true}"; 
 		#]
-		updateResource [# robotmoving #]
+		updateResource [# ROBOTMOVING #]		
+		emit robotstate : robotstate($ROBOTMOVING)
+		
 		
 		delay 2000
 		onMsg (load : load(SLOT)) {
@@ -292,9 +302,10 @@ QActor cargorobot context ctx_cargo {
 		
 		[#  
 			moving = true;
-			var robotmoving = "{status:true}"; 
+			var ROBOTMOVING = "{status:true}"; 
 		#]
-		updateResource [# robotmoving #]
+		updateResource [# ROBOTMOVING #]		
+		emit robotstate : robotstate($ROBOTMOVING)
 		
 		delay 2000
 		onMsg ( moverobotdone : moverobotdone(ARG)) {
@@ -330,9 +341,10 @@ QActor cargorobot context ctx_cargo {
 		
 		[#  
 			moving = true;
-			var robotmoving = "{status:true}"; 
+			var ROBOTMOVING = "{status:true}"; 
 		#]
-		updateResource [# robotmoving #]
+		updateResource [# ROBOTMOVING #]		
+		emit robotstate : robotstate($ROBOTMOVING)
 		
 		delay 2000
 		onMsg ( moverobotdone : moverobotdone(ARG)) {
@@ -363,9 +375,10 @@ QActor cargorobot context ctx_cargo {
 		[# 
 			moving = false
 			TARGETSLOT = -1 
-			var robotmoving = "{status:false}" 
+			var ROBOTMOVING = "{status:false}"; 
 		#]
-		updateResource [# robotmoving #]
+		updateResource [# ROBOTMOVING #]		
+		emit robotstate : robotstate($ROBOTMOVING)
 		
 		emit productloaded :  productloaded($TARGETSLOT)
 	}
@@ -375,8 +388,9 @@ QActor cargorobot context ctx_cargo {
 		println("$name : system forced to stop ") color red
 		emit alarm : alarm(blokkabilly)
 		
-		[#	var robotmoving = "{status:false}"  #]
-		updateResource [# robotmoving #]
+		[#	var ROBOTMOVING = "{status:false}"  #]
+		updateResource [# ROBOTMOVING #]
+		emit robotstate : robotstate($ROBOTMOVING)
 	}
 	Transition t
 		whenReply moverobotdone   -> robotStopped  // risposta ad alarm in caso di interruzione alla fine del movimento
@@ -404,8 +418,9 @@ QActor cargorobot context ctx_cargo {
 				moving = true			
 			#]
 			
-			[#	var robotmoving = "{status:true}"  #]
-			updateResource [# robotmoving #]
+			[#	var ROBOTMOVING = "{status:true}"  #]
+			updateResource [# ROBOTMOVING #]
+			emit robotstate : robotstate($ROBOTMOVING)
 			
 			request basicrobot -m moverobot:moverobot($X,$Y)
 //			delay 500
@@ -496,6 +511,7 @@ QActor holdmanager context ctx_cargo {
 				
 			#]
 			updateResource [# JSONSTATE #]
+			emit holdupdated : holdupdated($JSONSTATE)
 		} else {
 			println("$name : state file not found, initializing") color blue 
 			[# 
@@ -505,6 +521,7 @@ QActor holdmanager context ctx_cargo {
 				val JSONSTATE = "'${json.encodeToString(state)}'"
 			#]
 			updateResource [# JSONSTATE #]
+			emit holdupdated : holdupdated($JSONSTATE)
 		}
 		
 		forward cargoservice -m databaseready : databaseready(0)
@@ -629,33 +646,33 @@ QActor holdmanager context ctx_cargo {
 	Goto wait
 }
 //
-QActor mockuser context ctx_cargo {
-	
-	[#
-		var ERROR = false;
-		var COUNTLOADS = 0
-	#]
-	
-	State s0 initial{
-		delay 100
-		println("$name : starting") color cyan 
-		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
-		println("$name : loading productservice db") color cyan 
-		[# 
-			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
-			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
-			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
-			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
-			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
-		#]
-		request productservice -m createProduct : product($JsonObj1)
-		request productservice -m createProduct : product($JsonObj2)
-		request productservice -m createProduct : product($JsonObj3)
-		request productservice -m createProduct : product($JsonObj4)
-		request productservice -m createProduct : product($JsonObj5)
-
-	} 
-}
+//QActor mockuser context ctx_cargo {
+//	
+//	[#
+//		var ERROR = false;
+//		var COUNTLOADS = 0
+//	#]
+//	
+//	State s0 initial{
+//		delay 100
+//		println("$name : starting") color cyan 
+//		// CODE NEEDED TO LOAD MONGODB AT THE FIRST BOOT OF THE SYSTEM 
+//		println("$name : loading productservice db") color cyan 
+//		[# 
+//			val JsonObj1 = "'{\"productId\":1,\"name\":\"p1\",\"weight\":10}'" 
+//			val JsonObj2 = "'{\"productId\":2,\"name\":\"p2\",\"weight\":20}'" 
+//			val JsonObj3 = "'{\"productId\":3,\"name\":\"p3\",\"weight\":30}'" 
+//			val JsonObj4 = "'{\"productId\":4,\"name\":\"p4\",\"weight\":40}'" 
+//			val JsonObj5 = "'{\"productId\":5,\"name\":\"p5\",\"weight\":200}'" 
+//		#]
+//		request productservice -m createProduct : product($JsonObj1)
+//		request productservice -m createProduct : product($JsonObj2)
+//		request productservice -m createProduct : product($JsonObj3)
+//		request productservice -m createProduct : product($JsonObj4)
+//		request productservice -m createProduct : product($JsonObj5)
+//
+//	} 
+//}
 //	
 //	State load_test{
 //		

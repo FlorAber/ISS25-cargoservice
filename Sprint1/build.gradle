@@ -198,6 +198,8 @@ distributions {
              from './pointPicker.pl'
         }
     }
+    
+    
 } 
 
 task run0(type: JavaExec) {

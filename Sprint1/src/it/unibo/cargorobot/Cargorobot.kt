@@ -83,9 +83,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						  
 									moving = true;
-									var robotmoving = "{status:true}"; 
-						updateResourceRep( robotmoving  
+									var ROBOTMOVING = "{status:true}"; 
+						updateResourceRep( ROBOTMOVING  
 						)
+						emit("robotstate", "robotstate($ROBOTMOVING)" ) 
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("load(SLOT)"), Term.createTerm("load(SLOT)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -118,9 +119,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						  
 									moving = true;
-									var robotmoving = "{status:true}"; 
-						updateResourceRep( robotmoving  
+									var ROBOTMOVING = "{status:true}"; 
+						updateResourceRep( ROBOTMOVING  
 						)
+						emit("robotstate", "robotstate($ROBOTMOVING)" ) 
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -153,9 +155,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						  
 									moving = true;
-									var robotmoving = "{status:true}"; 
-						updateResourceRep( robotmoving  
+									var ROBOTMOVING = "{status:true}"; 
+						updateResourceRep( ROBOTMOVING  
 						)
+						emit("robotstate", "robotstate($ROBOTMOVING)" ) 
 						delay(2000) 
 						if( checkMsgContent( Term.createTerm("moverobotdone(ARG)"), Term.createTerm("moverobotdone(ARG)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
@@ -186,9 +189,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						 
 									moving = false
 									TARGETSLOT = -1 
-									var robotmoving = "{status:false}" 
-						updateResourceRep( robotmoving  
+									var ROBOTMOVING = "{status:false}"; 
+						updateResourceRep( ROBOTMOVING  
 						)
+						emit("robotstate", "robotstate($ROBOTMOVING)" ) 
 						emit("productloaded", "productloaded($TARGETSLOT)" ) 
 						//genTimer( actor, state )
 					}
@@ -201,9 +205,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						CommUtils.outred("$name : system forced to stop ")
 						emit("alarm", "alarm(blokkabilly)" ) 
-							var robotmoving = "{status:false}"   
-						updateResourceRep( robotmoving  
+							var ROBOTMOVING = "{status:false}"   
+						updateResourceRep( ROBOTMOVING  
 						)
+						emit("robotstate", "robotstate($ROBOTMOVING)" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -236,9 +241,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 										val D = getCurSol("TDIR").toString();
 									
 										moving = true			
-							var robotmoving = "{status:true}"   
-						updateResourceRep( robotmoving  
+							var ROBOTMOVING = "{status:true}"   
+						updateResourceRep( ROBOTMOVING  
 						)
+						emit("robotstate", "robotstate($ROBOTMOVING)" ) 
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						}
 						returnFromInterrupt(interruptedStateTransitions)

@@ -45,10 +45,6 @@ javafx {
 }
 */
 
-bootBuildImage {
-    builder = "paketobuildpacks/builder-jammy-base"
-}
-
 dependencies {
     // Align versions of all Kotlin components
     implementation platform('org.jetbrains.kotlin:kotlin-bom')

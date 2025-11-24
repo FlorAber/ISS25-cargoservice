@@ -94,6 +94,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 										
 						updateResourceRep( JSONSTATE  
 						)
+						emit("holdupdated", "holdupdated($JSONSTATE)" ) 
 						}
 						else
 						 {CommUtils.outblue("$name : state file not found, initializing")
@@ -104,6 +105,7 @@ class Holdmanager ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 						 				val JSONSTATE = "'${json.encodeToString(state)}'"
 						 updateResourceRep( JSONSTATE  
 						 )
+						 emit("holdupdated", "holdupdated($JSONSTATE)" ) 
 						 }
 						forward("databaseready", "databaseready(0)" ,"cargoservice" ) 
 						//genTimer( actor, state )

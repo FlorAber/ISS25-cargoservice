@@ -60,6 +60,7 @@ public class HoldStateService {
     
     @GetMapping("/sonardetection")
     public void sonardetection() {
+    	CommUtils.outblue("sent detection");
         try {
             IApplMessage request = CommUtils.buildEvent("webgui", "doDeposit", "X");
             conn.forward(request);
