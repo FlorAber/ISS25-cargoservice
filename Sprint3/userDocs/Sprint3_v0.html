@@ -63,7 +63,7 @@
         Il sistema deve soddisfare il seguente requisito:
         <ul>
           <li>
-            Deve fornire un'interfaccia grafica web dinamica che consenta agli
+            Deve fornire un'interfaccia grafica web che consenta agli
             utenti di visualizzare in tempo reale lo stato della hold.
           </li>
         </ul>
@@ -533,6 +533,38 @@ public class CallerService {
       </div>
 
       <h2>Considerazioni finali e Deployment</h2>
+      <div class="remark">
+        Per l'esecuzione del sistema è necessario avviare preliminarmente i servizi
+        definiti nel file: <code>yamls/docker-compose-unified.yaml</code>.<br/>
+        I componenti del sistema vengono eseguiti come segue:
+        <ul>
+          <li>
+            Avviare il container Docker <code>cargoservice</code> tramite il comando:
+            <code>docker compose -f system/docker-compose.yaml up sprint1_core</code>.
+          </li>
+          <li>
+            Avviare il container Docker <code>webgui</code> che esegue la GUI
+            web sviluppata in questo sprint con <code>docker compose -f system/docker-compose.yaml up webgui</code>.
+          </li>
+            
+          <li> Il componente sensors è stato implementato nel progetto gradle 
+            contenuto all'interno della directory <code>Sprint2</code> e può essere lanciato
+             caricando sul RaspberryPi il contenuto della directory <code>Sprint2/build/libs/</code> ed eseguendo
+              l'archivio <code>sprint2_sensors_model-1.0.jar</code> tramite il comando: <code>java -jar sprint2_sensors_model-1.0.jar</code>
+          </li>
+          <li>
+            Accedere alla GUI web tramite un browser web all'indirizzo:
+            <code>http://localhost:8080</code>.
+            
+          </li>
+        </ul>
+        Per l'esecuzione di cargoservice e webgui sulla stessa macchina, è sufficiente eseguire il comando:
+        <code>docker compose -f system/docker-compose.yaml up</code>.
+<br>
+        Per la versione del sistema con i rilevamenti simulati e non su raspberryPi, è possibile tramite webgui 
+        specificare la modalità di funzionamento dei sensori (reale o simulata).
+
+      </div>
 
       <footer class="footer">
         <div class="grid-container fluid">
