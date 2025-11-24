@@ -25,9 +25,9 @@ public class HoldStateService {
     public HoldStateService() {
         try {
         	//Local development
-//            conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
+            conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "127.0.0.1", "8014");
             //Docker image
-        	conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "sprint1_core", "8014");
+//        	conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, "sprint1_core", "8014");
         } catch (Exception e) {
             System.err.println("Errore nella connessione TCP iniziale: " + e.getMessage());
         }

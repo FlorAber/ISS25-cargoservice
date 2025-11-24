@@ -4,7 +4,7 @@ System sprint1_core
 //mqttBroker "127.0.0.1" : 1883 eventTopic "coreevents"
 
 //Docker images
-mqttBroker "mosquitto" : 1883 eventTopic "coreevents"
+//mqttBroker "mosquitto" : 1883 eventTopic "coreevents"
 
 // MESSAGGI DI AVVIO DEL SISTEMA IL cargoservice PARTE DOPO AVERLI RICEVUTI ENTRAMBI INVIANDOSI UN allRady
 Dispatch robotready : robotready(0)
@@ -77,15 +77,15 @@ Event resumethesystem:resumethesystem(X)	// Evento interno per far ripartire gli
 // ------------------------------------------------------------------------
 
 Context ctx_cargo  ip  [host="localhost" port=8014]
-//Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
-//Context ctxproductservice ip [ host="127.0.0.1" port=8111]
+Context ctx_basicrobot  ip  [host="127.0.0.1" port=8020]
+Context ctxproductservice ip [ host="127.0.0.1" port=8111]
 //Context ctx_sensor  ip  [host="192.168.202.118" port=8016] //ciac
-Context ctx_sensor  ip  [host="172.20.10.13" port=8016]      //flor
+//Context ctx_sensor  ip  [host="172.20.10.13" port=8016]      //flor
 
 //Contexts for docker images
 //Context ctx_sensor ip [host="sprint2_sensor" port=8016]
-Context ctx_basicrobot  ip  [host="basicrobot24" port=8020]
-Context ctxproductservice ip [ host="cargoserviceqak" port=8111]
+//Context ctx_basicrobot  ip  [host="basicrobot24" port=8020]
+//Context ctxproductservice ip [ host="cargoserviceqak" port=8111]
 
 ExternalQActor productservice context ctxproductservice
 ExternalQActor basicrobot context ctx_basicrobot
