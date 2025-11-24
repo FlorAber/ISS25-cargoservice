@@ -1,7 +1,6 @@
 %====================================================================================
 % sprint1_core description   
 %====================================================================================
-mqttBroker("mosquitto", "1883", "coreevents").
 dispatch( robotready, robotready(0) ).
 dispatch( databaseready, databaseready(0) ).
 dispatch( allready, allReady(0) ).
@@ -40,9 +39,8 @@ event( stopthesystem, stopthesystem(X) ).
 event( resumethesystem, resumethesystem(X) ).
 %====================================================================================
 context(ctx_cargo, "localhost",  "TCP", "8014").
-context(ctx_sensor, "172.20.10.13",  "TCP", "8016").
-context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
-context(ctxproductservice, "cargoserviceqak",  "TCP", "8111").
+context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
+context(ctxproductservice, "127.0.0.1",  "TCP", "8111").
  qactor( productservice, ctxproductservice, "external").
   qactor( basicrobot, ctx_basicrobot, "external").
   qactor( cargoservice, ctx_cargo, "it.unibo.cargoservice.Cargoservice").
